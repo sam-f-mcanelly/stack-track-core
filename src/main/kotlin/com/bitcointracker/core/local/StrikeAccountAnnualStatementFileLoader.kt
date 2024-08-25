@@ -6,7 +6,6 @@ import com.bitcointracker.model.transaction.strike.StrikeTransactionState
 import com.bitcointracker.model.transaction.strike.StrikeTransactionType
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Date
 // TODO remove this
 import java.util.*
 
@@ -33,8 +32,8 @@ class StrikeAccountAnnualStatementFileLoader {
                         type = StrikeTransactionType.valueOf(columns[5].uppercase(Locale.ROOT)),
                         state = StrikeTransactionState.valueOf(columns[6].uppercase(Locale.ROOT)),
                         fee = columns[9].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
-                        assetOut = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
-                        assetIn = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11]) },
+                        asset1 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
+                        asset2 = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11]) },
                         assetValue = columns[12].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                         balance = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                         balanceBtc = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },

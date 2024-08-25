@@ -23,15 +23,9 @@ class StrikeAccountStatementFileLoader {
                     val columns = line.split(",")
                     val datePart = dateFormatter.parse(columns[1]) // Parsing "Jan 01 2024"
                     val timePart = timeFormatter.parse(columns[2]) // Parsing "13:30:07"
-
-                    System.out.println("datePart: " + datePart)
-                    System.out.println("timePart: " + timePart)
         
                     // Combine date and time into a single Date object
                     val dateTime = Date(datePart.time + timePart.time)
-
-                    // TODO: handle deposits that have no asset out
-                    // TODO: handle on-chain transactions
 
                     StrikeTransaction(
                         transactionId = columns[0],
@@ -39,8 +33,8 @@ class StrikeAccountStatementFileLoader {
                         type = StrikeTransactionType.valueOf(columns[5].uppercase(Locale.ROOT)),
                         state = StrikeTransactionState.valueOf(columns[6].uppercase(Locale.ROOT)),
                         fee = columns[9].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
-                        assetOut = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
-                        assetIn = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11]) },
+                        asset1 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
+                        asset2 = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11]) },
                         assetValue = columns[12].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                         balance = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                         balanceBtc = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
