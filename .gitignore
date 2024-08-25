@@ -1,0 +1,9 @@
+**/build
+**/bin
+**/.gradle*
+**/gradle*
+.DS*
+2024/*
+Coinbase/*
+*.iml
+*.idea
