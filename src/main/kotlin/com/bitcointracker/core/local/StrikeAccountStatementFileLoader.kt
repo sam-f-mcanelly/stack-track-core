@@ -7,8 +7,7 @@ import com.bitcointracker.model.transaction.strike.StrikeTransactionType
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
-// TODO remove this
-import java.util.*
+import java.util.Locale
 
 class StrikeAccountStatementFileLoader(): FileLoader<StrikeTransaction> {
 

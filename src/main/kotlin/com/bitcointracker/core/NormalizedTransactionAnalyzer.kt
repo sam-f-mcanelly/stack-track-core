@@ -33,8 +33,20 @@ class NormalizedTransactionAnalyzer {
         return withdrawals ?: ExchangeAmount(0.0, asset)
     }
 
-    fun calculateProfitStatement(transactions: List<NormalizedTransaction>, assetValue: ExchangeAmount = ExchangeAmount(64100.0, "USD")): ProfitStatement {
-        val buyTransactions = transactions.filter { transaction -> transaction.type == NormalizedTransactionType.BUY }
+    /**
+     * Simple profit statement.
+     *
+     * TODO: more accurate math
+     */
+    fun calculateUnrealizedProfit(transactions: List<NormalizedTransaction>, asset: String, assetValue: ExchangeAmount = ExchangeAmount(64400.0, "USD")): ProfitStatement {
+        val filteredTransactions = transactions
+                .filter { transaction -> transaction.assetAmount.unit == asset }
+
+        val buyTransactions = filteredTransactions
+            .filter { transaction -> transaction.type == NormalizedTransactionType.BUY }
+
+//        val sellTransactions = transactions
+//            .filter { transaction -> transaction.type == NormalizedTransactionType.SELL }
 
         val costBasis = buyTransactions.map { it.transactionAmountUSD }.reduce { acc, i -> acc + i  }
         val units = buyTransactions.map { it.assetAmount }.reduce { acc, i -> acc + i  }
@@ -46,6 +58,7 @@ class NormalizedTransactionAnalyzer {
         return ProfitStatement(
             units = units,
             costBasis = costBasis,
+            currentValue = ExchangeAmount(units.amount * assetValue.amount, assetValue.unit),
             profit = profit,
             profitPercentage = profitPercentage
         )

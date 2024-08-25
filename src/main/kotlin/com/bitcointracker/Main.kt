@@ -1,8 +1,6 @@
 import com.bitcointracker.core.NormalizedTransactionAnalyzer
-import com.bitcointracker.core.local.StrikeAccountStatementFileLoader
 import com.bitcointracker.core.local.UniversalFileLoader
 import com.bitcointracker.core.local.report.ReportGenerator
-import com.bitcointracker.core.mapper.StrikeTransactionNormalizingMapper
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -22,12 +20,9 @@ fun main(args: Array<String>) {
     println("\n\n\n\n")
     println("Normalized Transactions")
     println("\n\n\n\n")
-    transactions.forEach { println(it) }
+    // transactions.forEach { println(it) }
     println("\n\n\n\n")
-    println("Total bitcoin purchased: " + transactionAnalyzer.calculateAssetPurchased(transactions, "BTC"))
-    println("Total spent on bitcoin: " + transactionAnalyzer.calculateUSDSpentOnAsset(transactions, "BTC"))
-    println("Total USD withdrawn: " + transactionAnalyzer.calculateWithdrawals(transactions, "USD"))
-    println("Profit statement: \n" + reportGenerator.generatePrettyProfitStatement(transactionAnalyzer.calculateProfitStatement(transactions)))
+    println("Profit statement: \n" + reportGenerator.generatePrettyProfitStatement(transactionAnalyzer.calculateUnrealizedProfit(transactions, "BTC")))
 }
 
 fun listFilesInDirectory(directoryPath: String): List<File> {
@@ -38,6 +33,22 @@ fun listFilesInDirectory(directoryPath: String): List<File> {
         throw IllegalArgumentException("The provided path is not a directory.")
     }
 
-    // Get all files in the directory
-    return directory.listFiles()?.toList() ?: emptyList()
+    // Recursive function to list files
+    return listFilesRecursively(directory)
+}
+
+fun listFilesRecursively(directory: File): List<File> {
+    val files = mutableListOf<File>()
+
+    // Get all files and directories in the current directory
+    directory.listFiles()?.forEach { file ->
+        if (file.isDirectory) {
+            // Recursively list files in the subdirectory
+            files.addAll(listFilesRecursively(file))
+        } else {
+            files.add(file)
+        }
+    }
+
+    return files
 }
