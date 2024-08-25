@@ -25,4 +25,5 @@ fun main(args: Array<String>) {
     println("Total bitcoin purchased: " + transactionAnalyzer.calculateAssetPurchased(normalizedTransactions, "BTC"))
     println("Total spent on bitcoin: " + transactionAnalyzer.calculateUSDSpentOnAsset(normalizedTransactions, "BTC"))
     println("Total USD withdrawn: " + transactionAnalyzer.calculateWithdrawals(normalizedTransactions, "USD"))
+    println("Profit statement: " + transactionAnalyzer.calculateProfitStatement(normalizedTransactions))
 }

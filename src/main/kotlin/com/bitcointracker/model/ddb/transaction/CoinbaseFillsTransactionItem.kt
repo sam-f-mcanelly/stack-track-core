@@ -1,4 +1,4 @@
-package com.bitcointracker.model.ddb
+package com.bitcointracker.model.ddb.transaction
 
 // TODO support storing data in DynamoDB
 data class CoinbaseFillsTransactionItem(
