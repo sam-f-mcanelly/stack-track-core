@@ -29,9 +29,9 @@ tasks.register<JavaExec>("runCsvParser") {
     classpath = sourceSets["main"].runtimeClasspath
 
     doFirst {
-        val fileLocation = project.properties["fileLocation"] as? String
+        val folder = project.properties["folder"] as? String
             ?: throw GradleException("Please provide the file location as a project property.")
-        args = listOf(fileLocation)
+        args = listOf(folder)
     }
 }
 

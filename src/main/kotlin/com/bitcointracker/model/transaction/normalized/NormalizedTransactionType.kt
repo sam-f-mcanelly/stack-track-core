@@ -4,5 +4,6 @@ enum class NormalizedTransactionType {
     BUY,
     SELL,
     DEPOSIT,
-    WITHDRAWAL
+    WITHDRAWAL,
+    BROKER_CREDIT,
 }

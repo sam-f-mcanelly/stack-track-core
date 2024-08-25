@@ -10,16 +10,15 @@ import java.util.Date
 // TODO remove this
 import java.util.*
 
-class StrikeAccountStatementFileLoader {
+class StrikeAccountStatementFileLoader(): FileLoader<StrikeTransaction> {
 
-    fun readStrikeAccountStatementCsv(fileLocation: String): List<StrikeTransaction> {
+    override fun readCsv(fileLocation: String): List<StrikeTransaction> {
         val dateFormatter = SimpleDateFormat("MMM dd yyyy")
         val timeFormatter = SimpleDateFormat("HH:mm:ss")
 
         return File(fileLocation).useLines { lines ->
             lines.drop(1)
                 .map { line ->
-                    System.out.println("Line: \n" + line)
                     val columns = line.split(",")
                     val datePart = dateFormatter.parse(columns[1]) // Parsing "Jan 01 2024"
                     val timePart = timeFormatter.parse(columns[2]) // Parsing "13:30:07"
@@ -30,13 +29,13 @@ class StrikeAccountStatementFileLoader {
                     StrikeTransaction(
                         transactionId = columns[0],
                         date = dateTime,
-                        type = StrikeTransactionType.valueOf(columns[5].uppercase(Locale.ROOT)),
-                        state = StrikeTransactionState.valueOf(columns[6].uppercase(Locale.ROOT)),
+                        type = StrikeTransactionType.valueOf(columns[5].uppercase(Locale.ROOT).replace(" ", "_")),
+                        state = StrikeTransactionState.valueOf(columns[6].uppercase(Locale.ROOT).replace(" ", "_")),
                         fee = columns[9].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
                         asset1 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
                         asset2 = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11]) },
                         assetValue = columns[12].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
-                        balance = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
+                        balance = columns[14].toDoubleOrNull()?.let { ExchangeAmount(it, columns[15].uppercase(Locale.ROOT)) },
                         balanceBtc = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                         destination = if (columns.size > 16) columns[16] else null,
                         description = if (columns.size > 17) columns[17] else ""

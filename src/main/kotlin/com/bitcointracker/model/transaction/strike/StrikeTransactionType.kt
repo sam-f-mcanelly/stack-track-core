@@ -5,4 +5,6 @@ enum class StrikeTransactionType {
     TRADE,
     WITHDRAWAL,
     ONCHAIN,
+    STRIKE_CREDIT,
+    REFERRAL,
 }
