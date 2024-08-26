@@ -5,7 +5,8 @@ import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 
 data class ProfitStatement(
-    val units: ExchangeAmount,
+    val remainingUnits: ExchangeAmount,
+    val soldUnits: ExchangeAmount,
     val currentValue: ExchangeAmount,
     val realizedProfit: ExchangeAmount,
     val unrealizedProfit: ExchangeAmount,

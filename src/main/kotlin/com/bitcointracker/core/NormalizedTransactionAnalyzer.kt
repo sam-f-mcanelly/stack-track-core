@@ -102,7 +102,10 @@ class NormalizedTransactionAnalyzer {
 
                         val buyTransaction = buyQueue.first()
 
+                        println("Pulled first buy transaction with ${buyTransaction.assetAmount} to be a cost basis for a sell amount of $remainingAmountToSell")
+
                         if (buyTransaction.assetAmount.amount <= remainingAmountToSell.amount) {
+                            println("")
                             val spent = buyTransaction.transactionAmountUSD
                             val returned = ExchangeAmount(
                                 buyTransaction.assetAmount.amount * transaction.assetValueUSD.amount,
@@ -173,14 +176,15 @@ class NormalizedTransactionAnalyzer {
         }
 
         val boughtUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.BUY }
-                .map { it.assetAmount }
-                .sumOf { it.amount }
+            .map { it.assetAmount }
+            .sumOf { it.amount }
         val soldUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.SELL }
-                .map { it.assetAmount }
-                .sumOf { it.amount }
+            .map { it.assetAmount }
+            .sumOf { it.amount }
 
         return ProfitStatement(
-            units = ExchangeAmount(boughtUnits - soldUnits, asset),
+            remainingUnits = ExchangeAmount(boughtUnits - soldUnits, asset),
+            soldUnits = ExchangeAmount(soldUnits, asset),
             currentValue = ExchangeAmount((boughtUnits - soldUnits) * currentAssetPrice.amount, currentAssetPrice.unit),
             realizedProfit = taxLotStatements.map { it.profit }.reduce { acc, i -> acc + i}, // TODO
             unrealizedProfit = ExchangeAmount(0.0, currentAssetPrice.unit), // TODO,
