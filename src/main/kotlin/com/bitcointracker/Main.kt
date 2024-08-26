@@ -1,6 +1,7 @@
 import com.bitcointracker.core.NormalizedTransactionAnalyzer
 import com.bitcointracker.core.local.UniversalFileLoader
 import com.bitcointracker.core.local.report.ReportGenerator
+import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -22,7 +23,16 @@ fun main(args: Array<String>) {
     println("\n\n\n\n")
     // transactions.forEach { println(it) }
     println("\n\n\n\n")
-    println("Profit statement: \n" + reportGenerator.generatePrettyProfitStatement(transactionAnalyzer.calculateUnrealizedProfit(transactions, "BTC")))
+    println("Profit statement: \n"
+        + reportGenerator.generatePrettyProfitStatement(
+            transactionAnalyzer.computeTransactionResults(
+                transactions,
+                34.0,
+                "BTC",
+                ExchangeAmount(64400.0, "USD")
+            )
+        )
+    )
 }
 
 fun listFilesInDirectory(directoryPath: String): List<File> {

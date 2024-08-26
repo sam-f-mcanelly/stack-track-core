@@ -3,7 +3,7 @@ package com.bitcointracker.model.transaction.normalized
 data class ExchangeAmount(
     val amount: Double,
     val unit: String, // TODO make type
-) {
+) : Comparable<ExchangeAmount> {
     // Overload the * operator
     operator fun times(multiplier: Double): ExchangeAmount {
         return this.copy(amount = this.amount * multiplier)
@@ -34,4 +34,11 @@ data class ExchangeAmount(
         }
         return ExchangeAmount(this.amount + other.amount, this.unit)
     }
+
+     override fun compareTo(other: ExchangeAmount): Int {
+         if (this.unit != other.unit) {
+             throw IllegalArgumentException("Cannot compare amounts with different currencies")
+         }
+         return this.amount.compareTo(other.amount)
+     }
 }

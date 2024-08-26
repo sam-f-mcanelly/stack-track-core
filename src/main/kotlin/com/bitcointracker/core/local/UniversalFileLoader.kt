@@ -29,7 +29,6 @@ class UniversalFileLoader {
         return if (file.name.contains("annual transactions")) {
             println("Loading a strike annual statement...")
             val transactions = strikeAccountAnnualStatementFileLoader.readCsv(file.absolutePath)
-            transactions.forEach { println(it) }
             strikeTransactionNormalizingMapper.normalizeTransactions(transactions)
         } else if (file.name.contains("Account statement")) {
             println("Loading a strike monthly statement...")

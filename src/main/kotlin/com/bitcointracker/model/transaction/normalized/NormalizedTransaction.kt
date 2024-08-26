@@ -7,7 +7,7 @@ data class NormalizedTransaction(
     val type: NormalizedTransactionType,
     val transactionAmountUSD: ExchangeAmount,
     val fee: ExchangeAmount,
-    val assetAmount: ExchangeAmount,
+    var assetAmount: ExchangeAmount,
     val assetValueUSD: ExchangeAmount,
     val timestamp: Date,
     val address: String = "",

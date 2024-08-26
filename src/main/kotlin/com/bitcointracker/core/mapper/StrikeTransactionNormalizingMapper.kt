@@ -8,7 +8,7 @@ import com.bitcointracker.model.transaction.strike.StrikeTransactionType
 
 class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction> {
     override fun normalizeTransaction(transaction: StrikeTransaction): NormalizedTransaction {
-        println("Normalizing transaction " + transaction.transactionId)
+        // println("Normalizing transaction " + transaction.transactionId)
 
         return when (transaction.type) {
             StrikeTransactionType.DEPOSIT -> normalizeDeposit(transaction)
@@ -57,7 +57,7 @@ class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction
     }
 
     private fun normalizeWithdrawal(transaction: StrikeTransaction): NormalizedTransaction {
-        println("Normalizing withdrawal: " + transaction)
+        // println("Normalizing withdrawal: " + transaction)
 
         // old reporting style
         if (transaction.asset1 == null) {

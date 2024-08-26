@@ -7,14 +7,14 @@ import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
 
 class CoinbaseFillsNormalizingMapper() : NormalizingMapper<CoinbaseFillsTransaction> {
     override fun normalizeTransaction(transaction: CoinbaseFillsTransaction): NormalizedTransaction {
-        println("Normalizing transaction " + transaction.tradeId)
+        // println("Normalizing transaction " + transaction.tradeId)
 
         val type = when (transaction.side) {
             CoinbaseFillsSide.BUY -> NormalizedTransactionType.BUY
             CoinbaseFillsSide.SELL -> NormalizedTransactionType.SELL
         }
 
-        val transaction = NormalizedTransaction(
+        return NormalizedTransaction(
             id = transaction.tradeId,
             type = type,
             transactionAmountUSD = transaction.total * -1.0,
@@ -23,8 +23,5 @@ class CoinbaseFillsNormalizingMapper() : NormalizingMapper<CoinbaseFillsTransact
             assetValueUSD = (transaction.total * -1.0) - transaction.fee,
             timestamp = transaction.createdAt,
         )
-
-        println("Normalized Transaction: " + transaction)
-        return transaction
     }
 }
