@@ -1,4 +1,5 @@
 import com.bitcointracker.core.NormalizedTransactionAnalyzer
+import com.bitcointracker.core.TransactionCache
 import com.bitcointracker.core.local.UniversalFileLoader
 import com.bitcointracker.core.local.report.ReportGenerator
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
@@ -15,24 +16,21 @@ fun main(args: Array<String>) {
     val transactionAnalyzer = NormalizedTransactionAnalyzer()
     val reportGenerator = ReportGenerator()
     val transactions = fileLoader.loadFiles(listFilesInDirectory(folder))
-
-
-    // transactions.forEach { println(it) }
-    println("\n\n\n\n")
-    println("Normalized Transactions")
-    println("\n\n\n\n")
-    // transactions.forEach { println(it) }
-    println("\n\n\n\n")
-    println("Profit statement: \n"
-        + reportGenerator.generatePrettyProfitStatement(
-            transactionAnalyzer.computeTransactionResults(
-                transactions,
-                34.0,
-                "BTC",
-                ExchangeAmount(64400.0, "USD")
-            )
-        )
+    val transactionCache = TransactionCache(transactions)
+    val profitStatement = transactionAnalyzer.computeTransactionResults(
+        transactionCache,
+        "BTC",
+        ExchangeAmount(63700.0, "USD")
     )
+
+    println("\n\nProfit statement: \n")
+    println(reportGenerator.generatePrettyProfitStatement(profitStatement))
+    println("\n\nTax statements: \n")
+    profitStatement.taxLotStatements.forEach {
+        println("Tax Lot statement for ${it.sellTransaction.source} ${it.sellTransaction.id}\n")
+        println(it)
+        println("\n\n")
+    }
 }
 
 fun listFilesInDirectory(directoryPath: String): List<File> {

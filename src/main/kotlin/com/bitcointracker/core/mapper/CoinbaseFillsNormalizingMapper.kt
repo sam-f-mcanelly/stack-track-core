@@ -4,6 +4,7 @@ import com.bitcointracker.model.transaction.coinbase.CoinbaseFillsSide
 import com.bitcointracker.model.transaction.coinbase.CoinbaseFillsTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.transaction.normalized.TransactionSource
 
 class CoinbaseFillsNormalizingMapper() : NormalizingMapper<CoinbaseFillsTransaction> {
     override fun normalizeTransaction(transaction: CoinbaseFillsTransaction): NormalizedTransaction {
@@ -17,10 +18,11 @@ class CoinbaseFillsNormalizingMapper() : NormalizingMapper<CoinbaseFillsTransact
         return NormalizedTransaction(
             id = transaction.tradeId,
             type = type,
-            transactionAmountUSD = transaction.total * -1.0,
-            fee = transaction.fee,
-            assetAmount = transaction.size,
-            assetValueUSD = (transaction.total * -1.0) - transaction.fee,
+            source = TransactionSource.COINBASE_FILL,
+            transactionAmountUSD = transaction.total.absoluteValue,
+            fee = transaction.fee.absoluteValue,
+            assetAmount = transaction.size.absoluteValue,
+            assetValueUSD = transaction.price.absoluteValue,
             timestamp = transaction.createdAt,
         )
     }

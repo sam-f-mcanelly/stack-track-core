@@ -3,8 +3,11 @@ package com.bitcointracker.core.mapper
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.transaction.normalized.TransactionSource
 import com.bitcointracker.model.transaction.strike.StrikeTransaction
+import com.bitcointracker.model.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.transaction.strike.StrikeTransactionType
+import kotlin.math.absoluteValue
 
 class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction> {
     override fun normalizeTransaction(transaction: StrikeTransaction): NormalizedTransaction {
@@ -23,6 +26,7 @@ class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction
     private fun normalizeDeposit(transaction: StrikeTransaction): NormalizedTransaction
         = NormalizedTransaction(
             id = transaction.transactionId,
+            source = getSource(transaction),
             type = NormalizedTransactionType.DEPOSIT,
             transactionAmountUSD = transaction.asset1!!,
             fee = ExchangeAmount(0.0, "USD"), // Deposits are free
@@ -41,13 +45,14 @@ class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction
             assetAmount = transaction.asset1
         } else {
             transactionType = NormalizedTransactionType.BUY
-            transactionAmountUSD = transaction.asset1 * -1.0
+            transactionAmountUSD = transaction.asset1.absoluteValue
             assetAmount = transaction.asset2!!
         }
 
         return NormalizedTransaction(
             id = transaction.transactionId,
             type = transactionType,
+            source = getSource(transaction),
             transactionAmountUSD = transactionAmountUSD,
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
             assetAmount = assetAmount,
@@ -67,10 +72,11 @@ class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction
         return NormalizedTransaction(
             id = transaction.transactionId,
             type = NormalizedTransactionType.WITHDRAWAL,
-            transactionAmountUSD = transaction.asset1!! * -1.0,
+            source = getSource(transaction),
+            transactionAmountUSD = transaction.asset1.absoluteValue,
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
-            assetAmount = transaction.asset1!! * -1.0,
-            assetValueUSD = transaction.asset1!! * -1.0,
+            assetAmount = transaction.asset1.absoluteValue,
+            assetValueUSD = transaction.asset1.absoluteValue,
             timestamp = transaction.date,
         )
     }
@@ -83,13 +89,14 @@ class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction
      */
     private fun normalizeBitcoinWithdrawal(transaction: StrikeTransaction): NormalizedTransaction {
         return NormalizedTransaction(
-                id = transaction.transactionId,
-                type = NormalizedTransactionType.WITHDRAWAL,
-                transactionAmountUSD = ExchangeAmount(-1.0, "USD"), // TODO populate
-                fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
-                assetAmount = transaction.asset2!! * -1.0,
-                assetValueUSD = ExchangeAmount(-1.0, "USD"), // TODO populate
-                timestamp = transaction.date,
+            id = transaction.transactionId,
+            type = NormalizedTransactionType.WITHDRAWAL,
+            source = getSource(transaction),
+            transactionAmountUSD = ExchangeAmount(-1.0, "USD"), // TODO populate
+            fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
+            assetAmount = transaction.asset2!!.absoluteValue,
+            assetValueUSD = ExchangeAmount(-1.0, "USD"), // TODO populate
+            timestamp = transaction.date,
         )
     }
 
@@ -97,9 +104,10 @@ class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction
         = NormalizedTransaction(
             id = transaction.transactionId,
             type = NormalizedTransactionType.WITHDRAWAL,
+            source = getSource(transaction),
             transactionAmountUSD = ExchangeAmount(-1.0, "USD"),
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
-            assetAmount = transaction.asset2!! * -1.0,
+            assetAmount = transaction.asset2!!.absoluteValue,
             assetValueUSD = ExchangeAmount(0.0, "USD"), // TODO call API for this
             timestamp = transaction.date,
             address = transaction.destination ?: ""
@@ -109,10 +117,17 @@ class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction
         = NormalizedTransaction(
             id = transaction.transactionId,
             type = NormalizedTransactionType.BROKER_CREDIT,
-            transactionAmountUSD = transaction.asset1!!,
+            source = getSource(transaction),
+            transactionAmountUSD = transaction.asset1!!.absoluteValue,
             fee = ExchangeAmount(0.0, "USD"), // Deposits are free
-            assetAmount = transaction.asset1!!,
+            assetAmount = transaction.asset1!!.absoluteValue,
             assetValueUSD = ExchangeAmount(-1.0, "USD"), // TODO populate
             timestamp = transaction.date
         )
+
+    private fun getSource(transaction: StrikeTransaction)
+        = when(transaction.source) {
+            StrikeTransactionSource.MONTHLY_STATEMENT -> TransactionSource.STRIKE_MONTHLY
+            StrikeTransactionSource.ANNUAL_STATEMENT -> TransactionSource.STRIKE_ANNUAL
+        }
 }

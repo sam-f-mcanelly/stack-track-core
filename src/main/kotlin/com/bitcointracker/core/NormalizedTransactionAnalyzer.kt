@@ -1,6 +1,8 @@
 package com.bitcointracker.core
 
 import com.bitcointracker.model.report.ProfitStatement
+import com.bitcointracker.model.tax.TaxLotStatement
+import com.bitcointracker.model.tax.TaxType
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
@@ -64,26 +66,25 @@ class NormalizedTransactionAnalyzer {
 //        )
 //    }
 
+    // TODO: remove fees from cost basis if necessary
     fun computeTransactionResults(
-        transactions: List<NormalizedTransaction>,
-        taxPercentage: Double,
+        transactionCache: TransactionCache,
         asset: String,
         currentAssetPrice: ExchangeAmount
     ): ProfitStatement {
         val buyQueue = mutableListOf<NormalizedTransaction>()
-        var totalRealizedProfit = ExchangeAmount(0.0, "USD")
-        var totalRealizedCost = ExchangeAmount(0.0, "USD")
-        var totalTaxes = ExchangeAmount(0.0, "USD")
-        val soldLots: MutableList<NormalizedTransaction> = mutableListOf()
-        val partialSells: MutableList<NormalizedTransaction> = mutableListOf()
-        val filteredTransactions = transactions
-            .filter { transaction -> transaction.assetAmount.unit == asset }
-        val buyAndSells = filteredTransactions.filter {
-            transaction -> transaction.type == NormalizedTransactionType.BUY || transaction.type == NormalizedTransactionType.SELL
-        }
+        val soldLots = mutableListOf<NormalizedTransaction>()
+        val partialSells = mutableListOf<NormalizedTransaction>()
+        val taxLotStatements = mutableListOf<TaxLotStatement>()
+        val transactions = transactionCache.getTransactionsByAsset(asset)
+            .intersect(transactionCache.getTransactionsByType(
+                    NormalizedTransactionType.BUY,
+                    NormalizedTransactionType.SELL
+            ).toSet()
+        )
 
         // Sort transactions by timestamp to ensure FIFO based on time
-        val sortedTransactions = buyAndSells.sortedBy { it.timestamp }
+        val sortedTransactions = transactions.sortedBy { it.timestamp }
 
         for (transaction in sortedTransactions) {
             when (transaction.type) {
@@ -91,81 +92,118 @@ class NormalizedTransactionAnalyzer {
                     buyQueue.add(transaction)
                 }
                 NormalizedTransactionType.SELL -> {
-                    // Sort the buyQueue by timestamp before selling
-                    buyQueue.sortBy { it.timestamp }
-
                     var remainingAmountToSell = transaction.assetAmount
-                    var totalSellUsd = ExchangeAmount(0.0, "USD")
+                    var buysUsed = 1
 
-                    while (remainingAmountToSell.amount > 0.0 && buyQueue.isNotEmpty()) {
+                    while (remainingAmountToSell.amount > 0.0) {
+                        if (buyQueue.isEmpty()) {
+                            throw RuntimeException("Attempting to sell more than has been bought!")
+                        }
+
                         val buyTransaction = buyQueue.first()
-                        val buyPrice = buyTransaction.assetValueUSD
-                        val holdingPeriodInDays = (transaction.timestamp.time - buyTransaction.timestamp.time) / (1000 * 60 * 60 * 24)
-                        val holdingPeriodInYears = holdingPeriodInDays / 365.0
-                        val applicableTaxPercentage = if (holdingPeriodInYears > 1) 15.0 else taxPercentage
 
-                        if (buyTransaction.assetAmount <= remainingAmountToSell) {
-                            // Sell the entire amount of this buy transaction
-                            totalSellUsd += ExchangeAmount(buyTransaction.assetAmount.amount * buyPrice.amount, buyPrice.unit)
-                            remainingAmountToSell -= buyTransaction.assetAmount
-                            totalRealizedCost += buyTransaction.assetAmount * buyPrice
+                        if (buyTransaction.assetAmount.amount <= remainingAmountToSell.amount) {
+                            val spent = buyTransaction.transactionAmountUSD
+                            val returned = ExchangeAmount(
+                                buyTransaction.assetAmount.amount * transaction.assetValueUSD.amount,
+                                transaction.assetValueUSD.unit
+                            )
+                            taxLotStatements.add(
+                                TaxLotStatement(
+                                    id = "${transaction.id}-${buysUsed}",
+                                    buyTransaction = buyTransaction,
+                                    sellTransaction = transaction,
+                                    taxType = getTaxType(transaction, buyTransaction),
+                                    holdingTimeInDays = getHoldingPeriod(transaction, buyTransaction),
+                                    isPartialSell = false,
+                                    percentOfLotSold = 100.0,
+                                    spent = spent,
+                                    returned = returned,
+                                    profit = returned - spent,
+                                )
+                            )
+                            buysUsed++
                             soldLots.add(buyTransaction)
+                            remainingAmountToSell -= buyTransaction.assetAmount
                             buyQueue.removeAt(0)
                         } else {
                             // Partially sell this buy transaction
-                            totalSellUsd += ExchangeAmount(remainingAmountToSell.amount * buyPrice.amount, buyPrice.unit)
-                            totalRealizedCost += ExchangeAmount(remainingAmountToSell.amount * buyPrice.amount, buyPrice.unit)
-                            partialSells.add(
-                                NormalizedTransaction(
-                                    id = buyTransaction.id,
-                                    type = buyTransaction.type,
-                                    transactionAmountUSD = buyTransaction.assetValueUSD * (buyTransaction.assetAmount - remainingAmountToSell),
-                                    fee = buyTransaction.fee,
-                                    assetAmount = buyTransaction.assetAmount - remainingAmountToSell,
-                                    assetValueUSD = (ExchangeAmount((buyTransaction.assetAmount.amount - remainingAmountToSell.amount) * buyTransaction.assetValueUSD.amount, buyTransaction.assetValueUSD.unit)),
-                                    timestamp = buyTransaction.timestamp,
-                                    address = buyTransaction.address
+                            val percentSold = (remainingAmountToSell.amount / buyTransaction.assetAmount.amount)
+                            val spent = buyTransaction.transactionAmountUSD * percentSold
+                            val returned = ExchangeAmount(
+                                buyTransaction.assetAmount.amount * transaction.assetValueUSD.amount * percentSold,
+                                transaction.assetValueUSD.unit
+                            )
+                            taxLotStatements.add(
+                                TaxLotStatement(
+                                    id = "${transaction.id}-${buysUsed}",
+                                    buyTransaction = buyTransaction,
+                                    sellTransaction = transaction,
+                                    taxType = getTaxType(transaction, buyTransaction),
+                                    holdingTimeInDays = getHoldingPeriod(transaction, buyTransaction),
+                                    isPartialSell = true,
+                                    percentOfLotSold = percentSold * 100,
+                                    spent = spent,
+                                    returned = returned,
+                                    profit = returned - spent,
                                 )
+                            )
+
+                            val partialAmount = remainingAmountToSell
+                            partialSells.add(
+                                buyTransaction.copy(
+                                    assetAmount = buyTransaction.assetAmount - partialAmount,
+                                    assetValueUSD = ExchangeAmount((buyTransaction.assetAmount.amount - partialAmount.amount) * buyTransaction.assetValueUSD.amount, buyTransaction.assetValueUSD.unit)
+                                )
+                            )
+                            buyQueue[0] = buyTransaction.copy(
+                                id = "${buyTransaction.id}-partial",
+                                transactionAmountUSD = ExchangeAmount((buyTransaction.assetAmount.amount - partialAmount.amount) * buyTransaction.assetValueUSD.amount, buyTransaction.assetValueUSD.unit),
+                                assetAmount = buyTransaction.assetAmount - partialAmount,
+                                assetValueUSD = buyTransaction.assetValueUSD
                             )
                             remainingAmountToSell = ExchangeAmount(0.0, asset)
                         }
                     }
-
-                    // Calculate profit and taxes for this sell transaction
-                    val sellPrice = transaction.transactionAmountUSD
-                    val sellTotal = ExchangeAmount(transaction.assetAmount.amount * sellPrice.amount, sellPrice.unit)
-                    val profit = sellTotal - totalSellUsd
-                    totalRealizedProfit += profit
-                    totalTaxes += ExchangeAmount(profit.amount * taxPercentage / 100.0, profit.unit)
                 }
                 else -> {
-                    throw RuntimeException("Non-buy or sell transaction detected " + transaction)
+                    throw RuntimeException("Non-buy or sell transaction detected: $transaction")
                 }
             }
         }
 
-        // Calculate remaining asset units and their cost basis
-        val remainingUnits = buyQueue.map { it.assetAmount }.reduce { acc, i -> acc + i }
-        val costBasis = buyQueue.map { it.assetAmount * it.assetValueUSD }.reduce { acc, i -> acc + i }
-        val currentValue = ExchangeAmount(remainingUnits.amount * currentAssetPrice.amount, currentAssetPrice.unit)
-        val unrealizedProfit = currentValue - costBasis
-        val unrealizedProfitPercentage = if (costBasis.amount != 0.0) {
-            unrealizedProfit.amount / costBasis.amount * 100
-        } else 0.0
-        val realizedProfitPercentage = if (totalRealizedCost.amount != 0.0) {
-            totalRealizedProfit.amount / totalRealizedCost.amount * 100
-        } else 0.0
+        val boughtUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.BUY }
+                .map { it.assetAmount }
+                .sumOf { it.amount }
+        val soldUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.SELL }
+                .map { it.assetAmount }
+                .sumOf { it.amount }
 
         return ProfitStatement(
-            units = remainingUnits,
-            costBasis = costBasis,
-            currentValue = currentValue,
-            realizedProfit = totalRealizedProfit,
-            unrealizedProfit = unrealizedProfit,
-            realizedProfitPercentage = realizedProfitPercentage,
-            unrealizedProfitPercentage = unrealizedProfitPercentage,
+            units = ExchangeAmount(boughtUnits - soldUnits, asset),
+            currentValue = ExchangeAmount((boughtUnits - soldUnits) * currentAssetPrice.amount, currentAssetPrice.unit),
+            realizedProfit = taxLotStatements.map { it.profit }.reduce { acc, i -> acc + i}, // TODO
+            unrealizedProfit = ExchangeAmount(0.0, currentAssetPrice.unit), // TODO,
+            realizedProfitPercentage = 0.0, // TODO
+            unrealizedProfitPercentage = 0.0, // TODO
             partialSells = partialSells,
             soldLots = soldLots,
+            taxLotStatements = taxLotStatements,
         )
+    }
+
+    private fun getHoldingPeriod(
+        sellTransaction: NormalizedTransaction,
+        buyTransaction: NormalizedTransaction,
+    ) : Long
+        = (sellTransaction.timestamp.time - buyTransaction.timestamp.time) / (1000 * 60 * 60 * 24)
+
+    private fun getTaxType(
+        sellTransaction: NormalizedTransaction,
+        buyTransaction: NormalizedTransaction,
+    ) : TaxType {
+        val holdingPeriodInDays = getHoldingPeriod(sellTransaction, buyTransaction)
+        val holdingPeriodInYears = holdingPeriodInDays / 365.0
+        return if (holdingPeriodInYears > 1) TaxType.LONG_TERM else TaxType.SHORT_TERM
     }
 }

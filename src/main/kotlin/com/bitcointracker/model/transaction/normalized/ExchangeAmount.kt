@@ -1,9 +1,15 @@
 package com.bitcointracker.model.transaction.normalized
 
+import kotlin.math.absoluteValue
+
 data class ExchangeAmount(
     val amount: Double,
     val unit: String, // TODO make type
 ) : Comparable<ExchangeAmount> {
+
+    val absoluteValue: ExchangeAmount
+        get() = ExchangeAmount(amount.absoluteValue, unit)
+
     // Overload the * operator
     operator fun times(multiplier: Double): ExchangeAmount {
         return this.copy(amount = this.amount * multiplier)

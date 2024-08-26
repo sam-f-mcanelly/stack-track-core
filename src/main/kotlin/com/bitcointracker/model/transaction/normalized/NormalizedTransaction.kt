@@ -4,6 +4,7 @@ import java.util.Date
 
 data class NormalizedTransaction(
     val id: String,
+    val source: TransactionSource,
     val type: NormalizedTransactionType,
     val transactionAmountUSD: ExchangeAmount,
     val fee: ExchangeAmount,

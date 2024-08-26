@@ -2,6 +2,7 @@ package com.bitcointracker.core.local
 
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.transaction.strike.StrikeTransaction
+import com.bitcointracker.model.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.transaction.strike.StrikeTransactionState
 import com.bitcointracker.model.transaction.strike.StrikeTransactionType
 import java.io.File
@@ -24,6 +25,7 @@ class StrikeAccountAnnualStatementFileLoader(): FileLoader<StrikeTransaction>  {
                         date = date,
                         type = StrikeTransactionType.valueOf(columns[3].uppercase(Locale.ROOT).replace(" ", "_")),
                         state = StrikeTransactionState.valueOf(columns[4].uppercase(Locale.ROOT).replace(" ", "_")),
+                        source = StrikeTransactionSource.ANNUAL_STATEMENT,
                         fee = ExchangeAmount(0.0, "USD") ,
                         asset1 = columns[5].toDoubleOrNull()?.let { ExchangeAmount(it, columns[6]) },
                         asset2 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
