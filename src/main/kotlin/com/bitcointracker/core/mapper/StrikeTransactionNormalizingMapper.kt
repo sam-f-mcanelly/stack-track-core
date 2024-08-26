@@ -7,9 +7,9 @@ import com.bitcointracker.model.transaction.normalized.TransactionSource
 import com.bitcointracker.model.transaction.strike.StrikeTransaction
 import com.bitcointracker.model.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.transaction.strike.StrikeTransactionType
-import kotlin.math.absoluteValue
+import javax.inject.Inject
 
-class StrikeTransactionNormalizingMapper() : NormalizingMapper<StrikeTransaction> {
+class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMapper<StrikeTransaction> {
     override fun normalizeTransaction(transaction: StrikeTransaction): NormalizedTransaction {
         // println("Normalizing transaction " + transaction.transactionId)
 

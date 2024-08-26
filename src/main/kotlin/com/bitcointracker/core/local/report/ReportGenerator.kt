@@ -2,14 +2,14 @@ package com.bitcointracker.core.local.report
 
 import com.bitcointracker.model.report.ProfitStatement
 import java.text.DecimalFormat
+import javax.inject.Inject
 
-class ReportGenerator {
+class ReportGenerator @Inject constructor() {
 
     fun generatePrettyProfitStatement(profitStatement: ProfitStatement): String {
         val decimalFormat = DecimalFormat("#,###.##")
         val btcFormat =  DecimalFormat("#,###.00000000")
 
-        // TODO update
         return """
             Currently Owned Units: ${btcFormat.format(profitStatement.remainingUnits.amount)} ${profitStatement.remainingUnits.unit}
             Sold Units: ${btcFormat.format(profitStatement.soldUnits.amount)} ${profitStatement.soldUnits.unit}

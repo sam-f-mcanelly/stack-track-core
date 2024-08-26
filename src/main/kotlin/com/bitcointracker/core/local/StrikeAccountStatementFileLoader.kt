@@ -9,8 +9,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 
-class StrikeAccountStatementFileLoader(): FileLoader<StrikeTransaction> {
+class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction> {
 
     override fun readCsv(fileLocation: String): List<StrikeTransaction> {
         val dateFormatter = SimpleDateFormat("MMM dd yyyy")

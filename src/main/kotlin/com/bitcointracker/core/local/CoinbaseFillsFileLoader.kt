@@ -7,8 +7,9 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import javax.inject.Inject
 
-class CoinbaseFillsFileLoader(): FileLoader<CoinbaseFillsTransaction> {
+class CoinbaseFillsFileLoader @Inject constructor(): FileLoader<CoinbaseFillsTransaction> {
     override fun readCsv(fileLocation: String): List<CoinbaseFillsTransaction> {
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 

@@ -1,8 +1,5 @@
-import com.bitcointracker.core.NormalizedTransactionAnalyzer
 import com.bitcointracker.core.TransactionCache
-import com.bitcointracker.core.local.UniversalFileLoader
-import com.bitcointracker.core.local.report.ReportGenerator
-import com.bitcointracker.external.client.CoinbaseClient
+import com.bitcointracker.dagger.component.DaggerCliComponent
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import java.io.File
 
@@ -12,15 +9,19 @@ fun main(args: Array<String>) {
         return
     }
 
+    val cliComponent = DaggerCliComponent.create()
+
     val folder = args[0]
-    val fileLoader = UniversalFileLoader()
-    val transactionAnalyzer = NormalizedTransactionAnalyzer()
-    val reportGenerator = ReportGenerator()
+    val fileLoader = cliComponent.getFileLoader()
+    val transactionAnalyzer = cliComponent.getTransactionAnalyzer()
+    val reportGenerator = cliComponent.getReportGenerator()
+    val coinbaseClient = cliComponent.getCoinbaseClient()
+
     val transactions = fileLoader.loadFiles(listFilesInDirectory(folder))
     val transactionCache = TransactionCache(transactions)
-    val coinbaseClient = CoinbaseClient()
     val bitcoinPrice = coinbaseClient.getCurrentPrice("BTC")
     println("Retrieved bitcoin price from coinbase: $bitcoinPrice")
+
     val profitStatement = transactionAnalyzer.computeTransactionResults(
         transactionCache,
         "BTC",

@@ -8,8 +8,9 @@ import com.bitcointracker.model.transaction.strike.StrikeTransactionType
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
+import javax.inject.Inject
 
-class StrikeAccountAnnualStatementFileLoader(): FileLoader<StrikeTransaction>  {
+class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction>  {
 
     override fun readCsv(fileLocation: String): List<StrikeTransaction> {
         val dateFormatter = SimpleDateFormat("MMM dd yyyy HH:mm:ss")

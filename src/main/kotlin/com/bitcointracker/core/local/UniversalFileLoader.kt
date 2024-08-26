@@ -4,22 +4,16 @@ import com.bitcointracker.core.mapper.CoinbaseFillsNormalizingMapper
 import com.bitcointracker.core.mapper.StrikeTransactionNormalizingMapper
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import java.io.File
+import javax.inject.Inject
 
-class UniversalFileLoader {
-
-    /**
-     * Strike dependencies
-     */
-    private val strikeTransactionNormalizingMapper = StrikeTransactionNormalizingMapper()
-    private val strikeAccountAnnualStatementFileLoader = StrikeAccountAnnualStatementFileLoader()
-    private val strikeAccountStatementFileLoader = StrikeAccountStatementFileLoader()
-
-    /**
-     * Coinbase dependencies
-     */
-    private val coinbaseFillsNormalizingMapper = CoinbaseFillsNormalizingMapper()
-    private val coinbaseFillsFileLoader = CoinbaseFillsFileLoader()
-
+// TODO Maybe factor this out more?
+class UniversalFileLoader @Inject constructor(
+    private val strikeTransactionNormalizingMapper: StrikeTransactionNormalizingMapper,
+    private val strikeAccountAnnualStatementFileLoader: StrikeAccountAnnualStatementFileLoader,
+    private val strikeAccountStatementFileLoader: StrikeAccountStatementFileLoader,
+    private val coinbaseFillsNormalizingMapper: CoinbaseFillsNormalizingMapper,
+    private val coinbaseFillsFileLoader: CoinbaseFillsFileLoader,
+) {
     fun loadFiles(files: List<File>): List<NormalizedTransaction>
         = files.map { loadFile(it) }
             .flatMap { it }

@@ -6,12 +6,12 @@ import okhttp3.Response
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import java.io.IOException
+import javax.inject.Inject
 
-class CoinbaseClient {
-
-    private val client = OkHttpClient()
-    private val gson = Gson()
-
+class CoinbaseClient @Inject constructor(
+    private val client: OkHttpClient,
+    private val gson: Gson,
+) {
     fun getCurrentPrice(crypto: String, currency: String = "USD"): Double? {
         val url = "https://api.coinbase.com/v2/prices/$crypto-$currency/spot"
         val request = Request.Builder()

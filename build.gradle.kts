@@ -1,6 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.0.20"
     application
+    id("org.jetbrains.kotlin.kapt") version "2.0.20"
 }
 
 group = "com.bitcointracker"
@@ -8,6 +9,7 @@ version = "1.0.0"
 
 repositories {
     mavenCentral()
+    google()
 }
 
 application {
@@ -17,11 +19,11 @@ application {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
-    implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation("com.google.code.gson:gson:2.8.8")
-    // implementation("software.amazon.awssdk:dynamodb:2.20.89")
+    implementation("com.google.dagger:dagger:2.48")
+    kapt("com.google.dagger:dagger-compiler:2.48")
+    implementation("javax.inject:javax.inject:1")
 }
 
 tasks.register<JavaExec>("runCsvParser") {
@@ -36,23 +38,3 @@ tasks.register<JavaExec>("runCsvParser") {
         args = listOf(folder)
     }
 }
-
-// Lambda specific?
-// tasks {
-//     val jar by getting(Jar::class) {
-//         manifest {
-//             attributes["Main-Class"] = "com.bitcointracker.FileDropHandler"
-//         }
-
-//         // Include the compiled classes and resources in the jar
-//         from(sourceSets.main.get().output)
-
-//         // Include dependencies
-//         from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-//     }
-
-//     // Ensure that the build task depends on the jar task
-//     build {
-//         dependsOn(jar)
-//     }
-// }

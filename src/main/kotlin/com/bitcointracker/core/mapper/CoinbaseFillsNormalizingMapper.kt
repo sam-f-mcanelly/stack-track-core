@@ -5,8 +5,9 @@ import com.bitcointracker.model.transaction.coinbase.CoinbaseFillsTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
 import com.bitcointracker.model.transaction.normalized.TransactionSource
+import javax.inject.Inject
 
-class CoinbaseFillsNormalizingMapper() : NormalizingMapper<CoinbaseFillsTransaction> {
+class CoinbaseFillsNormalizingMapper @Inject constructor() : NormalizingMapper<CoinbaseFillsTransaction> {
     override fun normalizeTransaction(transaction: CoinbaseFillsTransaction): NormalizedTransaction {
         // println("Normalizing transaction " + transaction.tradeId)
 
