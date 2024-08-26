@@ -111,18 +111,24 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
             }
         }
 
-        val totalBoughtUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.BUY }
+        val totalBoughtUnitsList = sortedTransactions.filter { it.type == NormalizedTransactionType.BUY }
             .map { it.assetAmount }
-            .sumOf { it.amount }
-        val soldUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.SELL }
+        val totalBoughtUnits = if (totalBoughtUnitsList.isNotEmpty()) {
+            totalBoughtUnitsList.sumOf { it.amount }
+        } else 0.0
+
+        val soldUnitsList = sortedTransactions.filter { it.type == NormalizedTransactionType.SELL }
             .map { it.assetAmount }
-            .sumOf { it.amount }
+
+        val soldUnits = if (soldUnitsList.isNotEmpty()) {
+            soldUnitsList.sumOf { it.amount }
+        } else 0.0
 
         val currentValue = ExchangeAmount((totalBoughtUnits - soldUnits) * currentAssetPrice.amount, currentAssetPrice.unit)
-        val remainingCostBasis = buyQueue.map { it.transactionAmountUSD }.reduce { acc, i -> acc + i }
-        val realizedProfit = taxLotStatements.map { it.profit }.reduce { acc, i -> acc + i}
-        val soldCostBasis = soldLots.map { it.transactionAmountUSD }.reduce { acc, i -> acc + i}
-        val soldValue = taxLotStatements.map { it.sellTransaction.transactionAmountUSD }.reduce { acc, i -> acc + i }
+        val remainingCostBasis = buyQueue.map { it.transactionAmountUSD }.reduceOrNull { acc, i -> acc + i } ?: ExchangeAmount(0.0, currentAssetPrice.unit)
+        val realizedProfit = taxLotStatements.map { it.profit }.reduceOrNull { acc, i -> acc + i} ?: ExchangeAmount(0.0, currentAssetPrice.unit)
+        val soldCostBasis = soldLots.map { it.transactionAmountUSD }.reduceOrNull { acc, i -> acc + i} ?: ExchangeAmount(0.0, currentAssetPrice.unit)
+        val soldValue = taxLotStatements.map { it.sellTransaction.transactionAmountUSD }.reduceOrNull { acc, i -> acc + i } ?: ExchangeAmount(0.0, currentAssetPrice.unit)
 
         return ProfitStatement(
             remainingUnits = ExchangeAmount(totalBoughtUnits - soldUnits, asset),
