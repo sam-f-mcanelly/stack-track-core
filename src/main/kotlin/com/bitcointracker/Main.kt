@@ -2,6 +2,7 @@ import com.bitcointracker.core.NormalizedTransactionAnalyzer
 import com.bitcointracker.core.TransactionCache
 import com.bitcointracker.core.local.UniversalFileLoader
 import com.bitcointracker.core.local.report.ReportGenerator
+import com.bitcointracker.external.client.CoinbaseClient
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import java.io.File
 
@@ -17,20 +18,23 @@ fun main(args: Array<String>) {
     val reportGenerator = ReportGenerator()
     val transactions = fileLoader.loadFiles(listFilesInDirectory(folder))
     val transactionCache = TransactionCache(transactions)
+    val coinbaseClient = CoinbaseClient()
+    val bitcoinPrice = coinbaseClient.getCurrentPrice("BTC")
+    println("Retrieved bitcoin price from coinbase: $bitcoinPrice")
     val profitStatement = transactionAnalyzer.computeTransactionResults(
         transactionCache,
         "BTC",
-        ExchangeAmount(63700.0, "USD")
+        ExchangeAmount(bitcoinPrice ?: 63500.0, "USD")
     )
 
     println("\n\nProfit statement: \n")
     println(reportGenerator.generatePrettyProfitStatement(profitStatement))
-    println("\n\nTax statements: \n")
-    profitStatement.taxLotStatements.forEach {
-        println("Tax Lot statement for ${it.sellTransaction.source} ${it.sellTransaction.id}\n")
-        println(it)
-        println("\n\n")
-    }
+//    println("\n\nTax statements: \n")
+//    profitStatement.taxLotStatements.forEach {
+//        println("Tax Lot statement for ${it.sellTransaction.source} ${it.sellTransaction.id}\n")
+//        //println(it)
+//        println("\n\n")
+//    }
 }
 
 fun listFilesInDirectory(directoryPath: String): List<File> {

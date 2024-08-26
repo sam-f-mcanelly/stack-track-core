@@ -19,6 +19,8 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
     implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("com.google.code.gson:gson:2.8.8")
     // implementation("software.amazon.awssdk:dynamodb:2.20.89")
 }
 

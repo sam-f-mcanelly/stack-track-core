@@ -74,7 +74,6 @@ class NormalizedTransactionAnalyzer {
     ): ProfitStatement {
         val buyQueue = mutableListOf<NormalizedTransaction>()
         val soldLots = mutableListOf<NormalizedTransaction>()
-        val partialSells = mutableListOf<NormalizedTransaction>()
         val taxLotStatements = mutableListOf<TaxLotStatement>()
         val transactions = transactionCache.getTransactionsByAsset(asset)
             .intersect(transactionCache.getTransactionsByType(
@@ -101,8 +100,6 @@ class NormalizedTransactionAnalyzer {
                         }
 
                         val buyTransaction = buyQueue.first()
-
-                        println("Pulled first buy transaction with ${buyTransaction.assetAmount} to be a cost basis for a sell amount of $remainingAmountToSell")
 
                         if (buyTransaction.assetAmount.amount <= remainingAmountToSell.amount) {
                             println("")
@@ -153,18 +150,14 @@ class NormalizedTransactionAnalyzer {
                             )
 
                             val partialAmount = remainingAmountToSell
-                            partialSells.add(
-                                buyTransaction.copy(
-                                    assetAmount = buyTransaction.assetAmount - partialAmount,
-                                    assetValueUSD = ExchangeAmount((buyTransaction.assetAmount.amount - partialAmount.amount) * buyTransaction.assetValueUSD.amount, buyTransaction.assetValueUSD.unit)
-                                )
-                            )
-                            buyQueue[0] = buyTransaction.copy(
+                            val updatedBuyTransaction = buyTransaction.copy(
                                 id = "${buyTransaction.id}-partial",
                                 transactionAmountUSD = ExchangeAmount((buyTransaction.assetAmount.amount - partialAmount.amount) * buyTransaction.assetValueUSD.amount, buyTransaction.assetValueUSD.unit),
                                 assetAmount = buyTransaction.assetAmount - partialAmount,
                                 assetValueUSD = buyTransaction.assetValueUSD
                             )
+                            soldLots.add(updatedBuyTransaction)
+                            buyQueue[0] = updatedBuyTransaction
                             remainingAmountToSell = ExchangeAmount(0.0, asset)
                         }
                     }
@@ -175,22 +168,27 @@ class NormalizedTransactionAnalyzer {
             }
         }
 
-        val boughtUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.BUY }
+        val totalBoughtUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.BUY }
             .map { it.assetAmount }
             .sumOf { it.amount }
         val soldUnits = sortedTransactions.filter { it.type == NormalizedTransactionType.SELL }
             .map { it.assetAmount }
             .sumOf { it.amount }
 
+        val currentValue = ExchangeAmount((totalBoughtUnits - soldUnits) * currentAssetPrice.amount, currentAssetPrice.unit)
+        val remainingCostBasis = buyQueue.map { it.transactionAmountUSD }.reduce { acc, i -> acc + i }
+        val realizedProfit = taxLotStatements.map { it.profit }.reduce { acc, i -> acc + i}
+        val soldCostBasis = soldLots.map { it.transactionAmountUSD }.reduce { acc, i -> acc + i}
+        val soldValue = taxLotStatements.map { it.sellTransaction.transactionAmountUSD }.reduce { acc, i -> acc + i }
+
         return ProfitStatement(
-            remainingUnits = ExchangeAmount(boughtUnits - soldUnits, asset),
+            remainingUnits = ExchangeAmount(totalBoughtUnits - soldUnits, asset),
             soldUnits = ExchangeAmount(soldUnits, asset),
-            currentValue = ExchangeAmount((boughtUnits - soldUnits) * currentAssetPrice.amount, currentAssetPrice.unit),
-            realizedProfit = taxLotStatements.map { it.profit }.reduce { acc, i -> acc + i}, // TODO
-            unrealizedProfit = ExchangeAmount(0.0, currentAssetPrice.unit), // TODO,
-            realizedProfitPercentage = 0.0, // TODO
-            unrealizedProfitPercentage = 0.0, // TODO
-            partialSells = partialSells,
+            currentValue = currentValue,
+            realizedProfit = realizedProfit,
+            unrealizedProfit = currentValue - remainingCostBasis,
+            realizedProfitPercentage = (soldValue.amount - soldCostBasis.amount) / soldCostBasis.amount * 100.0,
+            unrealizedProfitPercentage = (currentValue.amount - remainingCostBasis.amount) / remainingCostBasis.amount * 100.0,
             soldLots = soldLots,
             taxLotStatements = taxLotStatements,
         )

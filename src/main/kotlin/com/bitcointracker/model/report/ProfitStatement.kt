@@ -12,7 +12,6 @@ data class ProfitStatement(
     val unrealizedProfit: ExchangeAmount,
     val realizedProfitPercentage: Double,
     val unrealizedProfitPercentage: Double,
-    val partialSells: List<NormalizedTransaction>,
     val soldLots: List<NormalizedTransaction>,
     val taxLotStatements: List<TaxLotStatement>,
 )
