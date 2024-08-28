@@ -6,7 +6,6 @@ import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import java.io.File
 import javax.inject.Inject
 
-// TODO Maybe factor this out more?
 class UniversalFileLoader @Inject constructor(
     private val strikeTransactionNormalizingMapper: StrikeTransactionNormalizingMapper,
     private val strikeAccountAnnualStatementFileLoader: StrikeAccountAnnualStatementFileLoader,
@@ -20,6 +19,7 @@ class UniversalFileLoader @Inject constructor(
             .toList()
 
     fun loadFile(file: File): List<NormalizedTransaction> {
+        println("Loading file: ${file.absolutePath}")
         return if (file.name.contains("annual transactions")) {
             println("Loading a strike annual statement...")
             val transactions = strikeAccountAnnualStatementFileLoader.readCsv(file.absolutePath)

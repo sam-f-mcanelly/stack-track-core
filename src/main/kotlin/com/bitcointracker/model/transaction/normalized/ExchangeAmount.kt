@@ -1,7 +1,9 @@
 package com.bitcointracker.model.transaction.normalized
 
+import kotlinx.serialization.Serializable
 import kotlin.math.absoluteValue
 
+@Serializable
 data class ExchangeAmount(
     val amount: Double,
     val unit: String, // TODO make type
