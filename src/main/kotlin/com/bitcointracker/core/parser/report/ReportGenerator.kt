@@ -1,4 +1,4 @@
-package com.bitcointracker.core.local.report
+package com.bitcointracker.core.parser.report
 
 import com.bitcointracker.model.report.ProfitStatement
 import java.text.DecimalFormat

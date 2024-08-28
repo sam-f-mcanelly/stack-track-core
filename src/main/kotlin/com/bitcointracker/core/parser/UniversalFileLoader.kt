@@ -1,4 +1,4 @@
-package com.bitcointracker.core.local
+package com.bitcointracker.core.parser
 
 import com.bitcointracker.core.mapper.CoinbaseFillsNormalizingMapper
 import com.bitcointracker.core.mapper.StrikeTransactionNormalizingMapper
@@ -11,7 +11,7 @@ class UniversalFileLoader @Inject constructor(
     private val strikeAccountAnnualStatementFileLoader: StrikeAccountAnnualStatementFileLoader,
     private val strikeAccountStatementFileLoader: StrikeAccountStatementFileLoader,
     private val coinbaseFillsNormalizingMapper: CoinbaseFillsNormalizingMapper,
-    private val coinbaseFillsFileLoader: CoinbaseFillsFileLoader,
+    private val coinbaseProFillsFileLoader: CoinbaseProFillsFileLoader,
 ) {
     fun loadFiles(files: List<File>): List<NormalizedTransaction>
         = files.map { loadFile(it) }
@@ -22,21 +22,28 @@ class UniversalFileLoader @Inject constructor(
         println("Loading file: ${file.absolutePath}")
         return if (file.name.contains("annual transactions")) {
             println("Loading a strike annual statement...")
-            val transactions = strikeAccountAnnualStatementFileLoader.readCsv(file.absolutePath)
+            val transactions = strikeAccountAnnualStatementFileLoader.readCsv(loadLocalFile(file, 1))
             strikeTransactionNormalizingMapper.normalizeTransactions(transactions)
         } else if (file.name.contains("Account statement")) {
             println("Loading a strike monthly statement...")
             strikeTransactionNormalizingMapper.normalizeTransactions(
-                strikeAccountStatementFileLoader.readCsv(file.absolutePath)
+                strikeAccountStatementFileLoader.readCsv(loadLocalFile(file, 1))
             )
         } else if (file.name.contains("_fills")) {
             println("Loading a coinbase fills report...")
             coinbaseFillsNormalizingMapper.normalizeTransactions(
-                coinbaseFillsFileLoader.readCsv(file.absolutePath)
+                coinbaseProFillsFileLoader.readCsv(loadLocalFile(file, 1))
             )
         } else {
             println("Ignoring unsupported file: " + file.name)
             listOf()
         }
+    }
+
+    // Drop 4 for coinbase standard, 1 otherwise
+    fun loadLocalFile(file: File, numLinesToDrop: Int): String {
+        return file.useLines { lines ->
+            lines.drop(numLinesToDrop)
+        }.joinToString { "\n" }
     }
 }
