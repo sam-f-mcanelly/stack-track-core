@@ -2,9 +2,12 @@ package com.bitcointracker.service
 
 import com.bitcointracker.core.TransactionCache
 import com.bitcointracker.core.parser.UniversalFileLoader
+import com.bitcointracker.model.jackson.ExchangeAmountDeserializer
+import com.bitcointracker.model.jackson.ExchangeAmountSerializer
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
@@ -24,21 +27,10 @@ class BackendService @Inject constructor(
     }
 
     override fun loadInput(input: List<String>) {
-        println("Input Received: \n${input.first()}")
-
         println("Parsing transactions...")
         val transactions = input.flatMap {
             fileLoader.loadFromFileContents("annual transactions", it.split("\n").drop(1).joinToString("\n"))
         }
-        println("Parsed transactions: \n")
-        println(transactions.joinToString(","))
-        val mapper: ObjectMapper = jacksonObjectMapper()
-        val exchangeAmount = ExchangeAmount(100.0, "USD")
-        val jsonString = mapper.writeValueAsString(exchangeAmount)
-        println("Jackson Test of exchange amount: \n")
-        println(jsonString)
-        println("\n\nJackson test of transaction: \n")
-        println(mapper.writeValueAsString(transactions[0]))
 
         TransactionCache.addTransactions(transactions)
     }

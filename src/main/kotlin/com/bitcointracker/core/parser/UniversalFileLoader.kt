@@ -24,9 +24,6 @@ class UniversalFileLoader @Inject constructor(
     }
 
     fun loadFromFileContents(fileType: String, contents: String): List<NormalizedTransaction> {
-        println("Loading from file contents...")
-        println("$contents")
-
         return if (fileType.contains("annual transactions")) {
             println("Loading a strike annual statement...")
             val transactions = strikeAccountAnnualStatementFileLoader.readCsv(contents)

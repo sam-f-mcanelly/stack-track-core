@@ -3,7 +3,12 @@ package com.bitcointracker
 import com.bitcointracker.core.TransactionCache
 import com.bitcointracker.dagger.component.AppComponent
 import com.bitcointracker.dagger.component.DaggerAppComponent
+import com.bitcointracker.model.jackson.ExchangeAmountDeserializer
+import com.bitcointracker.model.jackson.ExchangeAmountSerializer
+import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -32,7 +37,21 @@ fun Application.module(appComponent: AppComponent) {
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
-            registerModule(KotlinModule())
+            registerModule(
+                KotlinModule.Builder()
+                    .withReflectionCacheSize(512)
+                    .configure(KotlinFeature.NullToEmptyCollection, false)
+                    .configure(KotlinFeature.NullToEmptyMap, false)
+                    .configure(KotlinFeature.NullIsSameAsDefault, false)
+                    .configure(KotlinFeature.SingletonSupport, false)
+                    .configure(KotlinFeature.StrictNullChecks, false)
+                    .build()
+            )
+            val module = SimpleModule().apply {
+                addSerializer(ExchangeAmount::class.java, ExchangeAmountSerializer())
+                addDeserializer(ExchangeAmount::class.java, ExchangeAmountDeserializer())
+            }
+            registerModule(module)
         }
     }
 
