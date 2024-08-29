@@ -4,6 +4,7 @@ import com.bitcointracker.core.TransactionCache
 import com.bitcointracker.core.parser.UniversalFileLoader
 import com.bitcointracker.model.jackson.ExchangeAmountDeserializer
 import com.bitcointracker.model.jackson.ExchangeAmountSerializer
+import com.bitcointracker.model.jackson.PaginatedNormalizedTransactions
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.fasterxml.jackson.databind.ObjectMapper

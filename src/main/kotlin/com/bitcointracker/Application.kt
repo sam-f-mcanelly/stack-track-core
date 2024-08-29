@@ -62,28 +62,12 @@ fun Application.module(appComponent: AppComponent) {
     }
 
     routing {
-        get("/api/items") {
-            println("Calling backend service")
-            try {
-                call.respondText { service.getTransactions()[0].toString() }
-            } catch (ex: Exception) {
-                call.respondText { "Internal failure ${ex.localizedMessage}" }
-            }
-        }
         get("/api/data") {
-            println("Paginated loading of items")
-            val page = call.parameters["page"]?.toIntOrNull() ?: 1
-            val pageSize = call.parameters["pageSize"]?.toIntOrNull() ?: 50
-
             try {
                 // Load items for the specific page
-                val items = service
-                    .getTransactions()
-                    .drop((page - 1) * pageSize)
-                    .take(pageSize)
+                val items = service.getTransactions()
 
                 println("Cache size: ${TransactionCache.getAllTransactions().size}")
-                println("Returning ${items.size} items")
 
                 call.respond(items)
             } catch (ex: Exception) {
