@@ -7,9 +7,10 @@ import com.fasterxml.jackson.databind.JsonNode
 
 class ExchangeAmountDeserializer : JsonDeserializer<ExchangeAmount>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ExchangeAmount {
-        val node: JsonNode = p.codec.readTree(p)
-        val amount = node.get("amount").asDouble()
-        val unit = node.get("unit").asText()
+        val exchangeAmountSerialized: String = p.text.trim()
+        val components = exchangeAmountSerialized.split(" ")
+        val amount = components[0].toDouble()
+        val unit = components[1]
         return ExchangeAmount(amount, unit)
     }
 }

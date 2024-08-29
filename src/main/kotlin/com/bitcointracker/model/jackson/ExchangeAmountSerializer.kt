@@ -7,9 +7,6 @@ import com.fasterxml.jackson.databind.SerializerProvider
 
 class ExchangeAmountSerializer : JsonSerializer<ExchangeAmount>() {
     override fun serialize(value: ExchangeAmount, gen: JsonGenerator, serializers: SerializerProvider) {
-        gen.writeStartObject()
-        gen.writeNumberField("amount", value.amount)
-        gen.writeStringField("unit", value.unit)
-        gen.writeEndObject()
+        gen.writeString("${value.amount} ${value.unit}")
     }
 }
