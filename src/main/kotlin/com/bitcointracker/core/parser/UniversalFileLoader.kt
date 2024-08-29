@@ -20,30 +20,37 @@ class UniversalFileLoader @Inject constructor(
 
     fun loadFile(file: File): List<NormalizedTransaction> {
         println("Loading file: ${file.absolutePath}")
-        return if (file.name.contains("annual transactions")) {
+        return loadFromFileContents(file.name, loadLocalFile(file))
+    }
+
+    fun loadFromFileContents(fileType: String, contents: String): List<NormalizedTransaction> {
+        println("Loading from file contents...")
+        println("$contents")
+
+        return if (fileType.contains("annual transactions")) {
             println("Loading a strike annual statement...")
-            val transactions = strikeAccountAnnualStatementFileLoader.readCsv(loadLocalFile(file, 1))
+            val transactions = strikeAccountAnnualStatementFileLoader.readCsv(contents)
             strikeTransactionNormalizingMapper.normalizeTransactions(transactions)
-        } else if (file.name.contains("Account statement")) {
+        } else if (fileType.contains("Account statement")) {
             println("Loading a strike monthly statement...")
             strikeTransactionNormalizingMapper.normalizeTransactions(
-                strikeAccountStatementFileLoader.readCsv(loadLocalFile(file, 1))
+                strikeAccountStatementFileLoader.readCsv(contents)
             )
-        } else if (file.name.contains("_fills")) {
+        } else if (fileType.contains("_fills")) {
             println("Loading a coinbase fills report...")
             coinbaseFillsNormalizingMapper.normalizeTransactions(
-                coinbaseProFillsFileLoader.readCsv(loadLocalFile(file, 1))
+                coinbaseProFillsFileLoader.readCsv(contents)
             )
         } else {
-            println("Ignoring unsupported file: " + file.name)
+            println("Ignoring unsupported file: " + fileType)
             listOf()
         }
     }
 
     // Drop 4 for coinbase standard, 1 otherwise
-    fun loadLocalFile(file: File, numLinesToDrop: Int): String {
+    fun loadLocalFile(file: File): String {
         return file.useLines { lines ->
-            lines.drop(numLinesToDrop)
+            lines
         }.joinToString { "\n" }
     }
 }

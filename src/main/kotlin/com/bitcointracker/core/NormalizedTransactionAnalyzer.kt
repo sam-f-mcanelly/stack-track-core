@@ -45,7 +45,6 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
                         val buyTransaction = buyQueue.first()
 
                         if (buyTransaction.assetAmount.amount <= remainingAmountToSell.amount) {
-                            println("")
                             val spent = buyTransaction.transactionAmountUSD
                             val returned = ExchangeAmount(
                                 buyTransaction.assetAmount.amount * transaction.assetValueUSD.amount,

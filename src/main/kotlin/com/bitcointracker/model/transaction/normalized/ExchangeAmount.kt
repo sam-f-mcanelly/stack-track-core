@@ -1,11 +1,12 @@
 package com.bitcointracker.model.transaction.normalized
 
-import kotlinx.serialization.Serializable
+import com.fasterxml.jackson.annotation.JsonProperty
 import kotlin.math.absoluteValue
 
-@Serializable
 data class ExchangeAmount(
+    @JsonProperty("amount")
     val amount: Double,
+    @JsonProperty("unit")
     val unit: String, // TODO make type
 ) : Comparable<ExchangeAmount> {
 

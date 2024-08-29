@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMapper<StrikeTransaction> {
     override fun normalizeTransaction(transaction: StrikeTransaction): NormalizedTransaction {
-        // println("Normalizing transaction " + transaction.transactionId)
+        println("Normalizing transaction " + transaction.transactionId)
 
         return when (transaction.type) {
             StrikeTransactionType.DEPOSIT -> normalizeDeposit(transaction)

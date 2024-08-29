@@ -1,12 +1,15 @@
 package com.bitcointracker
 
+import com.bitcointracker.core.TransactionCache
 import com.bitcointracker.dagger.component.AppComponent
 import com.bitcointracker.dagger.component.DaggerAppComponent
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.http.*
 import io.ktor.http.content.*
+import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.install
@@ -25,8 +28,12 @@ fun main() {
 }
 
 fun Application.module(appComponent: AppComponent) {
+    val service = appComponent.getBackendService()
     install(ContentNegotiation) {
-        json()
+        jackson {
+            enable(SerializationFeature.INDENT_OUTPUT)
+            registerModule(KotlinModule())
+        }
     }
 
     install(CORS) {
@@ -36,12 +43,32 @@ fun Application.module(appComponent: AppComponent) {
     }
 
     routing {
-        get("/api/data") {
+        get("/api/items") {
             println("Calling backend service")
             try {
-                call.respondText { appComponent.getBackendService().returnHelloWorld() }
+                call.respondText { service.getTransactions()[0].toString() }
             } catch (ex: Exception) {
                 call.respondText { "Internal failure ${ex.localizedMessage}" }
+            }
+        }
+        get("/api/data") {
+            println("Paginated loading of items")
+            val page = call.parameters["page"]?.toIntOrNull() ?: 1
+            val pageSize = call.parameters["pageSize"]?.toIntOrNull() ?: 50
+
+            try {
+                // Load items for the specific page
+                val items = service
+                    .getTransactions()
+                    .drop((page - 1) * pageSize)
+                    .take(pageSize)
+
+                println("Cache size: ${TransactionCache.getAllTransactions().size}")
+                println("Returning ${items.size} items")
+
+                call.respond(items)
+            } catch (ex: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
             }
         }
         post("/api/upload") {
@@ -58,9 +85,10 @@ fun Application.module(appComponent: AppComponent) {
                     part.dispose()
                 }
 
-                call.respond(appComponent.getBackendService().loadInput(files.map { it.toString(Charsets.UTF_8) }))
+                service.loadInput(files.map { it.toString(Charsets.UTF_8) })
+                call.respond(HttpStatusCode.OK, "Files uploaded and stored successfully.")
             } catch (ex: Exception) {
-                call.respondText { "Upload failed: ${ex.localizedMessage}" }
+                call.respond(HttpStatusCode.InternalServerError,"Upload failed: ${ex.localizedMessage}")
             }
         }
     }

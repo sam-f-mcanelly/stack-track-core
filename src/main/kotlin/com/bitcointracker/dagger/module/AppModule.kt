@@ -1,6 +1,6 @@
 package com.bitcointracker.dagger.module
 
-import com.bitcointracker.core.local.UniversalFileLoader
+import com.bitcointracker.core.parser.UniversalFileLoader
 import com.bitcointracker.service.BackendService
 import dagger.Module
 import dagger.Provides

@@ -3,21 +3,27 @@ package com.bitcointracker.core
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
 
-class TransactionCache(
-    private val transactions: List<NormalizedTransaction>
-) {
+object TransactionCache {
 
-    private var transactionsByType: Map<NormalizedTransactionType, List<NormalizedTransaction>>
-    private var transactionsById: Map<String, NormalizedTransaction>
-    private var transactionsByAsset: Map<String, List<NormalizedTransaction>>
+    private var transactions: MutableList<NormalizedTransaction> = mutableListOf()
+    private var transactionsByType: Map<NormalizedTransactionType, List<NormalizedTransaction>> = mutableMapOf()
+    private var transactionsById: Map<String, NormalizedTransaction> = mutableMapOf()
+    private var transactionsByAsset: Map<String, List<NormalizedTransaction>> = mutableMapOf()
 
-    init {
-        transactionsByType = transactions.groupBy { it.type }
-        transactionsById = transactions.associateBy { it.id }
-        transactionsByAsset = transactions.groupBy { it.assetAmount.unit }
+    // TODO allow for adding
+    fun addTransactions(newTransactions: List<NormalizedTransaction>) {
+        transactionsByType = newTransactions.groupBy { it.type }
+        transactionsById = newTransactions.associateBy { it.id }
+        transactionsByAsset = newTransactions.groupBy { it.assetAmount.unit }
+        this.transactions.addAll(newTransactions)
     }
 
-    fun getAllTransactions() = transactions
+    fun getAllTransactions(): List<NormalizedTransaction> {
+        println("getAllTransactions")
+        return transactions.toMutableList()
+    }
+
+    fun clearAllTransactions() = transactions.clear()
 
     fun getTransactionsByType(vararg types: NormalizedTransactionType): List<NormalizedTransaction> {
         return types.flatMap {
