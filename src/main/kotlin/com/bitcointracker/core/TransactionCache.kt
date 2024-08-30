@@ -25,13 +25,16 @@ object TransactionCache {
 
     fun clearAllTransactions() = transactions.clear()
 
-    fun getTransactionsByType(vararg types: NormalizedTransactionType): List<NormalizedTransaction> {
-        return types.flatMap {
+    fun getTransactionsByType(vararg types: NormalizedTransactionType): List<NormalizedTransaction>
+        = types.flatMap {
             transactionsByType.getOrDefault(it, listOf())
         }
-    }
 
-    fun getTransactionsByAsset(asset: String) = transactionsByAsset.getOrDefault(asset, listOf())
+    fun getTransactionsByAsset(vararg assets: String): List<NormalizedTransaction>
+         = assets.flatMap {
+            transactionsByAsset.getOrDefault(it, listOf())
+        }
+
 
     fun getTransactionById(id: String) = transactionsById[id]
 }

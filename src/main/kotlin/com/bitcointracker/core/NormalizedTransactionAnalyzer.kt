@@ -61,6 +61,8 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
 
     fun computeTransactionResults(
         transactionCache: TransactionCache,
+        startDate: Date,
+        endDate: Date,
         asset: String,
         currentAssetPrice: ExchangeAmount
     ): ProfitStatement {
@@ -69,10 +71,14 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
         val taxLotStatements = mutableListOf<TaxLotStatement>()
         val transactions = transactionCache.getTransactionsByAsset(asset)
             .intersect(transactionCache.getTransactionsByType(
-                    NormalizedTransactionType.BUY,
-                    NormalizedTransactionType.SELL
+                NormalizedTransactionType.BUY,
+                NormalizedTransactionType.SELL
             ).toSet()
-        )
+        ).filter {
+            if (it.type == NormalizedTransactionType.SELL) {
+                it.timestamp.after(startDate) && it.timestamp.before(endDate)
+            } else true
+        }
 
         // Sort transactions by timestamp to ensure FIFO based on time
         val sortedTransactions = transactions.sortedBy { it.timestamp }

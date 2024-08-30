@@ -9,8 +9,6 @@ import javax.inject.Inject
 
 class CoinbaseFillsNormalizingMapper @Inject constructor() : NormalizingMapper<CoinbaseFillsTransaction> {
     override fun normalizeTransaction(transaction: CoinbaseFillsTransaction): NormalizedTransaction {
-        // println("Normalizing transaction " + transaction.tradeId)
-
         val type = when (transaction.side) {
             CoinbaseFillsSide.BUY -> NormalizedTransactionType.BUY
             CoinbaseFillsSide.SELL -> NormalizedTransactionType.SELL

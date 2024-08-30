@@ -12,15 +12,20 @@ import javax.inject.Inject
 
 class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction>  {
 
-    override fun readCsv(fileContents: String): List<StrikeTransaction> {
+    override fun readCsv(lines: List<String>): List<StrikeTransaction> {
         val dateFormatter = SimpleDateFormat("MMM dd yyyy HH:mm:ss")
 
-        return fileContents.split("\n").
-            filter{
-                // number of parameters in this documents
-                it.split(",").size > 5
+        return lines
+            .filter {
+                if (it.split(",").size < 13) {
+                    println("Skipping invalid line: $it")
+                    false
+                } else {
+                    true
+                }
             }
             .map { line ->
+                println("Reading line!")
                 val columns = line.split(",")
                 val date = dateFormatter.parse(columns[1]) // Parsing "Jan 01 2024 13:30:07"
 
