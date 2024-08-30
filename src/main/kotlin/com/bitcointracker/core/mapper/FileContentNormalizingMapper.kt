@@ -18,19 +18,19 @@ class FileContentNormalizingMapper @Inject constructor() {
         var fileType: FileType? = null
         for (i in 0 until SEARCH_LENGTH){
             val trimmedLine = lines[i].trim()
-            println("ANALYZING THE FOLLOWING LINE: ")
-            println(lines[i])
-            println("STRIKE_ANNUAL header")
             println(STRIKE_ANNUAL_TRANSACTIONS_HEADER)
             if (trimmedLine == STRIKE_ANNUAL_TRANSACTIONS_HEADER) {
                 println("STRIKE ANNUAL TRANSACTIONS HEADER FOUND")
                 fileType = FileType.STRIKE_ANNUAL
             } else if (trimmedLine == STRIKE_MONTHLY_TRANSACTIONS_COLUMNS) {
+                println("STRIKE MONTHLY TRANSACTIONS HEADER FOUND")
                 fileType = FileType.STRIKE_MONTHLY
             } else if (trimmedLine == COINBASE_FILLS_TRANSACTIONS_COLUMNS) {
+                println("COINBASE PRO FILLS TRANSACTIONS HEADER FOUND")
                 fileType = FileType.COINBASE_PRO_FILLS
             } else if (trimmedLine == COINBASE_ANNUAL_TRANSACTIONS_COLUMNS) {
-                throw RuntimeException("Unable to determine file type!")
+                println("COINBASE ANNUAL TRANSACTIONS HEADER FOUND")
+                fileType = FileType.COINBASE_ANNUAL
             }
 
             fileType?.let {

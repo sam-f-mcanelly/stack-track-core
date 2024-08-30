@@ -7,7 +7,7 @@ import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
 import com.bitcointracker.model.transaction.normalized.TransactionSource
 import javax.inject.Inject
 
-class CoinbaseFillsNormalizingMapper @Inject constructor() : NormalizingMapper<CoinbaseFillsTransaction> {
+class CoinbaseProFillsNormalizingMapper @Inject constructor() : NormalizingMapper<CoinbaseFillsTransaction> {
     override fun normalizeTransaction(transaction: CoinbaseFillsTransaction): NormalizedTransaction {
         val type = when (transaction.side) {
             CoinbaseFillsSide.BUY -> NormalizedTransactionType.BUY
@@ -17,7 +17,7 @@ class CoinbaseFillsNormalizingMapper @Inject constructor() : NormalizingMapper<C
         return NormalizedTransaction(
             id = transaction.tradeId,
             type = type,
-            source = TransactionSource.COINBASE_FILL,
+            source = TransactionSource.COINBASE_PRO_FILL,
             transactionAmountFiat = transaction.total.absoluteValue,
             fee = transaction.fee.absoluteValue,
             assetAmount = transaction.size.absoluteValue,

@@ -71,6 +71,7 @@ fun Application.module(appComponent: AppComponent) {
 
                 call.respond(items)
             } catch (ex: Exception) {
+                println(ex)
                 call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
             }
         }
@@ -79,6 +80,7 @@ fun Application.module(appComponent: AppComponent) {
                 val fiatGain = service.getFiatGain(30, "USD", "BTC", )
                 call.respond(fiatGain)
             } catch (ex: Exception) {
+                println(ex)
                 call.respond(HttpStatusCode.InternalServerError, "analysis failed: ${ex.localizedMessage}")
             }
         }
@@ -86,7 +88,7 @@ fun Application.module(appComponent: AppComponent) {
             try {
                 call.respond(service.getProfitStatement())
             } catch (ex: Exception) {
-
+                println(ex)
             }
         }
         post("/api/upload") {
@@ -106,6 +108,7 @@ fun Application.module(appComponent: AppComponent) {
                 service.loadInput(files.map { it.toString(Charsets.UTF_8) })
                 call.respond(HttpStatusCode.OK, "Files uploaded and stored successfully.")
             } catch (ex: Exception) {
+                println(ex)
                 call.respond(HttpStatusCode.InternalServerError,"Upload failed: ${ex.localizedMessage}")
             }
         }

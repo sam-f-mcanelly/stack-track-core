@@ -36,6 +36,7 @@ class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<S
                     state = StrikeTransactionState.valueOf(columns[4].uppercase(Locale.ROOT).replace(" ", "_")),
                     source = StrikeTransactionSource.ANNUAL_STATEMENT,
                     fee = ExchangeAmount(0.0, "USD") ,
+                    // TODO remove nullability
                     asset1 = columns[5].toDoubleOrNull()?.let { ExchangeAmount(it, columns[6]) },
                     asset2 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
                     assetValue = columns[9].toDoubleOrNull()?.let { ExchangeAmount(it, "USD") },

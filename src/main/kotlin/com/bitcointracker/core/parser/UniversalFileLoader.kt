@@ -1,6 +1,7 @@
 package com.bitcointracker.core.parser
 
-import com.bitcointracker.core.mapper.CoinbaseFillsNormalizingMapper
+import com.bitcointracker.core.mapper.CoinbaseProFillsNormalizingMapper
+import com.bitcointracker.core.mapper.CoinbaseStandardTransactionNormalizingMapper
 import com.bitcointracker.core.mapper.FileContentNormalizingMapper
 import com.bitcointracker.core.mapper.StrikeTransactionNormalizingMapper
 import com.bitcointracker.model.file.FileType
@@ -13,8 +14,10 @@ class UniversalFileLoader @Inject constructor(
     private val strikeTransactionNormalizingMapper: StrikeTransactionNormalizingMapper,
     private val strikeAccountAnnualStatementFileLoader: StrikeAccountAnnualStatementFileLoader,
     private val strikeAccountStatementFileLoader: StrikeAccountStatementFileLoader,
-    private val coinbaseFillsNormalizingMapper: CoinbaseFillsNormalizingMapper,
+    private val coinbaseProFillsNormalizingMapper: CoinbaseProFillsNormalizingMapper,
     private val coinbaseProFillsFileLoader: CoinbaseProFillsFileLoader,
+    private val coinbaseStandardTransactionNormalizingMapper: CoinbaseStandardTransactionNormalizingMapper,
+    private val coinbaseAnnualFileLoader: CoinbaseStandardAnnualStatementFileLoader,
 ) {
     fun loadFiles(files: List<File>): List<NormalizedTransaction>
         = files.map { loadFile(it) }
@@ -42,8 +45,14 @@ class UniversalFileLoader @Inject constructor(
             }
             FileType.COINBASE_PRO_FILLS -> {
                 println("Loading a coinbase fills report...")
-                coinbaseFillsNormalizingMapper.normalizeTransactions(
+                coinbaseProFillsNormalizingMapper.normalizeTransactions(
                     coinbaseProFillsFileLoader.readCsv(normalizedFile.fileLines)
+                )
+            }
+            FileType.COINBASE_ANNUAL -> {
+                println("Loading a coinbase annual report...")
+                coinbaseStandardTransactionNormalizingMapper.normalizeTransactions(
+                    coinbaseAnnualFileLoader.readCsv(normalizedFile.fileLines)
                 )
             }
             else -> {
