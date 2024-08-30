@@ -74,6 +74,21 @@ fun Application.module(appComponent: AppComponent) {
                 call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
             }
         }
+        get("/api/portfolio_value") {
+            try {
+                val fiatGain = service.getFiatGain(30, "USD", "BTC", )
+                call.respond(fiatGain)
+            } catch (ex: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, "analysis failed: ${ex.localizedMessage}")
+            }
+        }
+        get("/api/profit_statement") {
+            try {
+                call.respond(service.getProfitStatement())
+            } catch (ex: Exception) {
+
+            }
+        }
         post("/api/upload") {
             try {
                 val multipart = call.receiveMultipart()

@@ -9,10 +9,8 @@ import okhttp3.OkHttpClient
 @Module
 class ExternalClientModule {
     @Provides
-    @Singleton
     fun provideOkHttpClient() = OkHttpClient()
 
     @Provides
-    @Singleton
     fun provideGson() = Gson()
 }

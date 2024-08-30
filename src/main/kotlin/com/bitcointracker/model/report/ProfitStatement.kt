@@ -8,6 +8,7 @@ data class ProfitStatement(
     val remainingUnits: ExchangeAmount,
     val soldUnits: ExchangeAmount,
     val currentValue: ExchangeAmount,
+    val costBasis: ExchangeAmount,
     val realizedProfit: ExchangeAmount,
     val unrealizedProfit: ExchangeAmount,
     val realizedProfitPercentage: Double,

@@ -33,7 +33,7 @@ class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<S
                     fee = ExchangeAmount(0.0, "USD") ,
                     asset1 = columns[5].toDoubleOrNull()?.let { ExchangeAmount(it, columns[6]) },
                     asset2 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
-                    assetValue = columns[9].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
+                    assetValue = columns[9].toDoubleOrNull()?.let { ExchangeAmount(it, "USD") },
                     balance = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11].uppercase(Locale.ROOT)) },
                     balanceBtc = columns[12].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                     destination = if (columns.size > 13) columns[13] else null,

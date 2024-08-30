@@ -5,7 +5,7 @@ import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
 
 object TransactionCache {
 
-    private var transactions: MutableList<NormalizedTransaction> = mutableListOf()
+    private var transactions: MutableSet<NormalizedTransaction> = mutableSetOf()
     private var transactionsByType: Map<NormalizedTransactionType, List<NormalizedTransaction>> = mutableMapOf()
     private var transactionsById: Map<String, NormalizedTransaction> = mutableMapOf()
     private var transactionsByAsset: Map<String, List<NormalizedTransaction>> = mutableMapOf()

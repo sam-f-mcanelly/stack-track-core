@@ -28,24 +28,24 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             id = transaction.transactionId,
             source = getSource(transaction),
             type = NormalizedTransactionType.DEPOSIT,
-            transactionAmountUSD = transaction.asset1!!,
+            transactionAmountFiat = transaction.asset1!!,
             fee = ExchangeAmount(0.0, "USD"), // Deposits are free
-            assetAmount = ExchangeAmount(0.0, "USD"),
-            assetValueUSD = ExchangeAmount(0.0, "USD"),
+            assetAmount = transaction.asset1!!,
+            assetValueFiat = ExchangeAmount(1.0, "USD"),
             timestamp = transaction.date
         )
 
     private fun normalizeTrade(transaction: StrikeTransaction): NormalizedTransaction {
         var transactionType: NormalizedTransactionType
-        var transactionAmountUSD: ExchangeAmount
+        var transactionAmountFiat: ExchangeAmount
         var assetAmount: ExchangeAmount
         if (transaction.asset1!!.unit != "USD") {
             transactionType = NormalizedTransactionType.SELL
-            transactionAmountUSD = transaction.asset2!!
+            transactionAmountFiat = transaction.asset2!!
             assetAmount = transaction.asset1
         } else {
             transactionType = NormalizedTransactionType.BUY
-            transactionAmountUSD = transaction.asset1.absoluteValue
+            transactionAmountFiat = transaction.asset1.absoluteValue
             assetAmount = transaction.asset2!!
         }
 
@@ -53,10 +53,10 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             id = transaction.transactionId,
             type = transactionType,
             source = getSource(transaction),
-            transactionAmountUSD = transactionAmountUSD,
+            transactionAmountFiat = transactionAmountFiat,
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
             assetAmount = assetAmount,
-            assetValueUSD = transaction.assetValue ?: ExchangeAmount(0.0, "USD"),
+            assetValueFiat = transaction.assetValue ?: ExchangeAmount(0.0, "USD"),
             timestamp = transaction.date,
         )
     }
@@ -73,10 +73,10 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             id = transaction.transactionId,
             type = NormalizedTransactionType.WITHDRAWAL,
             source = getSource(transaction),
-            transactionAmountUSD = transaction.asset1.absoluteValue,
+            transactionAmountFiat = transaction.asset1.absoluteValue,
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
             assetAmount = transaction.asset1.absoluteValue,
-            assetValueUSD = transaction.asset1.absoluteValue,
+            assetValueFiat = transaction.asset1.absoluteValue,
             timestamp = transaction.date,
         )
     }
@@ -92,10 +92,10 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             id = transaction.transactionId,
             type = NormalizedTransactionType.WITHDRAWAL,
             source = getSource(transaction),
-            transactionAmountUSD = ExchangeAmount(-1.0, "USD"), // TODO populate
+            transactionAmountFiat = ExchangeAmount(-1.0, "USD"), // TODO populate
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
             assetAmount = transaction.asset2!!.absoluteValue,
-            assetValueUSD = ExchangeAmount(-1.0, "USD"), // TODO populate
+            assetValueFiat = ExchangeAmount(-1.0, "USD"), // TODO populate
             timestamp = transaction.date,
         )
     }
@@ -105,10 +105,10 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             id = transaction.transactionId,
             type = NormalizedTransactionType.WITHDRAWAL,
             source = getSource(transaction),
-            transactionAmountUSD = ExchangeAmount(-1.0, "USD"),
+            transactionAmountFiat = ExchangeAmount(-1.0, "USD"),
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
             assetAmount = transaction.asset2!!.absoluteValue,
-            assetValueUSD = ExchangeAmount(0.0, "USD"), // TODO call API for this
+            assetValueFiat = ExchangeAmount(0.0, "USD"), // TODO call API for this
             timestamp = transaction.date,
             address = transaction.destination ?: ""
         )
@@ -118,10 +118,10 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             id = transaction.transactionId,
             type = NormalizedTransactionType.BROKER_CREDIT,
             source = getSource(transaction),
-            transactionAmountUSD = transaction.asset1!!.absoluteValue,
+            transactionAmountFiat = transaction.asset1!!.absoluteValue,
             fee = ExchangeAmount(0.0, "USD"), // Deposits are free
             assetAmount = transaction.asset1!!.absoluteValue,
-            assetValueUSD = ExchangeAmount(-1.0, "USD"), // TODO populate
+            assetValueFiat = ExchangeAmount(-1.0, "USD"), // TODO populate
             timestamp = transaction.date
         )
 

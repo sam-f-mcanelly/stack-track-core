@@ -2,7 +2,6 @@ package com.bitcointracker.external.client
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import java.io.IOException

@@ -20,10 +20,10 @@ class CoinbaseFillsNormalizingMapper @Inject constructor() : NormalizingMapper<C
             id = transaction.tradeId,
             type = type,
             source = TransactionSource.COINBASE_FILL,
-            transactionAmountUSD = transaction.total.absoluteValue,
+            transactionAmountFiat = transaction.total.absoluteValue,
             fee = transaction.fee.absoluteValue,
             assetAmount = transaction.size.absoluteValue,
-            assetValueUSD = transaction.price.absoluteValue,
+            assetValueFiat = transaction.price.absoluteValue,
             timestamp = transaction.createdAt,
         )
     }

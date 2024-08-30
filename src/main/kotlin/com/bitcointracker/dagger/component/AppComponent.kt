@@ -1,5 +1,6 @@
 package com.bitcointracker.dagger.component
 
+import com.bitcointracker.core.NormalizedTransactionAnalyzer
 import com.bitcointracker.dagger.module.ExternalClientModule
 import com.bitcointracker.service.BackendService
 import dagger.Component
