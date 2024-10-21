@@ -6,78 +6,78 @@ import com.bitcointracker.model.tax.TaxType
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
-import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
 class NormalizedTransactionAnalyzer @Inject constructor(){
 
-    fun computeFiatGain(
-        transactionCache: TransactionCache,
-        days: Int,
-        currency: String,
-        asset: String,
-    ): List<Double> {
-        val calendar = Calendar.getInstance()
-        val currentDay = calendar.get(Calendar.DAY_OF_YEAR)
+    fun getAccumulation(days: Int, asset: String): List<ExchangeAmount> {
+        // Calculate the cutoff date n days ago
+        val today = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 0); clear(Calendar.MINUTE); clear(Calendar.SECOND); clear(Calendar.MILLISECOND) }.time
+        val cutoffDate = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, -days)
+        }.time
 
-        val bitcoinTransactions = transactionCache.getTransactionsByAsset("BTC")
-            .filter {
-                it.type == NormalizedTransactionType.BUY || it.type == NormalizedTransactionType.SELL
+        // Filter transactions that are buys within the last n days
+        val recentBuys = TransactionCache.getTransactionsByAsset(asset).filter { transaction ->
+            transaction.type == NormalizedTransactionType.BUY && transaction.timestamp.after(cutoffDate)
+        }.sortedBy { it.timestamp }
+        val recentSells = TransactionCache.getTransactionsByAsset(asset).filter { transaction ->
+            transaction.type == NormalizedTransactionType.SELL && transaction.timestamp.after(cutoffDate)
+        }.sortedBy { it.timestamp }
+
+        // Initialize the cumulative amounts list
+        val cumulativeAmounts = MutableList(days) { ExchangeAmount(0.0, asset) }
+        var totalAmount = ExchangeAmount(0.0, asset)
+
+        // Track each day's cumulative total
+        for (day in 0 until days) {
+            val dayStart = Calendar.getInstance().apply {
+                time = today
+                add(Calendar.DAY_OF_YEAR, -(days - 1 - day))
+            }.time
+            val dayEnd = Calendar.getInstance().apply {
+                time = dayStart
+                add(Calendar.DAY_OF_YEAR, 1)
+            }.time
+
+            // Sum up transactions that occurred on this specific day
+            val dayBuys = recentBuys.filter {
+                it.timestamp.after(dayStart) && it.timestamp.before(dayEnd)
+            }
+            val daySells = recentSells.filter {
+                it.timestamp.after(dayStart) && it.timestamp.before(dayEnd)
             }
 
 
-        val itemValuePerDay = alignAssetValuesWithDates(generateDateSequence(30), bitcoinTransactions)
-
-        val format = SimpleDateFormat("yyyyMMdd")
-
-        // Initialize an array to hold the cumulative item counts
-        val itemCounts = DoubleArray(days) { 0.0 }
-        // Initialize an array for daily net values
-        val dailyNetValues = DoubleArray(days) { 0.0 }
-
-        // Process transactions to update itemCounts
-        bitcoinTransactions.forEach { transaction ->
-            val transactionDate = format.format(transaction.timestamp)
-            val dayIndex = days - (currentDay - transactionDate.toInt()) - 1
-            if (dayIndex in 0 until days) {
-                when (transaction.type) {
-                    NormalizedTransactionType.SELL -> itemCounts[dayIndex] += transaction.assetAmount.amount
-                    NormalizedTransactionType.BUY -> itemCounts[dayIndex] -= transaction.assetAmount.amount
-                    else -> throw RuntimeException("Found invalid transaction!")
-                }
+            for (transaction in dayBuys) {
+                totalAmount += transaction.assetAmount
             }
+            for (transaction in daySells) {
+                totalAmount -= transaction.assetAmount
+            }
+
+            // Store the cumulative amount for the day
+            cumulativeAmounts[day] = totalAmount
         }
 
-        // Calculate cumulative items held and compute net values
-        var cumulativeItems = 0.0
-        for (i in 0 until days) {
-            cumulativeItems += itemCounts[i]
-            dailyNetValues[i] = cumulativeItems * itemValuePerDay[i]
-        }
-
-        return dailyNetValues.toList()
+        return cumulativeAmounts
     }
 
     fun computeTransactionResults(
-        transactionCache: TransactionCache,
-        startDate: Date,
-        endDate: Date,
         asset: String,
         currentAssetPrice: ExchangeAmount
     ): ProfitStatement {
         val buyQueue = mutableListOf<NormalizedTransaction>()
         val soldLots = mutableListOf<NormalizedTransaction>()
         val taxLotStatements = mutableListOf<TaxLotStatement>()
-        val transactions = transactionCache.getTransactionsByAsset(asset)
-            .intersect(transactionCache.getTransactionsByType(
+        val transactions = TransactionCache.getTransactionsByAsset(asset)
+            .intersect(TransactionCache.getTransactionsByType(
                 NormalizedTransactionType.BUY,
                 NormalizedTransactionType.SELL
             ).toSet()
         ).filter {
-            if (it.type == NormalizedTransactionType.SELL) {
-                it.timestamp.after(startDate) && it.timestamp.before(endDate)
-            } else true
+            !it.filedWithIRS
         }
 
         // Sort transactions by timestamp to ensure FIFO based on time
@@ -147,8 +147,9 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
                             )
 
                             val partialAmount = remainingAmountToSell
+                            val id = if (buyTransaction.id.endsWith("-partial")) buyTransaction.id else "${buyTransaction.id}-partial"
                             val updatedBuyTransaction = buyTransaction.copy(
-                                id = "${buyTransaction.id}-partial",
+                                id = id,
                                 transactionAmountFiat = ExchangeAmount((buyTransaction.assetAmount.amount - partialAmount.amount) * buyTransaction.assetValueFiat.amount, buyTransaction.assetValueFiat.unit),
                                 assetAmount = buyTransaction.assetAmount - partialAmount,
                                 assetValueFiat = buyTransaction.assetValueFiat
@@ -177,6 +178,7 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
         val soldUnits = if (soldUnitsList.isNotEmpty()) {
             soldUnitsList.sumOf { it.amount }
         } else 0.0
+
 
         val currentValue = ExchangeAmount((totalBoughtUnits - soldUnits) * currentAssetPrice.amount, currentAssetPrice.unit)
         val remainingCostBasis = buyQueue.map { it.transactionAmountFiat }.reduceOrNull { acc, i -> acc + i } ?: ExchangeAmount(0.0, currentAssetPrice.unit)
@@ -211,32 +213,5 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
         val holdingPeriodInDays = getHoldingPeriod(sellTransaction, buyTransaction)
         val holdingPeriodInYears = holdingPeriodInDays / 365.0
         return if (holdingPeriodInYears > 1) TaxType.LONG_TERM else TaxType.SHORT_TERM
-    }
-
-    fun findNearestTransaction(transactions: List<NormalizedTransaction>, targetDate: Date): NormalizedTransaction? {
-        // Sorting transactions just in case; if they are already sorted this can be omitted
-        val sortedTransactions = transactions.sortedBy { it.timestamp }
-
-        // Fold to find the most appropriate transaction
-        return sortedTransactions.foldRight(null as NormalizedTransaction?) { transaction, nearest ->
-            if (transaction.timestamp.time <= targetDate.time) transaction else nearest
-        }
-    }
-
-    fun alignAssetValuesWithDates(dates: List<Date>, transactions: List<NormalizedTransaction>): List<Double> {
-        return dates.map { date ->
-            findNearestTransaction(transactions, date)?.assetValueFiat?.let {
-                it.amount
-            }
-            0.0
-        }
-    }
-
-    private fun generateDateSequence(days: Int): List<Date> {
-        val calendar = Calendar.getInstance()
-        return (1..days).map {
-            calendar.add(Calendar.DATE, -1)
-            calendar.time
-        }
     }
 }

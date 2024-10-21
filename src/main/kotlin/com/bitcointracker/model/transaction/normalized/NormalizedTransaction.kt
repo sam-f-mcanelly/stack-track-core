@@ -11,6 +11,7 @@ data class NormalizedTransaction(
     var assetAmount: ExchangeAmount,
     val assetValueFiat: ExchangeAmount,
     val timestamp: Date,
+    val timestampText: String,
     val address: String = "",
     val notes: String = "",
     val filedWithIRS: Boolean = false,

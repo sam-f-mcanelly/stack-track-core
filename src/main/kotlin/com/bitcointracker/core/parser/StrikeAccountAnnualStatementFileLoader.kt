@@ -25,7 +25,6 @@ class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<S
                 }
             }
             .map { line ->
-                println("Reading line!")
                 val columns = line.split(",")
                 val date = dateFormatter.parse(columns[1]) // Parsing "Jan 01 2024 13:30:07"
 

@@ -3,6 +3,7 @@ package com.bitcointracker
 import com.bitcointracker.core.TransactionCache
 import com.bitcointracker.dagger.component.AppComponent
 import com.bitcointracker.dagger.component.DaggerAppComponent
+import com.bitcointracker.model.frontend.QuickLookData
 import com.bitcointracker.model.jackson.ExchangeAmountDeserializer
 import com.bitcointracker.model.jackson.ExchangeAmountSerializer
 import com.bitcointracker.model.transaction.normalized.ExchangeAmount
@@ -23,6 +24,9 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.io.ByteArrayInputStream
+import java.util.Date
+import java.util.UUID
 
 fun main() {
     val appComponent = DaggerAppComponent.create()
@@ -34,6 +38,7 @@ fun main() {
 
 fun Application.module(appComponent: AppComponent) {
     val service = appComponent.getBackendService()
+    val gson = appComponent.getGson()
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
@@ -62,35 +67,6 @@ fun Application.module(appComponent: AppComponent) {
     }
 
     routing {
-        get("/api/data") {
-            try {
-                // Load items for the specific page
-                val items = service.getTransactions()
-
-                println("Cache size: ${TransactionCache.getAllTransactions().size}")
-
-                call.respond(items)
-            } catch (ex: Exception) {
-                println(ex)
-                call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
-            }
-        }
-        get("/api/portfolio_value") {
-            try {
-                val fiatGain = service.getFiatGain(30, "USD", "BTC", )
-                call.respond(fiatGain)
-            } catch (ex: Exception) {
-                println(ex)
-                call.respond(HttpStatusCode.InternalServerError, "analysis failed: ${ex.localizedMessage}")
-            }
-        }
-        get("/api/profit_statement") {
-            try {
-                call.respond(service.getProfitStatement())
-            } catch (ex: Exception) {
-                println(ex)
-            }
-        }
         post("/api/upload") {
             try {
                 val multipart = call.receiveMultipart()
@@ -110,6 +86,73 @@ fun Application.module(appComponent: AppComponent) {
             } catch (ex: Exception) {
                 println(ex)
                 call.respond(HttpStatusCode.InternalServerError,"Upload failed: ${ex.localizedMessage}")
+            }
+        }
+        get("/api/download") {
+            try {
+                val date = Date()
+                val transactions = service.getTransactions()
+                val serializedTransactions = gson.toJson(transactions)
+                val jsonFileName = "items-$date-${UUID.randomUUID().toString().substring(0, 6)}.json"  // Unique filename
+                call.response.header(HttpHeaders.ContentDisposition, "attachment; filename=\"$jsonFileName\"")
+                // Convert JSON string to ByteArray and stream it as a response
+                val byteArray = serializedTransactions.toByteArray(Charsets.UTF_8)
+                val inputStream = ByteArrayInputStream(byteArray)
+
+                call.respondOutputStream(
+                    contentType = ContentType.Application.Json,
+                    status = HttpStatusCode.OK
+                ) {
+                    inputStream.copyTo(this)
+                }
+            } catch (ex: Exception) {
+                println(ex)
+            }
+        }
+        get("/api/data") {
+            try {
+                // Load items for the specific page
+                val items = service.getTransactions()
+
+                println("Cache size: ${TransactionCache.getAllTransactions().size}")
+
+                call.respond(items)
+            } catch (ex: Exception) {
+                println(ex)
+                call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
+            }
+        }
+        get("/api/accumulation/token/{token}/days/{days}") {
+            try {
+                val tokenInput = call.parameters["token"] ?: return@get call.respondText(
+                    "Missing or malformed token",
+                    status = HttpStatusCode.BadRequest
+                )
+
+                val dayInput = call.parameters["days"]?.toIntOrNull() ?: return@get call.respondText(
+                    "Days parameter must be a number",
+                    status = HttpStatusCode.BadRequest
+                )
+
+                println("Fetching accumulation data for $tokenInput - $dayInput days")
+
+                val data = service.getAccumulation(dayInput, tokenInput)
+                call.respond(
+                    QuickLookData(
+                        title = "$tokenInput Accumulation",
+                        value = "${data.last()}  $tokenInput",
+                        data = service.getAccumulation(dayInput, tokenInput)
+                    )
+                )
+            } catch (ex: Exception) {
+                println(ex)
+            }
+        }
+        get("/api/profit_statement") {
+            try {
+                call.respond(service.getProfitStatement())
+            } catch (ex: Exception) {
+                println(ex)
             }
         }
     }

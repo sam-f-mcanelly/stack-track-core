@@ -18,7 +18,6 @@ class FileContentNormalizingMapper @Inject constructor() {
         var fileType: FileType? = null
         for (i in 0 until SEARCH_LENGTH){
             val trimmedLine = lines[i].trim()
-            println(STRIKE_ANNUAL_TRANSACTIONS_HEADER)
             if (trimmedLine == STRIKE_ANNUAL_TRANSACTIONS_HEADER) {
                 println("STRIKE ANNUAL TRANSACTIONS HEADER FOUND")
                 fileType = FileType.STRIKE_ANNUAL
@@ -34,9 +33,6 @@ class FileContentNormalizingMapper @Inject constructor() {
             }
 
             fileType?.let {
-                println("Returning a normalized file")
-                println("Normalized file lines")
-                println(lines.drop(i + 1).joinToString("\n"))
                 return NormalizedFile(
                     fileType,
                     lines.drop(i + 1)

@@ -4,7 +4,6 @@ import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
 
 object TransactionCache {
-
     private var transactions: MutableSet<NormalizedTransaction> = mutableSetOf()
     private var transactionsByType: Map<NormalizedTransactionType, List<NormalizedTransaction>> = mutableMapOf()
     private var transactionsById: Map<String, NormalizedTransaction> = mutableMapOf()
@@ -12,15 +11,15 @@ object TransactionCache {
 
     // TODO allow for adding
     fun addTransactions(newTransactions: List<NormalizedTransaction>) {
-        transactionsByType = newTransactions.groupBy { it.type }
-        transactionsById = newTransactions.associateBy { it.id }
-        transactionsByAsset = newTransactions.groupBy { it.assetAmount.unit }
         this.transactions.addAll(newTransactions)
+        transactionsByType = this.transactions.groupBy { it.type }
+        transactionsById = this.transactions.associateBy { it.id }
+        transactionsByAsset = this.transactions.groupBy { it.assetAmount.unit }
     }
 
     fun getAllTransactions(): List<NormalizedTransaction> {
         println("getAllTransactions")
-        return transactions.toMutableList()
+        return transactions.toList()
     }
 
     fun clearAllTransactions() = transactions.clear()
@@ -36,5 +35,5 @@ object TransactionCache {
         }
 
 
-    fun getTransactionById(id: String) = transactionsById[id]
+    fun getTransactionById(id: String): NormalizedTransaction? = transactionsById[id]
 }

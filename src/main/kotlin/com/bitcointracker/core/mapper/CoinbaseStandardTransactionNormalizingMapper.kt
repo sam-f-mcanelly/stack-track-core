@@ -10,7 +10,7 @@ import javax.inject.Inject
 class CoinbaseStandardTransactionNormalizingMapper @Inject constructor() : NormalizingMapper<CoinbaseStandardTransaction> {
     override fun normalizeTransaction(transaction: CoinbaseStandardTransaction): NormalizedTransaction {
         val type = when (transaction.type) {
-            CoinbaseTransactionType.DEPOSIT -> NormalizedTransactionType.BUY
+            CoinbaseTransactionType.DEPOSIT -> NormalizedTransactionType.DEPOSIT
             CoinbaseTransactionType.PRO_WITHDRAWAL -> NormalizedTransactionType.WITHDRAWAL
             CoinbaseTransactionType.SEND -> NormalizedTransactionType.WITHDRAWAL
             CoinbaseTransactionType.BUY -> NormalizedTransactionType.BUY
@@ -20,12 +20,14 @@ class CoinbaseStandardTransactionNormalizingMapper @Inject constructor() : Norma
             id = transaction.id,
             type = type,
             source = TransactionSource.COINBASE_STANDARD,
-            transactionAmountFiat = transaction.assetValue.absoluteValue * transaction.transactionAmount.absoluteValue,
+            transactionAmountFiat = transaction.transactionAmount.absoluteValue,
             fee = transaction.fee.absoluteValue,
             assetAmount = transaction.quantityTransacted.absoluteValue,
             assetValueFiat = transaction.assetValue,
             timestamp = transaction.timestamp,
-            notes = transaction.notes
+            timestampText = transaction.timestamp.toString(),
+            notes = transaction.notes,
+            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.id)
         )
     }
 }

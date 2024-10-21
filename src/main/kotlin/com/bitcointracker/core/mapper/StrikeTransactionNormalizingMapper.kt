@@ -9,9 +9,9 @@ import com.bitcointracker.model.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.transaction.strike.StrikeTransactionType
 import javax.inject.Inject
 
+// TODO handle reversed deposits
 class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMapper<StrikeTransaction> {
     override fun normalizeTransaction(transaction: StrikeTransaction): NormalizedTransaction {
-        println("Normalizing transaction: ${transaction.transactionId}")
         return when (transaction.type) {
             StrikeTransactionType.DEPOSIT -> normalizeDeposit(transaction)
             StrikeTransactionType.TRADE -> normalizeTrade(transaction)
@@ -31,8 +31,10 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             fee = ExchangeAmount(0.0, "USD"), // Deposits are free
             assetAmount = transaction.asset1!!,
             assetValueFiat = ExchangeAmount(1.0, "USD"),
-            timestamp = transaction.date
-        )
+            timestamp = transaction.date,
+            timestampText = transaction.date.toString(),
+            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
+    )
 
     private fun normalizeTrade(transaction: StrikeTransaction): NormalizedTransaction {
         var transactionType: NormalizedTransactionType
@@ -57,6 +59,8 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetAmount = assetAmount,
             assetValueFiat = transaction.assetValue ?: ExchangeAmount(0.0, "USD"),
             timestamp = transaction.date,
+            timestampText = transaction.date.toString(),
+            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
         )
     }
 
@@ -77,6 +81,8 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetAmount = transaction.asset1.absoluteValue,
             assetValueFiat = transaction.asset1.absoluteValue,
             timestamp = transaction.date,
+            timestampText = transaction.date.toString(),
+            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
         )
     }
 
@@ -96,6 +102,8 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetAmount = transaction.asset2!!.absoluteValue,
             assetValueFiat = ExchangeAmount(-1.0, "USD"), // TODO populate
             timestamp = transaction.date,
+            timestampText = transaction.date.toString(),
+            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
         )
     }
 
@@ -109,7 +117,9 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetAmount = transaction.asset2!!.absoluteValue,
             assetValueFiat = ExchangeAmount(0.0, "USD"), // TODO call API for this
             timestamp = transaction.date,
-            address = transaction.destination ?: ""
+            timestampText = transaction.date.toString(),
+            address = transaction.destination ?: "",
+            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
         )
 
     private fun normalizeStrikeCredit(transaction: StrikeTransaction): NormalizedTransaction
@@ -120,8 +130,10 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             transactionAmountFiat = transaction.asset1!!.absoluteValue,
             fee = ExchangeAmount(0.0, "USD"), // Deposits are free
             assetAmount = transaction.asset1!!.absoluteValue,
-            assetValueFiat = ExchangeAmount(-1.0, "USD"), // TODO populate
-            timestamp = transaction.date
+            assetValueFiat = transaction.asset1!!.absoluteValue,
+            timestamp = transaction.date,
+            timestampText = transaction.date.toString(),
+            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
         )
 
     private fun getSource(transaction: StrikeTransaction)

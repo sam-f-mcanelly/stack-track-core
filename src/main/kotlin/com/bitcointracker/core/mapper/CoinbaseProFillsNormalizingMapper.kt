@@ -23,6 +23,8 @@ class CoinbaseProFillsNormalizingMapper @Inject constructor() : NormalizingMappe
             assetAmount = transaction.size.absoluteValue,
             assetValueFiat = transaction.price.absoluteValue,
             timestamp = transaction.createdAt,
+            timestampText = transaction.createdAt.toString(),
+            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.tradeId)
         )
     }
 }

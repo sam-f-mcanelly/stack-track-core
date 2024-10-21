@@ -17,11 +17,16 @@ class CoinbaseClient @Inject constructor(
                 .url(url)
                 .build()
 
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+        try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw IOException("Unexpected code $response")
 
-            val responseBody = response.body?.string()
-            return responseBody?.let { parsePrice(it) }
+                val responseBody = response.body?.string()
+                return responseBody?.let { parsePrice(it) }
+            }
+        } catch (ex: Exception) {
+            println("Failure getting current price from coinbase")
+            return 59000.0
         }
     }
 
