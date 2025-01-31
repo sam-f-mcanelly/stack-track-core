@@ -3,14 +3,13 @@ import com.bitcointracker.model.transaction.normalized.ExchangeAmount
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 
 class ExchangeAmountDeserializer : JsonDeserializer<ExchangeAmount>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ExchangeAmount {
-        val exchangeAmountSerialized: String = p.text.trim()
-        val components = exchangeAmountSerialized.split(" ")
-        val amount = components[0].toDouble()
-        val unit = components[1]
+        val node = p.codec.readTree<ObjectNode>(p)
+        val amount = node.get("amount").asDouble()
+        val unit = node.get("unit").asText()
         return ExchangeAmount(amount, unit)
     }
 }

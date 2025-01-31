@@ -25,7 +25,7 @@ class BackendService @Inject constructor(
 ) : IBackendService {
 
     companion object {
-        // TODO make this stupid thing work
+        // TODO make this work
         private val logger = LoggerFactory.getLogger(BackendService::class.java)
     }
 
