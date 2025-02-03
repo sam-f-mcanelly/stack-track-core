@@ -1,12 +1,12 @@
 package com.bitcointracker.core.mapper
 
-import com.bitcointracker.model.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.transaction.normalized.TransactionSource
-import com.bitcointracker.model.transaction.strike.StrikeTransaction
-import com.bitcointracker.model.transaction.strike.StrikeTransactionSource
-import com.bitcointracker.model.transaction.strike.StrikeTransactionType
+import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
+import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
+import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType
 import javax.inject.Inject
 
 // TODO handle reversed deposits

@@ -1,7 +1,7 @@
 package com.bitcointracker.core.mapper
 
-import com.bitcointracker.model.file.FileType
-import com.bitcointracker.model.file.NormalizedFile
+import com.bitcointracker.model.internal.file.FileType
+import com.bitcointracker.model.internal.file.NormalizedFile
 import javax.inject.Inject
 
 class FileContentNormalizingMapper @Inject constructor() {

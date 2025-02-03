@@ -1,11 +1,10 @@
 package com.bitcointracker.core.parser
 
-import com.bitcointracker.model.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.transaction.strike.StrikeTransaction
-import com.bitcointracker.model.transaction.strike.StrikeTransactionSource
-import com.bitcointracker.model.transaction.strike.StrikeTransactionState
-import com.bitcointracker.model.transaction.strike.StrikeTransactionType
-import java.io.File
+import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
+import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
+import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
+import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionState
+import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject

@@ -1,12 +1,11 @@
 package com.bitcointracker
 
-import com.bitcointracker.core.TransactionCache
 import com.bitcointracker.dagger.component.AppComponent
 import com.bitcointracker.dagger.component.DaggerAppComponent
-import com.bitcointracker.model.frontend.QuickLookData
-import com.bitcointracker.model.jackson.ExchangeAmountDeserializer
-import com.bitcointracker.model.jackson.ExchangeAmountSerializer
-import com.bitcointracker.model.transaction.normalized.ExchangeAmount
+import com.bitcointracker.model.api.QuickLookData
+import com.bitcointracker.util.jackson.ExchangeAmountDeserializer
+import com.bitcointracker.util.jackson.ExchangeAmountSerializer
+import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
@@ -36,6 +35,7 @@ fun main() {
     }.start(wait = true)
 }
 
+// TODO: move routes into their own files
 fun Application.module(appComponent: AppComponent) {
     val service = appComponent.getBackendService()
     val gson = appComponent.getGson()
@@ -113,8 +113,6 @@ fun Application.module(appComponent: AppComponent) {
             try {
                 // Load items for the specific page
                 val items = service.getTransactions()
-
-                println("Cache size: ${TransactionCache.getAllTransactions().size}")
 
                 call.respond(items)
             } catch (ex: Exception) {

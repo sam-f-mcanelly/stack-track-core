@@ -1,6 +1,6 @@
 package com.bitcointracker.core.parser.report
 
-import com.bitcointracker.model.report.ProfitStatement
+import com.bitcointracker.model.internal.report.ProfitStatement
 import java.text.DecimalFormat
 import javax.inject.Inject
 

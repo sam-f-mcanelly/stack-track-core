@@ -29,6 +29,20 @@ dependencies {
     kapt("com.google.dagger:dagger-compiler:2.48")
     implementation("javax.inject:javax.inject:1")
     implementation("org.slf4j:slf4j-api:2.0.9")
+
+    // H2 database
+    implementation("com.h2database:h2:2.2.224")
+
+    // Exposed ORM
+    implementation("org.jetbrains.exposed:exposed-dao:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-core:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-java-time:0.41.1")
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.41.1")
+
+    // co-routines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.3")
 }
 
 application {

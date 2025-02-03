@@ -1,17 +1,19 @@
 package com.bitcointracker.core
 
-import com.bitcointracker.model.report.ProfitStatement
-import com.bitcointracker.model.tax.TaxLotStatement
-import com.bitcointracker.model.tax.TaxType
-import com.bitcointracker.model.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
-import java.util.*
+import com.bitcointracker.model.internal.report.ProfitStatement
+import com.bitcointracker.model.internal.tax.TaxLotStatement
+import com.bitcointracker.model.internal.tax.TaxType
+import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import java.util.Calendar
 import javax.inject.Inject
 
-class NormalizedTransactionAnalyzer @Inject constructor(){
+class NormalizedTransactionAnalyzer @Inject constructor(
+    private val transactionRepository: TransactionRepository
+){
 
-    fun getAccumulation(days: Int, asset: String): List<ExchangeAmount> {
+    suspend fun getAccumulation(days: Int, asset: String): List<ExchangeAmount> {
         // Calculate the cutoff date n days ago
         val today = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 0); clear(Calendar.MINUTE); clear(Calendar.SECOND); clear(Calendar.MILLISECOND) }.time
         val cutoffDate = Calendar.getInstance().apply {
@@ -19,12 +21,9 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
         }.time
 
         // Filter transactions that are buys within the last n days
-        val recentBuys = TransactionCache.getTransactionsByAsset(asset).filter { transaction ->
-            transaction.type == NormalizedTransactionType.BUY && transaction.timestamp.after(cutoffDate)
-        }.sortedBy { it.timestamp }
-        val recentSells = TransactionCache.getTransactionsByAsset(asset).filter { transaction ->
-            transaction.type == NormalizedTransactionType.SELL && transaction.timestamp.after(cutoffDate)
-        }.sortedBy { it.timestamp }
+        // TODO abstract this out into its own function
+        val recentBuys = transactionRepository.getFilteredTransactions(types = listOf(NormalizedTransactionType.BUY), assets = listOf("BTC"), startDate = cutoffDate).sortedBy { it.timestamp }
+        val recentSells = transactionRepository.getFilteredTransactions(types = listOf(NormalizedTransactionType.SELL), assets = listOf("BTC"), startDate = cutoffDate).sortedBy { it.timestamp }
 
         // Initialize the cumulative amounts list
         val cumulativeAmounts = MutableList(days) { ExchangeAmount(0.0, asset) }
@@ -64,15 +63,15 @@ class NormalizedTransactionAnalyzer @Inject constructor(){
         return cumulativeAmounts
     }
 
-    fun computeTransactionResults(
+    suspend fun computeTransactionResults(
         asset: String,
         currentAssetPrice: ExchangeAmount
     ): ProfitStatement {
         val buyQueue = mutableListOf<NormalizedTransaction>()
         val soldLots = mutableListOf<NormalizedTransaction>()
         val taxLotStatements = mutableListOf<TaxLotStatement>()
-        val transactions = TransactionCache.getTransactionsByAsset(asset)
-            .intersect(TransactionCache.getTransactionsByType(
+        val transactions = transactionRepository.getTransactionsByAsset(asset)
+            .intersect(transactionRepository.getTransactionsByType(
                 NormalizedTransactionType.BUY,
                 NormalizedTransactionType.SELL
             ).toSet()

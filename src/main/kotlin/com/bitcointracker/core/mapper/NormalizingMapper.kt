@@ -1,6 +1,6 @@
 package com.bitcointracker.core.mapper
 
-import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
 
 interface NormalizingMapper<T> {
     fun normalizeTransactions(transactions: List<T>): List<NormalizedTransaction> 

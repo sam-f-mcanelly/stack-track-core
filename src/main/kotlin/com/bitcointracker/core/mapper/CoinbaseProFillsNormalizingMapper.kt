@@ -1,10 +1,10 @@
 package com.bitcointracker.core.mapper
 
-import com.bitcointracker.model.transaction.coinbase.CoinbaseFillsSide
-import com.bitcointracker.model.transaction.coinbase.CoinbaseFillsTransaction
-import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.transaction.normalized.TransactionSource
+import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsSide
+import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsTransaction
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
 import javax.inject.Inject
 
 class CoinbaseProFillsNormalizingMapper @Inject constructor() : NormalizingMapper<CoinbaseFillsTransaction> {

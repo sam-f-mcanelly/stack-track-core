@@ -1,8 +1,8 @@
 package com.bitcointracker.core.parser
 
-import com.bitcointracker.model.transaction.coinbase.CoinbaseStandardTransaction
-import com.bitcointracker.model.transaction.coinbase.CoinbaseTransactionType
-import com.bitcointracker.model.transaction.normalized.ExchangeAmount
+import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseStandardTransaction
+import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseTransactionType
+import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject

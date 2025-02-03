@@ -4,8 +4,8 @@ import com.bitcointracker.core.mapper.CoinbaseProFillsNormalizingMapper
 import com.bitcointracker.core.mapper.CoinbaseStandardTransactionNormalizingMapper
 import com.bitcointracker.core.mapper.FileContentNormalizingMapper
 import com.bitcointracker.core.mapper.StrikeTransactionNormalizingMapper
-import com.bitcointracker.model.file.FileType
-import com.bitcointracker.model.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.internal.file.FileType
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
 import java.io.File
 import javax.inject.Inject
 
@@ -19,17 +19,17 @@ class UniversalFileLoader @Inject constructor(
     private val coinbaseStandardTransactionNormalizingMapper: CoinbaseStandardTransactionNormalizingMapper,
     private val coinbaseAnnualFileLoader: CoinbaseStandardAnnualStatementFileLoader,
 ) {
-    fun loadFiles(files: List<File>): List<NormalizedTransaction>
+    suspend fun loadFiles(files: List<File>): List<NormalizedTransaction>
         = files.map { loadFile(it) }
             .flatMap { it }
             .toList()
 
-    fun loadFile(file: File): List<NormalizedTransaction> {
+    suspend fun loadFile(file: File): List<NormalizedTransaction> {
         println("Loading file: ${file.absolutePath}")
         return loadFromFileContents(loadLocalFile(file))
     }
 
-    fun loadFromFileContents(contents: String): List<NormalizedTransaction> {
+    suspend fun loadFromFileContents(contents: String): List<NormalizedTransaction> {
         val normalizedFile = fileContentNormalizingMapper.normalizeFile(contents)
         return when (normalizedFile.fileType) {
             FileType.STRIKE_ANNUAL -> {
