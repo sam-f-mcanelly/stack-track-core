@@ -1,5 +1,6 @@
 package com.bitcointracker.core.parser
 
+import com.bitcointracker.core.exception.FileParsingException
 import com.bitcointracker.core.mapper.CoinbaseProFillsNormalizingMapper
 import com.bitcointracker.core.mapper.CoinbaseStandardTransactionNormalizingMapper
 import com.bitcointracker.core.mapper.FileContentNormalizingMapper
@@ -19,17 +20,21 @@ class UniversalFileLoader @Inject constructor(
     private val coinbaseStandardTransactionNormalizingMapper: CoinbaseStandardTransactionNormalizingMapper,
     private val coinbaseAnnualFileLoader: CoinbaseStandardAnnualStatementFileLoader,
 ) {
-    suspend fun loadFiles(files: List<File>): List<NormalizedTransaction>
+    fun loadFiles(files: List<File>): List<NormalizedTransaction>
         = files.map { loadFile(it) }
             .flatMap { it }
             .toList()
 
-    suspend fun loadFile(file: File): List<NormalizedTransaction> {
+    private fun loadFile(file: File): List<NormalizedTransaction> {
         println("Loading file: ${file.absolutePath}")
-        return loadFromFileContents(loadLocalFile(file))
+        return try {
+            loadFromFileContents(loadLocalFile(file))
+        } catch (e: Exception) {
+            throw FileParsingException(file.name, cause = e)
+        }
     }
 
-    suspend fun loadFromFileContents(contents: String): List<NormalizedTransaction> {
+    fun loadFromFileContents(contents: String): List<NormalizedTransaction> {
         val normalizedFile = fileContentNormalizingMapper.normalizeFile(contents)
         return when (normalizedFile.fileType) {
             FileType.STRIKE_ANNUAL -> {

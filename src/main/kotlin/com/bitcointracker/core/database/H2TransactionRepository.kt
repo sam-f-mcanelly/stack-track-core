@@ -15,7 +15,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -46,16 +45,12 @@ class H2TransactionRepository @Inject constructor(
             try {
                 addTransactionToTable(transaction)
             } catch(e: Exception) {
-                when(e) {
-                    else -> {
-                        println(e.localizedMessage)
-                        println(e.stackTrace)
-                        val existingTransaction = getTransactionById(transaction.id)
-                        println("Existing transaction with id ${transaction.id}: \n $existingTransaction")
-                    }
-                }
+                println("Failed to add transaction ${transaction.id}")
+                println(e.localizedMessage)
+                println(e.stackTrace)
             }
         }
+
         transactionCache.update(getAllTransactions())
     }
 
@@ -65,20 +60,16 @@ class H2TransactionRepository @Inject constructor(
                 try {
                     addTransactionToTable(transaction)
                 } catch(e: Exception) {
-                    when(e) {
-                        else -> {
-                            println("Error putting transaction $transaction. Checking for existing transaction...")
-                            val existingTransaction = getTransactionById(transaction.id)
-                            println("Existing transaction with id ${transaction.id}: \n $existingTransaction")
-                        }
-                    }
+                    println("Failed to add transaction ${transaction.id}")
+                    println(e.localizedMessage)
+                    println(e.stackTrace)
                 }
             }
         }
         transactionCache.update(getAllTransactions())
     }
 
-    suspend fun addTransactionToTable(transaction: NormalizedTransaction) {
+    fun addTransactionToTable(transaction: NormalizedTransaction) {
         TransactionTable.insert {
             it[id] = transaction.id
             it[transactionSource] = transaction.source

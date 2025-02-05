@@ -16,7 +16,7 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
         val dateFormatter = SimpleDateFormat("MMM dd yyyy")
         val timeFormatter = SimpleDateFormat("HH:mm:ss")
 
-        return lines
+        val unfilteredTransactions = lines
             .filter {
                 if (it.split(",").size < 15) {
                     println("Skipping invalid line: $it")
@@ -49,5 +49,30 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
                     description = if (columns.size > 17) columns[17] else ""
                 )
             }.toList()
+
+        return filter(unfilteredTransactions)
+    }
+
+    /**
+     * Special logic for handling transactions that have been reversed on Strike.
+     *
+     * @param transactions List of Strike Transactions
+     */
+    private fun filter(transactions: List<StrikeTransaction>): List<StrikeTransaction> {
+        val result = mutableMapOf<String, StrikeTransaction>()
+
+        transactions.forEach { transaction ->
+            if (transaction.transactionId in result) {
+                val existingTransaction = result[transaction.transactionId]
+                if (transaction.state == StrikeTransactionState.REVERSED || existingTransaction!!.state == StrikeTransactionState.REVERSED) {
+                    println("Found reversed transaction with id: ${transaction.transactionId}. Ignoring the two transactions")
+                    result.remove(transaction.transactionId)
+                }
+            } else {
+                result[transaction.transactionId] = transaction
+            }
+        }
+
+        return result.values.toList()
     }
 }

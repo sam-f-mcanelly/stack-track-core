@@ -2,8 +2,10 @@ package com.bitcointracker.service
 
 import com.bitcointracker.core.NormalizedTransactionAnalyzer
 import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.cache.TransactionMetadataCache
 import com.bitcointracker.core.parser.UniversalFileLoader
 import com.bitcointracker.external.client.CoinbaseClient
+import com.bitcointracker.model.api.AssetHoldingsReport
 import com.bitcointracker.model.internal.report.ProfitStatement
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
@@ -20,6 +22,9 @@ interface IBackendService {
     suspend fun getTransactions(): List<NormalizedTransaction>
     suspend fun getProfitStatement(): ProfitStatement
     suspend fun getAccumulation(days: Int, asset: String): List<Double>
+
+    suspend fun getPortfolioValue(fiat: String): ExchangeAmount
+    suspend fun getAssetHoldings(asset: String, currency: String): AssetHoldingsReport
 }
 
 class BackendService @Inject constructor(
@@ -27,6 +32,7 @@ class BackendService @Inject constructor(
     private val transactionAnalyzer: NormalizedTransactionAnalyzer,
     private val coinbaseClient: CoinbaseClient,
     private val transactionRepository: TransactionRepository,
+    private val transactionCache: TransactionMetadataCache,
 ) : IBackendService {
 
     companion object {
@@ -79,6 +85,31 @@ class BackendService @Inject constructor(
             it.amount
         }
     }
+
+    override suspend fun getPortfolioValue(fiat: String): ExchangeAmount =
+        ExchangeAmount(
+            transactionCache.getAllAssetAmounts()
+                .map {
+                    coinbaseClient.getCurrentPrice(it.unit, fiat) ?: 0.0
+                }.sumOf {
+                    it
+                },
+            fiat
+        )
+
+    override suspend fun getAssetHoldings(asset: String, currency: String): AssetHoldingsReport {
+        val assetAmount = transactionCache.getAssetAmount(asset)
+        val totalValue = coinbaseClient.getCurrentPrice(asset, currency)?.let {
+            assetAmount * it
+        }
+
+        return AssetHoldingsReport(
+            asset = asset,
+            assetAmount = assetAmount,
+            fiatValue = totalValue,
+        )
+    }
+
 
     override suspend fun getProfitStatement(): ProfitStatement {
         val bitcoinPrice = coinbaseClient.getCurrentPrice("BTC", "USD") ?: 15000.0

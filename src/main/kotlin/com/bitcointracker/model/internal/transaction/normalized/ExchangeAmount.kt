@@ -25,28 +25,40 @@ data class ExchangeAmount(
 
     operator fun div(other: ExchangeAmount): ExchangeAmount {
         if (this.unit != other.unit) {
-            throw IllegalArgumentException("Cannot divide amounts with different currencies")
+            throw IllegalArgumentException("Cannot divide amounts with different currencies.\n" +
+                " Amount 1: $this \n" +
+                " Amount 2: $other"
+            )
         }
         return ExchangeAmount(this.amount / other.amount, this.unit)
     }
 
     operator fun minus(other: ExchangeAmount): ExchangeAmount {
         if (this.unit != other.unit) {
-            throw IllegalArgumentException("Cannot subtract amounts with different currencies")
+            throw IllegalArgumentException("Cannot subtract amounts with different currencies. \n" +
+                " Amount 1: $this \n" +
+                " Amount 2: $other"
+            )
         }
         return ExchangeAmount(this.amount - other.amount, this.unit)
     }
 
     operator fun plus(other: ExchangeAmount): ExchangeAmount {
         if (this.unit != other.unit) {
-            throw IllegalArgumentException("Cannot add amounts with different currencies")
+            throw IllegalArgumentException("Cannot add amounts with different currencies. \n" +
+                " Amount 1: $this \n" +
+                " Amount 2: $other"
+            )
         }
         return ExchangeAmount(this.amount + other.amount, this.unit)
     }
 
      override fun compareTo(other: ExchangeAmount): Int {
          if (this.unit != other.unit) {
-             throw IllegalArgumentException("Cannot compare amounts with different currencies")
+             throw IllegalArgumentException("Cannot compare amounts with different currencies. \n" +
+                 " Amount 1: $this \n" +
+                 " Amount 2: $other"
+             )
          }
          return this.amount.compareTo(other.amount)
      }

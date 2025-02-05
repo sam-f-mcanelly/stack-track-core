@@ -37,8 +37,9 @@ fun main() {
 
 // TODO: move routes into their own files
 fun Application.module(appComponent: AppComponent) {
+    val rawDataRouteHandler = appComponent.getRawDataRouteHandler()
+    val metadataRouteHandler = appComponent.getMetadataRouteHandler()
     val service = appComponent.getBackendService()
-    val gson = appComponent.getGson()
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
@@ -68,83 +69,16 @@ fun Application.module(appComponent: AppComponent) {
 
     routing {
         post("/api/upload") {
-            try {
-                val multipart = call.receiveMultipart()
-                val files = mutableListOf<ByteArray>()
-
-                multipart.forEachPart { part ->
-                    if (part is PartData.FileItem) {
-                        val fileBytes = part.streamProvider().readBytes()
-                        files.add(fileBytes)
-                        // You can also save the file to disk or process it further here
-                    }
-                    part.dispose()
-                }
-
-                service.loadInput(files.map { it.toString(Charsets.UTF_8) })
-                call.respond(HttpStatusCode.OK, "Files uploaded and stored successfully.")
-            } catch (ex: Exception) {
-                println(ex)
-                call.respond(HttpStatusCode.InternalServerError,"Upload failed: ${ex.localizedMessage}")
-            }
+            rawDataRouteHandler.handleFileUpload(call)
         }
         get("/api/download") {
-            try {
-                val date = Date()
-                val transactions = service.getTransactions()
-                val serializedTransactions = gson.toJson(transactions)
-                val jsonFileName = "items-$date-${UUID.randomUUID().toString().substring(0, 6)}.json"  // Unique filename
-                call.response.header(HttpHeaders.ContentDisposition, "attachment; filename=\"$jsonFileName\"")
-                // Convert JSON string to ByteArray and stream it as a response
-                val byteArray = serializedTransactions.toByteArray(Charsets.UTF_8)
-                val inputStream = ByteArrayInputStream(byteArray)
-
-                call.respondOutputStream(
-                    contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.OK
-                ) {
-                    inputStream.copyTo(this)
-                }
-            } catch (ex: Exception) {
-                println(ex)
-            }
+            rawDataRouteHandler.handleFileDownload(call)
         }
         get("/api/data") {
-            try {
-                // Load items for the specific page
-                val items = service.getTransactions()
-
-                call.respond(items)
-            } catch (ex: Exception) {
-                println(ex)
-                call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
-            }
+            rawDataRouteHandler.handleGetAllTransactions(call)
         }
-        get("/api/accumulation/token/{token}/days/{days}") {
-            try {
-                val tokenInput = call.parameters["token"] ?: return@get call.respondText(
-                    "Missing or malformed token",
-                    status = HttpStatusCode.BadRequest
-                )
-
-                val dayInput = call.parameters["days"]?.toIntOrNull() ?: return@get call.respondText(
-                    "Days parameter must be a number",
-                    status = HttpStatusCode.BadRequest
-                )
-
-                println("Fetching accumulation data for $tokenInput - $dayInput days")
-
-                val data = service.getAccumulation(dayInput, tokenInput)
-                call.respond(
-                    QuickLookData(
-                        title = "$tokenInput Accumulation",
-                        value = "${data.last()}  $tokenInput",
-                        data = service.getAccumulation(dayInput, tokenInput)
-                    )
-                )
-            } catch (ex: Exception) {
-                println(ex)
-            }
+        get("/api/accumulation/asset/{asset}/days/{days}") {
+            metadataRouteHandler.getAccumulationHistory(call)
         }
         get("/api/profit_statement") {
             try {

@@ -25,7 +25,7 @@ class CoinbaseClient @Inject constructor(
                 return responseBody?.let { parsePrice(it) }
             }
         } catch (ex: Exception) {
-            println("Failure getting current price from coinbase")
+            println("Failure getting current price for $crypto from coinbase")
             return 59000.0
         }
     }

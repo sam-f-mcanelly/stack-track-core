@@ -12,7 +12,9 @@ class CoinbaseStandardTransactionNormalizingMapper @Inject constructor() : Norma
         val type = when (transaction.type) {
             CoinbaseTransactionType.DEPOSIT -> NormalizedTransactionType.DEPOSIT
             CoinbaseTransactionType.PRO_WITHDRAWAL -> NormalizedTransactionType.WITHDRAWAL
+            CoinbaseTransactionType.RECEIVE -> NormalizedTransactionType.DEPOSIT
             CoinbaseTransactionType.SEND -> NormalizedTransactionType.WITHDRAWAL
+            CoinbaseTransactionType.SELL -> NormalizedTransactionType.SELL
             CoinbaseTransactionType.BUY -> NormalizedTransactionType.BUY
         }
 
