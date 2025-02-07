@@ -51,7 +51,7 @@ application {
 
 ktor {
     docker {
-        localImageName.set("coin-cortex-core")
+        localImageName.set("bitcoin-tax-core")
         imageTag.set("0.0.1-preview")
         jreVersion.set(JavaVersion.VERSION_22)
         portMappings.set(listOf(

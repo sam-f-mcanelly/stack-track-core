@@ -21,7 +21,7 @@ RUN gradle buildFatJar --no-daemon
 # Stage 3: Create the Runtime Image
 RUN echo "Starting the application on port 8080..."
 FROM amazoncorretto:22 AS runtime
-EXPOSE 8080:8080
+EXPOSE 3080:8080
 RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/bitcoin-tracker-1.0.0.jar
+COPY --from=build /home/gradle/src/build/libs/*.jar /app/bitcoin-tax-core-1.0.0.jar
 ENTRYPOINT ["java","-jar","/app/bitcoin-tracker-1.0.0.jar"]
