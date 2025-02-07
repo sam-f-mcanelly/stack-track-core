@@ -90,7 +90,7 @@ class BackendService @Inject constructor(
         ExchangeAmount(
             transactionCache.getAllAssetAmounts()
                 .map {
-                    coinbaseClient.getCurrentPrice(it.unit, fiat) ?: 0.0
+                    (coinbaseClient.getCurrentPrice(it.unit, fiat) ?: 0.0) * it.amount
                 }.sumOf {
                     it
                 },

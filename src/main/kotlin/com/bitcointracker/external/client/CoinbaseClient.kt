@@ -13,6 +13,7 @@ class CoinbaseClient @Inject constructor(
 ) {
     fun getCurrentPrice(crypto: String, currency: String = "USD"): Double? {
         val url = "https://api.coinbase.com/v2/prices/$crypto-$currency/spot"
+        println("Coinbase URL: $url")
         val request = Request.Builder()
                 .url(url)
                 .build()
@@ -23,6 +24,7 @@ class CoinbaseClient @Inject constructor(
 
                 val responseBody = response.body?.string()
                 return responseBody?.let { parsePrice(it) }
+                    .also { println("Price of $crypto: $it $currency") }
             }
         } catch (ex: Exception) {
             println("Failure getting current price for $crypto from coinbase")

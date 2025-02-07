@@ -10,6 +10,7 @@ import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransa
 import java.io.File
 import javax.inject.Inject
 
+// TODO create type for each report and replace all these dependencies with maps
 class UniversalFileLoader @Inject constructor(
     private val fileContentNormalizingMapper: FileContentNormalizingMapper,
     private val strikeTransactionNormalizingMapper: StrikeTransactionNormalizingMapper,

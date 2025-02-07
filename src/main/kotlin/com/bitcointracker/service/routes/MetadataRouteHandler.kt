@@ -30,16 +30,18 @@ class MetadataRouteHandler @Inject constructor(
 
     suspend fun getPortfolioValue(call: ApplicationCall) {
         try {
-            val assetInput = call.parameters["asset"] ?: return call.respondText(
-                "Missing or malformed asset",
+            val fiatInput = call.parameters["fiat"] ?: return call.respondText(
+                "Missing or malformed fiat",
                 status = HttpStatusCode.BadRequest
             )
 
-            val assetHoldings = service.getAssetHoldings(assetInput, "USD") // TODO: support other currencies
+            println("Getting portfolio value for USD")
+            val value = service.getPortfolioValue("USD") // TODO: support other currencies
+            println("portfolio value: $value")
 
-            call.respond(assetHoldings)
+            call.respond(value)
         } catch (e: Exception) {
-            println("Failed to load asset holdings!")
+            println("Failed to load portfolio value!")
             println(e.localizedMessage)
             println(e.stackTrace)
         }

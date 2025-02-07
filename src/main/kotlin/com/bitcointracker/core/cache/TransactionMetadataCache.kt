@@ -5,8 +5,10 @@ import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransa
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
 import java.lang.IllegalArgumentException
 import javax.inject.Inject
+import javax.inject.Singleton
 
 // TODO simplify the logic for each one
+@Singleton
 class TransactionMetadataCache @Inject constructor(){
     var transactionCount: Int = 0
     var assetToAmountHeld: MutableMap<String, ExchangeAmount> = mutableMapOf()
@@ -40,5 +42,5 @@ class TransactionMetadataCache @Inject constructor(){
         assetToAmountHeld.getOrDefault(asset.uppercase(), ExchangeAmount(0.0, asset))
 
     fun getAllAssetAmounts(): List<ExchangeAmount> =
-        assetToAmountHeld.values.toList()
+        assetToAmountHeld.values.toList().also { println("getting all asset amounts: $it") }
 }

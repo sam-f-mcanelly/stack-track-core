@@ -77,6 +77,9 @@ fun Application.module(appComponent: AppComponent) {
         get("/api/data") {
             rawDataRouteHandler.handleGetAllTransactions(call)
         }
+        get("/api/portfolio_value/{fiat}") {
+            metadataRouteHandler.getPortfolioValue(call)
+        }
         get("/api/accumulation/asset/{asset}/days/{days}") {
             metadataRouteHandler.getAccumulationHistory(call)
         }
