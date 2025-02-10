@@ -56,7 +56,7 @@ application {
 
 ktor {
     docker {
-        localImageName.set("bitcoin-tax-core")
+        localImageName.set("hodl-tax-core")
         imageTag.set("0.0.1-preview")
         jreVersion.set(JavaVersion.VERSION_22)
         portMappings.set(listOf(
