@@ -68,6 +68,9 @@ fun Application.module(appComponent: AppComponent) {
     }
 
     routing {
+        get("/health") {
+            call.respondText("OK", status = HttpStatusCode.OK)
+        }
         post("/api/upload") {
             rawDataRouteHandler.handleFileUpload(call)
         }

@@ -1,1 +1,1 @@
-rootProject.name = "bitcoin-tracker"
+rootProject.name = "hodl-tax-core"

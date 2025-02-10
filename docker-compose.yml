@@ -1,0 +1,18 @@
+version: '3.8'
+
+networks:
+  hodl-tax:
+    name: hodl-tax
+
+services:
+  hodl-tax-core:
+    container_name: hodl-tax-core
+    image: localhost:3002/sam/hodl-tax-core:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "90:9090"  # Maps host port 90 to container port 8080
+    restart: unless-stopped 
+    networks:
+      - hodl-tax
