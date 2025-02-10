@@ -42,6 +42,12 @@ dependencies {
     // co-routines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.3")
+
+    // Testing dependencies
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("io.ktor:ktor-server-test-host:2.3.7")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.20")
+    testImplementation("io.mockk:mockk:1.13.8")
 }
 
 application {
@@ -66,5 +72,95 @@ ktor {
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "com.bitcointracker.ApplicationKt"
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+// Define test source sets
+sourceSets {
+    create("integrationTest") {
+        kotlin {
+            compileClasspath += main.get().output + test.get().output
+            runtimeClasspath += main.get().output + test.get().output
+            srcDir("src/test/kotlin")
+        }
+    }
+}
+
+// Create configuration for integration tests
+val integrationTestImplementation: Configuration by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+
+// Define common test logging configuration
+fun Test.configureTestLogging() {
+    reports {
+        html.required.set(true)
+        junitXml.required.set(true)
+    }
+    
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        displayGranularity = 2
+        
+        afterSuite(KotlinClosure2({ desc: TestDescriptor, result: TestResult ->
+            if (desc.parent == null) {
+                println("\nTest result: ${result.resultType}")
+                println("Test summary: ${result.testCount} tests, " +
+                        "${result.successfulTestCount} succeeded, " +
+                        "${result.failedTestCount} failed, " +
+                        "${result.skippedTestCount} skipped")
+            }
+        }))
+    }
+}
+
+tasks {
+    // Unit tests task
+    register<Test>("unitTest") {
+        description = "Runs unit tests"
+        group = "verification"
+        
+        useJUnitPlatform()
+        filter {
+            includeTestsMatching("com.bitcointracker.unit.*")
+        }
+        
+        configureTestLogging()
+    }
+    
+    // Integration tests task
+    register<Test>("integrationTest") {
+        description = "Runs integration tests"
+        group = "verification"
+
+        outputs.upToDateWhen { false }
+        
+        useJUnitPlatform()
+        filter {
+            includeTestsMatching("com.bitcointracker.integration.*")
+        }
+
+        configureTestLogging()
+    }
+    
+    // Modify the default test task
+    test {
+        description = "Runs all tests"
+        useJUnitPlatform()
+        
+        // Optional: exclude integration tests from the default test task
+        filter {
+            excludeTestsMatching("com.bitcointracker.integration.*")
+        }
+        
+        configureTestLogging()
     }
 }
