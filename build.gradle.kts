@@ -48,6 +48,7 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host:2.3.7")
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.20")
     testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("org.slf4j:slf4j-simple:2.0.9")
 }
 
 application {
