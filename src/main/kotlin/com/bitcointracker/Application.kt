@@ -2,7 +2,6 @@ package com.bitcointracker
 
 import com.bitcointracker.dagger.component.AppComponent
 import com.bitcointracker.dagger.component.DaggerAppComponent
-import com.bitcointracker.model.api.QuickLookData
 import com.bitcointracker.util.jackson.ExchangeAmountDeserializer
 import com.bitcointracker.util.jackson.ExchangeAmountSerializer
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
@@ -11,21 +10,15 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.http.*
-import io.ktor.http.content.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.application.Application
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import java.io.ByteArrayInputStream
-import java.util.Date
-import java.util.UUID
 
 fun main() {
     val appComponent = DaggerAppComponent.create()
