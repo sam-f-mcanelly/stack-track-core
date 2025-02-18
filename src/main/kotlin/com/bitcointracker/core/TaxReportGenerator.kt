@@ -19,7 +19,7 @@ import javax.inject.Inject
  *
  * @property transactionRepository Repository for accessing transaction data
  */
-class TaxReportProcessor @Inject constructor(
+class TaxReportGenerator @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
     /**
@@ -244,7 +244,7 @@ class TaxReportProcessor @Inject constructor(
      * @throws IllegalArgumentException if any transaction is not found or is not a buy transaction
      */
     private suspend fun getBuyTransactionsByIds(ids: List<String>): List<NormalizedTransaction> {
-        return ids.mapNotNull { id ->
+        return ids.map { id ->
             val transaction = transactionRepository.getTransactionById(id)
             if (transaction?.type != NormalizedTransactionType.BUY) {
                 throw IllegalArgumentException("Transaction $id is not a buy transaction")

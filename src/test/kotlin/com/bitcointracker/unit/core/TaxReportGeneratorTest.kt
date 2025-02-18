@@ -1,6 +1,6 @@
 package com.bitcointracker.unit.core
 
-import com.bitcointracker.core.TaxReportProcessor
+import com.bitcointracker.core.TaxReportGenerator
 import com.bitcointracker.core.TransactionRepository
 import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.api.tax.TaxReportRequest
@@ -24,13 +24,13 @@ import java.util.Date
 import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
-class TaxReportProcessorTest {
+class TaxReportGeneratorTest {
 
     @MockK
     private lateinit var transactionRepository: TransactionRepository
 
     @InjectMockKs
-    private lateinit var processor: TaxReportProcessor
+    private lateinit var processor: TaxReportGenerator
 
     private val baseDate = Date(1700000000000) // Fixed date for testing
     private val buyDate1 = Date(1699900000000) // 1 day earlier
