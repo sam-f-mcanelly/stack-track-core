@@ -77,6 +77,17 @@ tasks.jar {
 }
 
 tasks.test {
+    // Configure SLF4J Simple
+    systemProperty("org.slf4j.simpleLogger.defaultLogLevel", "info")
+    systemProperty("org.slf4j.simpleLogger.logFile", "System.out")
+    systemProperty("org.slf4j.simpleLogger.showDateTime", "true")
+    systemProperty("org.slf4j.simpleLogger.dateTimeFormat", "yyyy-MM-dd HH:mm:ss.SSS")
+    systemProperty("org.slf4j.simpleLogger.showThreadName", "true")
+    systemProperty("org.slf4j.simpleLogger.showLogName", "true")
+    systemProperty("org.slf4j.simpleLogger.showShortLogName", "true")
+    systemProperty("org.slf4j.simpleLogger.levelInBrackets", "true")
+    systemProperty("org.slf4j.simpleLogger.log.com.bitcointracker", "debug")
+
     useJUnitPlatform()
 }
 
@@ -98,6 +109,17 @@ val integrationTestImplementation: Configuration by configurations.getting {
 
 // Define common test logging configuration
 fun Test.configureTestLogging() {
+    // Configure SLF4J Simple
+    systemProperty("org.slf4j.simpleLogger.defaultLogLevel", "info")
+    systemProperty("org.slf4j.simpleLogger.logFile", "System.out")
+    systemProperty("org.slf4j.simpleLogger.showDateTime", "true")
+    systemProperty("org.slf4j.simpleLogger.dateTimeFormat", "yyyy-MM-dd HH:mm:ss.SSS")
+    systemProperty("org.slf4j.simpleLogger.showThreadName", "true")
+    systemProperty("org.slf4j.simpleLogger.showLogName", "true")
+    systemProperty("org.slf4j.simpleLogger.showShortLogName", "true")
+    systemProperty("org.slf4j.simpleLogger.levelInBrackets", "true")
+    systemProperty("org.slf4j.simpleLogger.log.com.bitcointracker", "debug")
+
     reports {
         html.required.set(true)
         junitXml.required.set(true)

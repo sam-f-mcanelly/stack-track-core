@@ -1,7 +1,7 @@
-package com.bitcointracker.unit.core
+package com.bitcointracker.unit.core.tax
 
-import com.bitcointracker.core.TaxReportGenerator
 import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.tax.TaxReportGenerator
 import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.bitcointracker.model.api.tax.TaxTreatment
@@ -66,7 +66,10 @@ class TaxReportGeneratorTest {
             )
 
             coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getTransactionsByType(NormalizedTransactionType.BUY) } returns listOf(buyTx1, buyTx2)
+            coEvery { transactionRepository.getTransactionsByType(NormalizedTransactionType.BUY) } returns listOf(
+                buyTx1,
+                buyTx2
+            )
 
             val request = TaxReportRequest(
                 requestId = "request-1",
@@ -163,7 +166,10 @@ class TaxReportGeneratorTest {
             )
 
             coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getTransactionsByType(NormalizedTransactionType.BUY) } returns listOf(buyTx1, buyTx2)
+            coEvery { transactionRepository.getTransactionsByType(NormalizedTransactionType.BUY) } returns listOf(
+                buyTx1,
+                buyTx2
+            )
 
             val request = TaxReportRequest(
                 requestId = "request-1",

@@ -1,10 +1,11 @@
-package com.bitcointracker.core
+package com.bitcointracker.core.tax
 
+import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.bitcointracker.model.api.tax.TaxTreatment
 import com.bitcointracker.model.api.tax.TaxableEventParameters
 import com.bitcointracker.model.exception.InsufficientBuyTransactionsException
-import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.internal.tax.TaxReportResult
 import com.bitcointracker.model.internal.tax.TaxableEventResult
 import com.bitcointracker.model.internal.tax.UsedBuyTransaction
@@ -12,6 +13,7 @@ import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransa
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
 import java.util.Date
 import javax.inject.Inject
+import kotlin.collections.forEach
 
 /**
  * Processes tax reports by analyzing cryptocurrency transactions according to different tax treatment strategies.
@@ -28,7 +30,7 @@ class TaxReportGenerator @Inject constructor(
      *
      * @param request The tax report request containing events to process
      * @return TaxReportResult containing the processed results for each event
-     * @throws TaxReportProcessingException if any event fails to process
+     * @throws com.bitcointracker.model.api.exception.TaxReportProcessingException if any event fails to process
      */
     suspend fun processTaxReport(request: TaxReportRequest): TaxReportResult {
         val results = mutableListOf<TaxableEventResult>()
@@ -168,7 +170,7 @@ class TaxReportGenerator @Inject constructor(
      * @param sellTransaction The sell transaction to process
      * @param buyTransactions List of buy transactions to use, in order of preference
      * @return TaxableEventResult containing the calculated gains and used buy transactions
-     * @throws InsufficientBuyTransactionsException if buy transactions cannot cover the sell amount
+     * @throws com.bitcointracker.model.exception.InsufficientBuyTransactionsException if buy transactions cannot cover the sell amount
      */
     private suspend fun processEvent(
         sellTransaction: NormalizedTransaction,
@@ -253,5 +255,3 @@ class TaxReportGenerator @Inject constructor(
         }
     }
 }
-
-
