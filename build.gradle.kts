@@ -104,8 +104,8 @@ tasks.jacocoTestReport {
             fileTree(it) {
                 exclude(
                     // Add any exclusions here
-                    "**/models/**",
-                    "**/exceptions/**"
+                    "**/model/**",
+                    "**/dagger/**",
                 )
             }
         })
