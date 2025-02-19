@@ -1,25 +1,39 @@
 package com.bitcointracker.service.routes
 
-import com.bitcointracker.service.BackendService
+import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.parser.UniversalFileLoader
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
 import com.google.gson.Gson
-import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.PartData
+import io.ktor.http.content.forEachPart
+import io.ktor.http.content.streamProvider
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.receiveMultipart
+import io.ktor.server.response.header
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
-import java.util.*
+import java.util.Date
+import java.util.UUID
 import javax.inject.Inject
+import kotlin.collections.chunked
 
 class RawDataRouteHandler @Inject constructor(
-    private val service: BackendService,
+    private val fileLoader: UniversalFileLoader,
+    private val transactionRepository: TransactionRepository,
     private val gson: Gson
 ) {
     suspend fun handleFileUpload(call: ApplicationCall) {
         try {
             val multipart = call.receiveMultipart()
             val files = mutableListOf<ByteArray>()
-
             multipart.forEachPart { part ->
                 if (part is PartData.FileItem) {
                     val fileBytes = part.streamProvider().readBytes()
@@ -28,8 +42,7 @@ class RawDataRouteHandler @Inject constructor(
                 }
                 part.dispose()
             }
-
-            service.loadInput(files.map { it.toString(Charsets.UTF_8) })
+            loadInput(files.map { it.toString(Charsets.UTF_8) })
             call.respond(HttpStatusCode.OK, "Files uploaded and stored successfully.")
         } catch (ex: Exception) {
             println(ex)
@@ -40,14 +53,13 @@ class RawDataRouteHandler @Inject constructor(
     suspend fun handleFileDownload(call: ApplicationCall) {
         try {
             val date = Date()
-            val transactions = service.getTransactions()
+            val transactions = getTransactions()
             val serializedTransactions = gson.toJson(transactions)
             val jsonFileName = "items-$date-${UUID.randomUUID().toString().substring(0, 6)}.json"  // Unique filename
             call.response.header(HttpHeaders.ContentDisposition, "attachment; filename=\"$jsonFileName\"")
             // Convert JSON string to ByteArray and stream it as a response
             val byteArray = serializedTransactions.toByteArray(Charsets.UTF_8)
             val inputStream = ByteArrayInputStream(byteArray)
-
             call.respondOutputStream(
                 contentType = ContentType.Application.Json,
                 status = HttpStatusCode.OK
@@ -61,13 +73,38 @@ class RawDataRouteHandler @Inject constructor(
 
     suspend fun handleGetAllTransactions(call: ApplicationCall) {
         try {
-            val items = service.getTransactions()
-
-            call.respond(items)
+            call.respond(getTransactions())
         } catch (ex: Exception) {
             println(ex)
             call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
         }
     }
 
+    private suspend fun loadInput(input: List<String>) {
+        // Parse files in parallel
+        println("Loading files in parallel")
+        val parsedTransactions = runBlocking {
+            input.map { fileContent ->
+                async(Dispatchers.IO) {
+                    fileLoader.loadFromFileContents(fileContent)
+                }
+            }.awaitAll()
+        }
+
+        // Flatten the results and insert into database
+        val allTransactions = parsedTransactions.flatten()
+
+        // Optional: Process in batches if dealing with large datasets
+        println("Adding files to the database in chunks")
+        val batchSize = 1000
+        allTransactions.chunked(batchSize).forEach { batch ->
+            transactionRepository.addTransactions(batch)
+        }
+
+        println("Successfully processed ${allTransactions.size} transactions")
+    }
+
+    suspend fun getTransactions(): List<NormalizedTransaction> {
+        return transactionRepository.getAllTransactions()
+    }
 }
