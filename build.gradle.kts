@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.kapt") version "2.0.20"
     // kotlin("plugin.serialization") version "1.8.10"
     id("io.ktor.plugin") version "3.0.3"
+    jacoco
 }
 
 group = "com.bitcointracker"
@@ -21,7 +22,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:2.3.1")
     implementation("io.ktor:ktor-server-cors")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
-    implementation("com.google.code.gson:gson:2.8.8")
+    implementation("com.google.code.gson:gson:2.8.9")
     implementation("com.google.dagger:dagger:2.48")
     implementation("io.ktor:ktor-serialization-jackson:2.3.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
@@ -49,6 +50,15 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.20")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.slf4j:slf4j-simple:2.0.9")
+
+    // Chronometer dependencies
+    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
+    testImplementation("io.kotest:kotest-assertions-core:5.8.0")
+    testImplementation("io.kotest:kotest-property:5.8.0")
+
+    // JaCoCo for code coverage
+    implementation("org.jacoco:org.jacoco.core:0.8.11")
+    implementation("org.jacoco:org.jacoco.report:0.8.11")
 }
 
 application {
@@ -57,8 +67,8 @@ application {
 
 ktor {
     docker {
-        localImageName.set("hodl-tax-core")
-        imageTag.set("0.0.1-preview")
+        localImageName.set("stack-track-core")
+        imageTag.set("0.1.0-preview")
         jreVersion.set(JavaVersion.VERSION_22)
         portMappings.set(listOf(
             io.ktor.plugin.features.DockerPortMapping(
@@ -76,19 +86,36 @@ tasks.jar {
     }
 }
 
-tasks.test {
-    // Configure SLF4J Simple
-    systemProperty("org.slf4j.simpleLogger.defaultLogLevel", "info")
-    systemProperty("org.slf4j.simpleLogger.logFile", "System.out")
-    systemProperty("org.slf4j.simpleLogger.showDateTime", "true")
-    systemProperty("org.slf4j.simpleLogger.dateTimeFormat", "yyyy-MM-dd HH:mm:ss.SSS")
-    systemProperty("org.slf4j.simpleLogger.showThreadName", "true")
-    systemProperty("org.slf4j.simpleLogger.showLogName", "true")
-    systemProperty("org.slf4j.simpleLogger.showShortLogName", "true")
-    systemProperty("org.slf4j.simpleLogger.levelInBrackets", "true")
-    systemProperty("org.slf4j.simpleLogger.log.com.bitcointracker", "debug")
+jacoco {
+    toolVersion = "0.8.11"
+}
 
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    dependsOn(tasks.test)
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    // Add any exclusions here
+                    "**/models/**",
+                    "**/exceptions/**"
+                )
+            }
+        })
+    )
+}
+
+
+tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
 
 // Define test source sets

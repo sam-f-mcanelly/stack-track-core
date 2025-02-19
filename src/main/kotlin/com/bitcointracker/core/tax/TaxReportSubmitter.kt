@@ -79,9 +79,7 @@ class TaxReportSubmitter @Inject constructor(
                         SubmissionStatus.Failed(e.message ?: "Unknown error")
                     )
                 } finally {
-                    logger.info("Starting finally block")
                     submissionStatuses.remove(request.submissionId)
-                    logger.info("Finally block completed")
                 }
             }
         }
