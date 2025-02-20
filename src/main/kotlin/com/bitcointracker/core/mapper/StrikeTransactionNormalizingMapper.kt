@@ -33,7 +33,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetValueFiat = ExchangeAmount(1.0, "USD"),
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
-            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
+            filedWithIRS = false,
     )
 
     private fun normalizeTrade(transaction: StrikeTransaction): NormalizedTransaction {
@@ -60,7 +60,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetValueFiat = transaction.assetValue ?: ExchangeAmount(0.0, "USD"),
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
-            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
+            filedWithIRS = false,
         )
     }
 
@@ -82,7 +82,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetValueFiat = transaction.asset1.absoluteValue,
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
-            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
+            filedWithIRS = false,
         )
     }
 
@@ -103,7 +103,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetValueFiat = ExchangeAmount(-1.0, "USD"), // TODO populate
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
-            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
+            filedWithIRS = false,
         )
     }
 
@@ -119,7 +119,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             address = transaction.destination ?: "",
-            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
+            filedWithIRS = false,
         )
 
     private fun normalizeStrikeCredit(transaction: StrikeTransaction): NormalizedTransaction
@@ -133,7 +133,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             assetValueFiat = transaction.asset1!!.absoluteValue,
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
-            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.transactionId)
+            filedWithIRS = false,
         )
 
     private fun getSource(transaction: StrikeTransaction)

@@ -50,7 +50,7 @@ class CoinbaseStandardTransactionNormalizingMapper @Inject constructor() : Norma
             timestamp = transaction.timestamp,
             timestampText = transaction.timestamp.toString(),
             notes = transaction.notes,
-            filedWithIRS = FiledTransactions.filteredTransactionIds.contains(transaction.id)
+            filedWithIRS = false,
         )
     }
 }
