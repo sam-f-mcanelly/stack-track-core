@@ -1,68 +1,78 @@
-# 🌐 HODL-TAX-CORE
+# stack-track-core 🚀
 
-> _"Where crypto meets code in the neon-lit world of tax compliance"_
+A lightning-fast backend service for stack and portfolio tracking, built with Kotlin and Ktor.
 
-[![Build Status](http://gitea:3000/sam/hodl-tax-core/actions/workflows/test.yml/badge.svg)](http://gitea:3000/sam/hodl-tax-core/actions)
-[![Coverage](http://gitea:3000/sam/hodl-tax-core/badges/main/coverage.svg)](http://gitea:3000/sam/hodl-tax-core/coverage)
-[![Docker](http://gitea:3000/sam/hodl-tax-core/badges/main/docker.svg)](http://gitea:3000/sam/hodl-tax-core/packages)
+[![Build Status](https://img.shields.io/github/workflow/status/yourusername/stack-track-core/CI)](https://github.com/yourusername/stack-track-core/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/yourusername/stack-track-core)](https://codecov.io/gh/yourusername/stack-track-core)
+[![Docker Pulls](https://img.shields.io/docker/pulls/yourusername/stack-track-core)](https://hub.docker.com/r/yourusername/stack-track-core)
+[![License](https://img.shields.io/github/license/yourusername/stack-track-core)](https://github.com/yourusername/stack-track-core/blob/main/LICENSE)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.0.20-blue.svg)](https://kotlinlang.org)
+[![Ktor](https://img.shields.io/badge/ktor-2.3.7-blue.svg)](https://ktor.io)
 
-## 📡 Overview
+## What's This? 🤔
 
-HODL-TAX-CORE is a high-performance backend service designed for cryptocurrency tax calculations and portfolio tracking. Built with Kotlin, it leverages the power of Ktor for API serving, Gradle for build automation, and Docker for containerized deployment.
+stack-track-core is your friendly neighborhood portfolio tracking service. Built with Kotlin and powered by Ktor, it makes managing and analyzing your investments a breeze. This is the backend service that needs to be paired with Stack Track frontend for full functionality.
 
-## 🔧 Tech Stack Integration
+## Tech Stack 🛠️
 
-The service architecture integrates three primary technologies:
+- 💻 Kotlin 2.0.20
+- 🌐 Ktor 2.3.7 (Web framework)
+- 🗄️ Exposed (SQL framework)
+- 📊 H2 Database
+- 🎯 Dagger (Dependency injection)
+- 🧪 JUnit 5 (Testing)
+- 📦 Jackson (JSON serialization)
+- 🐳 Docker
 
-- **Ktor** serves as our asynchronous web framework, handling HTTP requests with coroutines for optimal performance. It provides the RESTful API endpoints and manages JSON serialization through Jackson.
+## Prerequisites ✨
 
-- **Gradle** orchestrates our build process, managing dependencies and enabling modular testing through custom tasks for both unit and integration tests. It integrates with Kotlin's multiplatform capabilities and handles Docker image creation through the Ktor plugin.
+- Java 21 (Amazon Corretto)
+- Gradle 8.5
 
-- **Docker** containerizes the application, ensuring consistent deployment across environments. Through multi-stage builds, it optimizes the final image size while maintaining all runtime dependencies.
+## Get Started 🚀
 
-## 🔗 Dependencies
+1. Clone this bad boy:
+```bash
+git clone https://github.com/sam-f-mcanelly/stack-track-core
+cd stack-track-core
+```
 
-- Kotlin JVM 2.0.20
-- Ktor 2.3.7
-- Jackson (for JSON serialization)
-- Exposed (SQL framework)
-- H2 Database
-- Dagger (DI framework)
-- JUnit 5 (Testing)
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-1. **Java Installation**
-
+2. Get Java and Gradle using SDKMAN:
 ```bash
 curl -s "https://get.sdkman.io" | bash
 source "$HOME/.sdkman/bin/sdkman-init.sh"
 sdk install java 21.0.1-amzn
-```
-
-2. **Gradle Installation**
-
-```bash
 sdk install gradle 8.5
 ```
 
-### Running with Ktor Docker Plugin
+## Development 👩‍💻
 
-The service can be run directly using the Ktor Docker plugin, which handles both building and running the container:
-
+Build and test:
 ```bash
-# Build Docker image using Ktor plugin
-./gradlew runDocker
-
+./gradlew build
+./gradlew test
 ```
 
-The Ktor Docker plugin configuration in `build.gradle.kts`:
+Fire it up locally (requires Docker):
+```bash
+./gradlew runDocker
+```
+
+## Docker Magic 🐳
+
+Build that image:
+```bash
+docker buildx build --load -t localhost:3002/sam/stack-track-core:latest .
+```
+
+### Ktor Docker Config 🔧
+
+Here's how we containerize with Ktor's Docker plugin (`build.gradle.kts`):
+
 ```kotlin
 ktor {
     docker {
-        localImageName.set("hodl-tax-core")
+        localImageName.set("stack-track-core")
         imageTag.set("0.0.1-preview")
         jreVersion.set(JavaVersion.VERSION_21)
         
@@ -73,62 +83,37 @@ ktor {
                 io.ktor.plugin.features.DockerPortMappingProtocol.TCP
             )
         ))
-        
-        environmentVariables.set(mapOf(
-            "JAVA_OPTS" to "-Xms256m -Xmx512m",
-            "TZ" to "UTC"
-        ))
     }
 }
 ```
 
-This method provides a streamlined way to build and run the service, with the Ktor plugin handling:
-- Docker image creation
-- Port mappings
-- Environment variables
-- JVM configuration
-- Health checks
-
-## 🚀 Release Process [WORK IN PROGRESS]
-
-The project uses GitHub Actions for automated releases. When a tag is pushed, it:
-1. Builds the project
-2. Runs tests
-3. Creates a GitHub release
-4. Builds and pushes Docker image
-
-## 🔍 Health Check
-
-The service includes a health endpoint at `/health` that returns a 200 OK status when operational.
-
-## 🛠️ Development
-
-- Run tests: `./gradlew test`
-- Build Docker image: `docker buildx build --load -t localhost:3002/sam/hodl-tax-core:latest .`
-- Start service: `docker compose up -d`
-- View logs: `docker compose logs -f`
-
-## 📡 Network Configuration
-
-The service operates on port 9090 internally and is mapped to port 90 on the host machine. It's part of the `hodl-tax` Docker network for service discovery and isolation.
-
-## 🔗 Dependencies
-
-- Kotlin JVM 2.0.20
-- Ktor 2.3.7
-- Jackson (for JSON serialization)
-- Exposed (SQL framework)
-- H2 Database
-- Dagger (DI framework)
-- JUnit 5 (Testing)
-
-## 🔗 Clone the repository
-
+Run it with Ktor's Docker plugin:
 ```bash
-git clone https://localhost:3001/sam/hodl-tax-core.git
-
+./gradlew runDocker
 ```
+
+## Network Details 🌐
+
+- Internal port: 9090
+- Host port mapping: 90
+- Docker network: stack-track
+
+## Health Check 💓
+
+Hit `/health` for a quick HTTP 200 when everything's running smooth.
+
+## CI/CD Pipeline 🔄
+
+We've got GitHub Actions doing the heavy lifting:
+- Builds and tests on every push
+- Creates releases from tags
+- Publishes Docker images
+- Tracks code coverage
+
+## License 📜
+
+[Add your license information here]
 
 ---
 
-
+Made with ❤️ by the Stack Track team
