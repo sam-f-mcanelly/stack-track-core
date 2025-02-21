@@ -38,22 +38,20 @@ class TaxComputationRouteHandler @Inject constructor(
      * @param call The ApplicationCall containing the request details
      * @return Unit, but responds to the call with either the generated tax report or an error
      */
-    fun submitTaxReportRequest(call: ApplicationCall) {
-        call.application.launch {
-            try {
-                val request = call.parameters["taxReportRequest"] ?: return@launch call.respondText(
-                    "Missing or malformed asset",
-                    status = HttpStatusCode.BadRequest
-                )
+    suspend fun submitTaxReportRequest(call: ApplicationCall) {
+        try {
+            val request = call.parameters["taxReportRequest"] ?: return call.respondText(
+                "Missing or malformed asset",
+                status = HttpStatusCode.BadRequest
+            )
 
-                // val taxReport = taxReportGenerator.processTaxReport()
+            // val taxReport = taxReportGenerator.processTaxReport()
 
-                call.respond("lol")
-            } catch (e: Exception) {
-                println("Failed to load asset holdings!")
-                println(e.localizedMessage)
-                println(e.stackTrace)
-            }
+            call.respond("lol")
+        } catch (e: Exception) {
+            println("Failed to load asset holdings!")
+            println(e.localizedMessage)
+            println(e.stackTrace)
         }
     }
 }

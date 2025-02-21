@@ -53,7 +53,7 @@ import io.ktor.server.routing.routing
 fun main() {
     val appComponent = DaggerAppComponent.create()
 
-    embeddedServer(Netty, port = 9090) {
+    embeddedServer(Netty, port = 3090) {
         module(appComponent)
     }.start(wait = true)
 }
