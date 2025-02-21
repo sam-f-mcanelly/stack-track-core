@@ -1,5 +1,7 @@
 package com.bitcointracker.model.internal.tax
 
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+
 /**
  * Details of how a buy transaction was used in tax calculations.
  *
@@ -11,4 +13,6 @@ data class UsedBuyTransaction(
     val transactionId: String,
     val amountUsed: Double,
     val costBasis: Double,
+    val taxType: TaxType,
+    val originalTransaction: NormalizedTransaction
 )

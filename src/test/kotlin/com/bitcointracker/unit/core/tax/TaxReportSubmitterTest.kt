@@ -3,6 +3,7 @@ package com.bitcointracker.unit.core.tax
 import com.bitcointracker.core.TransactionRepository
 import com.bitcointracker.core.tax.TaxReportSubmitter
 import com.bitcointracker.model.internal.tax.TaxReportResult
+import com.bitcointracker.model.internal.tax.TaxType
 import com.bitcointracker.model.internal.tax.TaxableEventResult
 import com.bitcointracker.model.internal.tax.UsedBuyTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
@@ -97,9 +98,10 @@ class TaxReportSubmitterTest {
                         proceeds = 100000.0,
                         costBasis = 90000.0,
                         gain = 10000.0,
+                        sellTransaction = sellTx,
                         usedBuyTransactions = listOf(
-                            UsedBuyTransaction("buy-1", 1.0, 45000.0),
-                            UsedBuyTransaction("buy-2", 1.0, 45000.0)
+                            UsedBuyTransaction("buy-1", 1.0, 45000.0, TaxType.LONG_TERM, buyTx1),
+                            UsedBuyTransaction("buy-2", 1.0, 45000.0, TaxType.LONG_TERM, buyTx2),
                         )
                     )
                 )
@@ -136,6 +138,8 @@ class TaxReportSubmitterTest {
         fun `should handle missing transactions gracefully`() = runTest(testDispatcher) {
             logger.info("Starting missing transactions test")
 
+            val sellTx = createTransaction("sell-1", NormalizedTransactionType.SELL)
+            val buyTx = createTransaction("buy-1", NormalizedTransactionType.BUY)
             coEvery { transactionRepository.getTransactionById(any()) } answers {
                 logger.info("Getting transaction (returning null): ${firstArg<String>()}")
                 null
@@ -149,8 +153,9 @@ class TaxReportSubmitterTest {
                         proceeds = 100000.0,
                         costBasis = 90000.0,
                         gain = 10000.0,
+                        sellTransaction = sellTx,
                         usedBuyTransactions = listOf(
-                            UsedBuyTransaction("buy-1", 1.0, 45000.0)
+                            UsedBuyTransaction("buy-1", 1.0, 45000.0, TaxType.LONG_TERM, buyTx),
                         )
                     )
                 )
@@ -228,8 +233,9 @@ class TaxReportSubmitterTest {
                 proceeds = 100000.0,
                 costBasis = 90000.0,
                 gain = 10000.0,
+                sellTransaction = createTransaction("sell-1", NormalizedTransactionType.SELL),
                 usedBuyTransactions = buyIds.map {
-                    UsedBuyTransaction(it, 1.0, 90000.0 / buyIds.size)
+                    UsedBuyTransaction(it, 1.0, 90000.0 / buyIds.size, TaxType.LONG_TERM, createTransaction("buy-$it", NormalizedTransactionType.BUY))
                 }
             )
         )

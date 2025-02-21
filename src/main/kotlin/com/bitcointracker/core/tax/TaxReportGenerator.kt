@@ -7,6 +7,7 @@ import com.bitcointracker.model.api.tax.TaxTreatment
 import com.bitcointracker.model.api.tax.TaxableEventParameters
 import com.bitcointracker.model.exception.InsufficientBuyTransactionsException
 import com.bitcointracker.model.internal.tax.TaxReportResult
+import com.bitcointracker.model.internal.tax.TaxType
 import com.bitcointracker.model.internal.tax.TaxableEventResult
 import com.bitcointracker.model.internal.tax.UsedBuyTransaction
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
@@ -186,11 +187,18 @@ class TaxReportGenerator @Inject constructor(
             val amountToUse = minOf(remainingSellAmount, buyTx.assetAmount.amount)
             val costBasis = (amountToUse / buyTx.assetAmount.amount) * buyTx.assetValueFiat.amount
 
+            // Calculate holding period
+            val holdingPeriodMillis = sellTransaction.timestamp.time - buyTx.timestamp.time
+            val holdingPeriodDays = holdingPeriodMillis / (1000 * 60 * 60 * 24)
+            val taxType = if (holdingPeriodDays >= 365) TaxType.LONG_TERM else TaxType.SHORT_TERM
+
             usedBuyTransactions.add(
                 UsedBuyTransaction(
                     transactionId = buyTx.id,
                     amountUsed = amountToUse,
-                    costBasis = costBasis
+                    costBasis = costBasis,
+                    taxType = taxType,
+                    originalTransaction = buyTx,
                 )
             )
 
@@ -212,7 +220,8 @@ class TaxReportGenerator @Inject constructor(
             proceeds = proceeds,
             costBasis = totalCostBasis,
             gain = gain,
-            usedBuyTransactions = usedBuyTransactions
+            sellTransaction = sellTransaction,
+            usedBuyTransactions = usedBuyTransactions,
         )
     }
 
