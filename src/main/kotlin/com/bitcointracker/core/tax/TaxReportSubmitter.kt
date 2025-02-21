@@ -27,7 +27,7 @@ import javax.inject.Singleton
 @Singleton
 class TaxReportSubmitter @Inject constructor(
     private val transactionRepository: TransactionRepository,
-    dispatcher: CoroutineDispatcher = Dispatchers.Default
+    dispatcher: CoroutineDispatcher,
 ) {
     private val logger = LoggerFactory.getLogger(TaxReportSubmitter::class.java)
 

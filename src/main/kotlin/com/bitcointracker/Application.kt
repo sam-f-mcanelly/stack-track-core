@@ -88,15 +88,16 @@ fun main() {
 fun Application.module(appComponent: AppComponent) {
     val rawDataRouteHandler = appComponent.getRawDataRouteHandler()
     val metadataRouteHandler = appComponent.getMetadataRouteHandler()
+    val taxComputationRouteHandler = appComponent.getTaxComputationRouteHandler()
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
             registerModule(
                 KotlinModule.Builder()
                     .withReflectionCacheSize(512)
-                    .configure(KotlinFeature.NullToEmptyCollection, false)
+                    .configure(KotlinFeature.NullToEmptyCollection, true)
                     .configure(KotlinFeature.NullToEmptyMap, false)
-                    .configure(KotlinFeature.NullIsSameAsDefault, false)
+                    .configure(KotlinFeature.NullIsSameAsDefault, true)
                     .configure(KotlinFeature.SingletonSupport, false)
                     .configure(KotlinFeature.StrictNullChecks, false)
                     .build()
@@ -119,20 +120,23 @@ fun Application.module(appComponent: AppComponent) {
         get("/health") {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
-        post("/api/upload") {
+        post("/api/data/upload") {
             rawDataRouteHandler.handleFileUpload(call)
         }
-        get("/api/download") {
+        get("/api/data/download") {
             rawDataRouteHandler.handleFileDownload(call)
         }
-        get("/api/data") {
+        get("/api/data/transactions") {
             rawDataRouteHandler.handleGetAllTransactions(call)
         }
-        get("/api/portfolio_value/{fiat}") {
+        get("/api/metadata/portfolio_value/{fiat}") {
             metadataRouteHandler.getPortfolioValue(call)
         }
-        get("/api/accumulation/asset/{asset}/days/{days}") {
+        get("/api/metadata/accumulation/asset/{asset}/days/{days}") {
             metadataRouteHandler.getAccumulationHistory(call)
+        }
+        post("/api/tax/request_report/{taxReportRequest}") {
+            taxComputationRouteHandler.submitTaxReportRequest(call)
         }
     }
 }

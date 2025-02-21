@@ -1,7 +1,6 @@
 package com.bitcointracker.external.client
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
+import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
@@ -17,17 +16,17 @@ import javax.inject.Inject
  *
  * Example usage:
  * ```
- * val client = CoinbaseClient(okHttpClient, gson)
+ * val client = CoinbaseClient(okHttpClient, objectMapper)
  * val btcPrice = client.getCurrentPrice("BTC", "USD")
  * ```
  *
  * @property client OkHttpClient instance for making HTTP requests
- * @property gson Gson instance for JSON parsing
+ * @property objectMapper Jackson instance for JSON parsing
  * @constructor Creates a CoinbaseClient with the specified HTTP client and JSON parser
  */
 class CoinbaseClient @Inject constructor(
     private val client: OkHttpClient,
-    private val gson: Gson,
+    private val objectMapper: ObjectMapper,
 ) {
     /**
      * Fetches the current spot price for a cryptocurrency in the specified currency.
@@ -89,8 +88,8 @@ class CoinbaseClient @Inject constructor(
      * ```
      */
     private fun parsePrice(json: String): Double? {
-        val jsonObject: JsonObject = gson.fromJson(json, JsonObject::class.java)
-        val price = jsonObject.getAsJsonObject("data").get("amount").asString
+        val jsonNode = objectMapper.readTree(json)
+        val price = jsonNode.path("data").path("amount").asText()
         return price.toDoubleOrNull()
     }
 }

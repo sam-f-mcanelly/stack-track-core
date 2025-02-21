@@ -14,6 +14,7 @@ import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransa
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
 import java.util.Date
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.collections.forEach
 
 /**
@@ -22,6 +23,7 @@ import kotlin.collections.forEach
  *
  * @property transactionRepository Repository for accessing transaction data
  */
+@Singleton
 class TaxReportGenerator @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {

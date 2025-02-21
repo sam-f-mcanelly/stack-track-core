@@ -3,7 +3,7 @@ package com.bitcointracker.service.routes
 import com.bitcointracker.core.TransactionRepository
 import com.bitcointracker.core.parser.UniversalFileLoader
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.google.gson.Gson
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -18,6 +18,7 @@ import io.ktor.server.response.respondOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
 import java.util.Date
@@ -28,55 +29,62 @@ import kotlin.collections.chunked
 class RawDataRouteHandler @Inject constructor(
     private val fileLoader: UniversalFileLoader,
     private val transactionRepository: TransactionRepository,
-    private val gson: Gson
+    private val objectMapper: ObjectMapper
 ) {
-    suspend fun handleFileUpload(call: ApplicationCall) {
-        try {
-            val multipart = call.receiveMultipart()
-            val files = mutableListOf<ByteArray>()
-            multipart.forEachPart { part ->
-                if (part is PartData.FileItem) {
-                    val fileBytes = part.streamProvider().readBytes()
-                    files.add(fileBytes)
-                    // You can also save the file to disk or process it further here
+    fun handleFileUpload(call: ApplicationCall) {
+        call.application.launch {
+            try {
+                val multipart = call.receiveMultipart()
+                val files = mutableListOf<ByteArray>()
+                multipart.forEachPart { part ->
+                    if (part is PartData.FileItem) {
+                        val fileBytes = part.streamProvider().readBytes()
+                        files.add(fileBytes)
+                        // You can also save the file to disk or process it further here
+                    }
+                    part.dispose()
                 }
-                part.dispose()
+                loadInput(files.map { it.toString(Charsets.UTF_8) })
+                call.respond(HttpStatusCode.OK, "Files uploaded and stored successfully.")
+            } catch (ex: Exception) {
+                println(ex)
+                call.respond(HttpStatusCode.InternalServerError, "Upload failed: ${ex.localizedMessage}")
             }
-            loadInput(files.map { it.toString(Charsets.UTF_8) })
-            call.respond(HttpStatusCode.OK, "Files uploaded and stored successfully.")
-        } catch (ex: Exception) {
-            println(ex)
-            call.respond(HttpStatusCode.InternalServerError,"Upload failed: ${ex.localizedMessage}")
         }
     }
 
-    suspend fun handleFileDownload(call: ApplicationCall) {
-        try {
-            val date = Date()
-            val transactions = getTransactions()
-            val serializedTransactions = gson.toJson(transactions)
-            val jsonFileName = "items-$date-${UUID.randomUUID().toString().substring(0, 6)}.json"  // Unique filename
-            call.response.header(HttpHeaders.ContentDisposition, "attachment; filename=\"$jsonFileName\"")
-            // Convert JSON string to ByteArray and stream it as a response
-            val byteArray = serializedTransactions.toByteArray(Charsets.UTF_8)
-            val inputStream = ByteArrayInputStream(byteArray)
-            call.respondOutputStream(
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            ) {
-                inputStream.copyTo(this)
+    fun handleFileDownload(call: ApplicationCall) {
+        call.application.launch {
+            try {
+                val date = Date()
+                val transactions = getTransactions()
+                val serializedTransactions = objectMapper.writeValueAsString(transactions)
+                val jsonFileName =
+                    "items-$date-${UUID.randomUUID().toString().substring(0, 6)}.json"  // Unique filename
+                call.response.header(HttpHeaders.ContentDisposition, "attachment; filename=\"$jsonFileName\"")
+                // Convert JSON string to ByteArray and stream it as a response
+                val byteArray = serializedTransactions.toByteArray(Charsets.UTF_8)
+                val inputStream = ByteArrayInputStream(byteArray)
+                call.respondOutputStream(
+                    contentType = ContentType.Application.Json,
+                    status = HttpStatusCode.OK
+                ) {
+                    inputStream.copyTo(this)
+                }
+            } catch (ex: Exception) {
+                println(ex)
             }
-        } catch (ex: Exception) {
-            println(ex)
         }
     }
 
-    suspend fun handleGetAllTransactions(call: ApplicationCall) {
-        try {
-            call.respond(getTransactions())
-        } catch (ex: Exception) {
-            println(ex)
-            call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
+    fun handleGetAllTransactions(call: ApplicationCall) {
+        call.application.launch {
+            try {
+                call.respond(getTransactions())
+            } catch (ex: Exception) {
+                println(ex)
+                call.respond(HttpStatusCode.InternalServerError, "load failed: ${ex.localizedMessage}")
+            }
         }
     }
 

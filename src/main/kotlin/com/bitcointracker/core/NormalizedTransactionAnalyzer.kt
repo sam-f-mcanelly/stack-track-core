@@ -4,7 +4,9 @@ import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
 import java.util.Calendar
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class NormalizedTransactionAnalyzer @Inject constructor(
     private val transactionRepository: TransactionRepository
 ){

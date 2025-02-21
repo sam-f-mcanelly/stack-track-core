@@ -1,7 +1,7 @@
 package com.bitcointracker.unit.external.client
 
 import com.bitcointracker.external.client.CoinbaseClient
-import com.google.gson.Gson
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -39,7 +39,7 @@ class CoinbaseClientTest {
     @MockK
     private lateinit var mockResponseBody: ResponseBody
     
-    private val gson = Gson()
+    private val objectMapper = ObjectMapper()
     
     private lateinit var coinbaseClient: CoinbaseClient
     
@@ -50,7 +50,7 @@ class CoinbaseClientTest {
     @BeforeEach
     fun setup() {
         MockKAnnotations.init(this)
-        coinbaseClient = CoinbaseClient(mockOkHttpClient, gson)
+        coinbaseClient = CoinbaseClient(mockOkHttpClient, objectMapper)
     }
     
     /**
