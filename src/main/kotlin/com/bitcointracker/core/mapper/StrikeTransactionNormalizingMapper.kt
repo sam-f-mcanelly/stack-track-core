@@ -9,8 +9,22 @@ import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSou
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType
 import javax.inject.Inject
 
-// TODO handle reversed deposits
+
+/**
+ * Mapper class responsible for normalizing Strike transactions into a standardized format.
+ * This class handles various types of Strike transactions including deposits, trades,
+ * withdrawals, on-chain transactions, and Strike credits.
+ *
+ * TODO: Implement handling for reversed deposits
+ */
 class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMapper<StrikeTransaction> {
+
+    /**
+     * Converts a Strike transaction into a normalized transaction format based on its type.
+     *
+     * @param transaction The Strike transaction to be normalized
+     * @return A normalized transaction with standardized fields and formats
+     */
     override fun normalizeTransaction(transaction: StrikeTransaction): NormalizedTransaction {
         return when (transaction.type) {
             StrikeTransactionType.DEPOSIT -> normalizeDeposit(transaction)
@@ -22,6 +36,13 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
         }
     }
 
+    /**
+     * Normalizes a deposit transaction.
+     * Deposits are treated as free transactions with a 1:1 USD conversion rate.
+     *
+     * @param transaction The deposit transaction to normalize
+     * @return A normalized deposit transaction
+     */
     private fun normalizeDeposit(transaction: StrikeTransaction): NormalizedTransaction
         = NormalizedTransaction(
             id = transaction.transactionId,
@@ -36,6 +57,13 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             filedWithIRS = false,
     )
 
+    /**
+     * Normalizes a trade transaction, determining whether it's a buy or sell based on the assets involved.
+     * If asset1 is not USD, it's treated as a sell; otherwise, it's treated as a buy.
+     *
+     * @param transaction The trade transaction to normalize
+     * @return A normalized buy or sell transaction
+     */
     private fun normalizeTrade(transaction: StrikeTransaction): NormalizedTransaction {
         var transactionType: NormalizedTransactionType
         var transactionAmountFiat: ExchangeAmount
@@ -64,6 +92,14 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
         )
     }
 
+    /**
+     * Normalizes a withdrawal transaction.
+     * Handles both current and legacy withdrawal formats, delegating to specialized handling for Bitcoin withdrawals
+     * if necessary.
+     *
+     * @param transaction The withdrawal transaction to normalize
+     * @return A normalized withdrawal transaction
+     */
     private fun normalizeWithdrawal(transaction: StrikeTransaction): NormalizedTransaction {
         // println("Normalizing withdrawal: " + transaction)
 
@@ -87,10 +123,13 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
     }
 
     /**
-     * Special handling for Strike's old style of reporting BTC withdrawals as a withdrawal
-     * instead of labelling it ONCHAIN.
+     * Handles Strike's legacy format for Bitcoin withdrawals.
+     * This special handling is required for older transactions where Bitcoin withdrawals
+     * were reported as regular withdrawals instead of on-chain transactions.
      *
-     * @param transaction StrikeTransaction
+     * @param transaction The Bitcoin withdrawal transaction to normalize
+     * @return A normalized Bitcoin withdrawal transaction
+     * @see normalizeOnChainTransaction
      */
     private fun normalizeBitcoinWithdrawal(transaction: StrikeTransaction): NormalizedTransaction {
         return NormalizedTransaction(
@@ -107,6 +146,14 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
         )
     }
 
+    /**
+     * Normalizes an on-chain transaction.
+     * These are typically Bitcoin transactions that occur on the blockchain.
+     * Note: Asset values need to be populated via API calls (currently pending implementation).
+     *
+     * @param transaction The on-chain transaction to normalize
+     * @return A normalized on-chain transaction
+     */
     private fun normalizeOnChainTransaction(transaction: StrikeTransaction): NormalizedTransaction
         = NormalizedTransaction(
             id = transaction.transactionId,
@@ -122,6 +169,13 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             filedWithIRS = false,
         )
 
+    /**
+     * Normalizes Strike credit transactions, including referral bonuses.
+     * These transactions are treated as broker credits with no associated fees.
+     *
+     * @param transaction The Strike credit transaction to normalize
+     * @return A normalized broker credit transaction
+     */
     private fun normalizeStrikeCredit(transaction: StrikeTransaction): NormalizedTransaction
         = NormalizedTransaction(
             id = transaction.transactionId,
@@ -136,6 +190,12 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             filedWithIRS = false,
         )
 
+    /**
+     * Converts Strike-specific transaction sources to normalized transaction sources.
+     *
+     * @param transaction The Strike transaction containing the source information
+     * @return The normalized transaction source
+     */
     private fun getSource(transaction: StrikeTransaction)
         = when(transaction.source) {
             StrikeTransactionSource.MONTHLY_STATEMENT -> TransactionSource.STRIKE_MONTHLY
