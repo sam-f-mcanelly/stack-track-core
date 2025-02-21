@@ -19,6 +19,11 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.Function
+import org.jetbrains.exposed.sql.ExpressionWithColumnType
+import org.jetbrains.exposed.sql.IntegerColumnType
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.SortOrder
 import java.time.ZoneId
 import java.util.Date
 import javax.inject.Inject
@@ -107,6 +112,20 @@ class H2TransactionRepository @Inject constructor(
     override suspend fun getAllTransactions(): List<NormalizedTransaction> {
         return dbQuery {
             TransactionTable.selectAll()
+                .map { it.toNormalizedTransaction() }
+        }
+    }
+
+    override suspend fun getSellTransactionsByYear(year: Int): List<NormalizedTransaction> {
+        return dbQuery {
+            TransactionTable
+                .select {
+                    // Filter for SELL transactions
+                    (TransactionTable.type eq NormalizedTransactionType.SELL) and
+                            // Filter for the specified year
+                            (ExtractYear(TransactionTable.timestamp) eq year)
+                }
+                .orderBy(TransactionTable.timestamp, SortOrder.DESC)
                 .map { it.toNormalizedTransaction() }
         }
     }
@@ -217,6 +236,14 @@ class H2TransactionRepository @Inject constructor(
             TransactionTable.deleteWhere { TransactionTable.id eq id }
         }
         transactionCache.update(getAllTransactions())
+    }
+
+    internal class ExtractYear(val expr: ExpressionWithColumnType<java.time.LocalDateTime>) : Function<Int>(IntegerColumnType()) {
+        override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
+            append("EXTRACT(YEAR FROM ")
+            append(expr)
+            append(")")
+        }
     }
 
     // Utility extension function to convert ResultRow to NormalizedTransaction

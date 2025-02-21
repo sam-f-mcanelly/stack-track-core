@@ -10,6 +10,7 @@ interface TransactionRepository {
     suspend fun addTransactions(transactions: List<NormalizedTransaction>)
     suspend fun getTransactionById(id: String): NormalizedTransaction?
     suspend fun getAllTransactions(): List<NormalizedTransaction>
+    suspend fun getSellTransactionsByYear(year: Int): List<NormalizedTransaction>
     suspend fun getFilteredTransactions(
         sources: List<TransactionSource>? = null,
         types: List<NormalizedTransactionType>? = null,

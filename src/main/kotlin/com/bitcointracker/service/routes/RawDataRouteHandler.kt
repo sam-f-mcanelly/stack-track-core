@@ -17,11 +17,9 @@ import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondOutputStream
-import io.ktor.server.routing.post
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
 import java.util.Date
@@ -34,6 +32,14 @@ class RawDataRouteHandler @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val objectMapper: ObjectMapper
 ) {
+
+    /**
+     * Handles file upload requests for transaction data.
+     * Processes multipart form data, reads uploaded files, and stores the transaction data.
+     *
+     * @param call The ApplicationCall containing the multipart request
+     * @throws Exception If file processing or storage fails
+     */
     suspend fun handleFileUpload(call: ApplicationCall) {
         try {
             println("Content-Length: ${call.request.headers["Content-Length"]}")
@@ -88,6 +94,13 @@ class RawDataRouteHandler @Inject constructor(
         }
     }
 
+    /**
+     * Handles requests to download transaction data as a JSON file.
+     * Retrieves all transactions from the repository and streams them as a JSON response.
+     *
+     * @param call The ApplicationCall for the download request
+     * @throws Exception If data retrieval or serialization fails
+     */
     suspend fun handleFileDownload(call: ApplicationCall) {
         try {
             val date = Date()
@@ -110,6 +123,13 @@ class RawDataRouteHandler @Inject constructor(
         }
     }
 
+    /**
+     * Handles requests to retrieve all transactions with pagination and sorting options.
+     * Supports customizable page size, sort field, and sort order.
+     *
+     * @param call The ApplicationCall containing pagination parameters
+     * @throws Exception If transaction retrieval fails
+     */
     suspend fun handleGetAllTransactions(call: ApplicationCall) {
         try {
             // Extract pagination parameters from query parameters
@@ -128,6 +148,46 @@ class RawDataRouteHandler @Inject constructor(
         }
     }
 
+    /**
+     * Handles requests to retrieve sell transactions for a specific year.
+     * Validates the year parameter and returns matching transactions.
+     *
+     * @param call The ApplicationCall containing the year parameter
+     * @throws Exception If parameter validation or transaction retrieval fails
+     */
+    suspend fun handleGetSellTransactionsByYear(call: ApplicationCall) {
+        try {
+            val year = call.parameters["year"]?.toIntOrNull()
+            if (year == null) {
+                call.respond(HttpStatusCode.BadRequest, "Invalid year parameter")
+                return
+            }
+
+            // Get current year to validate input
+            val currentYear = java.time.Year.now().value
+            if (year < 2009 || year > currentYear) { // 2009 is when Bitcoin started
+                call.respond(HttpStatusCode.BadRequest, "Year must be between 2009 and $currentYear")
+                return
+            }
+
+            val transactions = transactionRepository.getSellTransactionsByYear(year)
+            call.respond(transactions)
+        } catch (ex: Exception) {
+            println(ex)
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                "Failed to retrieve sell transactions: ${ex.localizedMessage}"
+            )
+        }
+    }
+
+    /**
+     * Processes and loads input data from multiple files in parallel.
+     * Parses the files and stores transactions in batches for better performance.
+     *
+     * @param input List of file contents as strings
+     * @throws Exception If file parsing or database insertion fails
+     */
     private suspend fun loadInput(input: List<String>) {
         // Parse files in parallel
         println("Loading files in parallel")
@@ -152,6 +212,14 @@ class RawDataRouteHandler @Inject constructor(
         println("Successfully processed ${allTransactions.size} transactions")
     }
 
+    /**
+     * Retrieves and sorts transactions based on pagination parameters.
+     * Supports sorting by various transaction fields and custom page sizes.
+     *
+     * @param params PaginationParams containing page number, size, and sort options
+     * @return PaginatedResponse containing the requested subset of transactions
+     * @throws Exception If transaction retrieval or sorting fails
+     */
     suspend fun getTransactions(params: PaginationParams): PaginatedResponse<NormalizedTransaction> {
         val allTransactions = transactionRepository.getAllTransactions()
 

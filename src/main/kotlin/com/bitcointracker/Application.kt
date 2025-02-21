@@ -129,6 +129,9 @@ fun Application.module(appComponent: AppComponent) {
         get("/api/data/transactions") {
             rawDataRouteHandler.handleGetAllTransactions(call)
         }
+        get("/api/data/sells/{year}") {
+            rawDataRouteHandler.handleGetSellTransactionsByYear(call)
+        }
         get("/api/metadata/portfolio_value/{fiat}") {
             metadataRouteHandler.getPortfolioValue(call)
         }
