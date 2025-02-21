@@ -116,6 +116,7 @@ tasks.jacocoTestReport {
 tasks.test {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+    jvmArgs = listOf("-XX:+EnableDynamicAgentLoading")
 }
 
 // Define test source sets
