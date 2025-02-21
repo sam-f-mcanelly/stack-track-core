@@ -79,12 +79,5 @@ fun Application.module(appComponent: AppComponent) {
         get("/api/accumulation/asset/{asset}/days/{days}") {
             metadataRouteHandler.getAccumulationHistory(call)
         }
-        get("/api/profit_statement") {
-            try {
-                call.respond(service.getProfitStatement())
-            } catch (ex: Exception) {
-                println(ex)
-            }
-        }
     }
 }

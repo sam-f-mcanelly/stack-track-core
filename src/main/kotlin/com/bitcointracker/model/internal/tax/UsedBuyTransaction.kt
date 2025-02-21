@@ -10,5 +10,5 @@ package com.bitcointracker.model.internal.tax
 data class UsedBuyTransaction(
     val transactionId: String,
     val amountUsed: Double,
-    val costBasis: Double
+    val costBasis: Double,
 )
