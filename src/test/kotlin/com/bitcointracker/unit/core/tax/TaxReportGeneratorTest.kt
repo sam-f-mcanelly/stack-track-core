@@ -6,7 +6,6 @@ import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.bitcointracker.model.api.tax.TaxTreatment
 import com.bitcointracker.model.api.tax.TaxableEventParameters
-import com.bitcointracker.model.exception.InsufficientBuyTransactionsException
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
@@ -16,6 +15,7 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -39,7 +39,7 @@ class TaxReportGeneratorTest {
     @Nested
     inner class FIFO {
         @Test
-        fun `should process FIFO tax treatment with sufficient buy transactions`() = runBlocking {
+        fun `should process FIFO tax treatment with sufficient buy transactions`() = runTest {
             // Arrange
             val sellTx = createTransaction(
                 id = "sell-1",
@@ -98,7 +98,7 @@ class TaxReportGeneratorTest {
         }
 
         @Test
-        fun `should throw exception when insufficient buy transactions for FIFO`() = runBlocking {
+        fun `should throw exception when insufficient buy transactions for FIFO`() = runTest {
             // Arrange
             val sellTx = createTransaction(
                 id = "sell-1",
@@ -130,7 +130,7 @@ class TaxReportGeneratorTest {
             )
 
             // Act & Assert
-            assertThrows<InsufficientBuyTransactionsException> {
+            assertThrows<TaxReportProcessingException> {
                 runBlocking { processor.processTaxReport(request) }
             }
         }
@@ -139,7 +139,7 @@ class TaxReportGeneratorTest {
     @Nested
     inner class LIFO {
         @Test
-        fun `should process LIFO tax treatment correctly`() = runBlocking {
+        fun `should process LIFO tax treatment correctly`() = runTest {
             // Arrange
             val sellTx = createTransaction(
                 id = "sell-1",
@@ -196,7 +196,7 @@ class TaxReportGeneratorTest {
     @Nested
     inner class CustomMatching {
         @Test
-        fun `should process custom tax treatment with valid buy transactions`() = runBlocking {
+        fun `should process custom tax treatment with valid buy transactions`() = runTest {
             // Arrange
             val sellTx = createTransaction(
                 id = "sell-1",
@@ -240,7 +240,7 @@ class TaxReportGeneratorTest {
         }
 
         @Test
-        fun `should throw exception for custom treatment without buy IDs`() = runBlocking {
+        fun `should throw exception for custom treatment without buy IDs`() = runTest {
             val request = TaxReportRequest(
                 requestId = "request-1",
                 taxableEvents = listOf(
@@ -260,13 +260,13 @@ class TaxReportGeneratorTest {
     @Nested
     inner class ProfitOptimization {
         @Test
-        fun `should process MAX_PROFIT strategy correctly`() = runBlocking {
+        fun `should process MAX_PROFIT strategy correctly`() = runTest {
             // Arrange and implementation similar to other tests
             // Should verify that highest profit transactions are selected first
         }
 
         @Test
-        fun `should process MIN_PROFIT strategy correctly`() = runBlocking {
+        fun `should process MIN_PROFIT strategy correctly`() = runTest {
             // Arrange and implementation similar to other tests
             // Should verify that lowest profit transactions are selected first
         }

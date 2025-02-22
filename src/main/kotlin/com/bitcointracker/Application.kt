@@ -127,7 +127,7 @@ fun Application.module(appComponent: AppComponent) {
             rawDataRouteHandler.handleFileDownload(call)
         }
         get("/api/data/transactions") {
-            rawDataRouteHandler.handleGetAllTransactions(call)
+            rawDataRouteHandler.handleGetTransactions(call)
         }
         get("/api/data/sells/{year}") {
             rawDataRouteHandler.handleGetSellTransactionsByYear(call)
@@ -135,7 +135,7 @@ fun Application.module(appComponent: AppComponent) {
         get("/api/metadata/portfolio_value/{fiat}") {
             metadataRouteHandler.getPortfolioValue(call)
         }
-        get("/api/metadata/accumulation/asset/{asset}/days/{days}") {
+        get("/api/metadata/accumulation/{asset}/{days}") {
             metadataRouteHandler.getAccumulationHistory(call)
         }
         post("/api/tax/request_report/{taxReportRequest}") {

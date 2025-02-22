@@ -1,7 +1,5 @@
 package com.bitcointracker.model.api.tax
 
-import com.bitcointracker.model.api.tax.TaxTreatment
-
 data class TaxReportRequest(
     val requestId: String,
     val taxableEvents: List<TaxableEventParameters>

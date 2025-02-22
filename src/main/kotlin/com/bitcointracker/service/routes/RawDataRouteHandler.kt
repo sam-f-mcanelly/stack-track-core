@@ -5,6 +5,7 @@ import com.bitcointracker.core.parser.UniversalFileLoader
 import com.bitcointracker.model.api.PaginatedResponse
 import com.bitcointracker.model.api.PaginationParams
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -130,15 +131,29 @@ class RawDataRouteHandler @Inject constructor(
      * @param call The ApplicationCall containing pagination parameters
      * @throws Exception If transaction retrieval fails
      */
-    suspend fun handleGetAllTransactions(call: ApplicationCall) {
+    suspend fun handleGetTransactions(call: ApplicationCall) {
         try {
             // Extract pagination parameters from query parameters
             val page = call.parameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.parameters["pageSize"]?.toIntOrNull() ?: 10
             val sortBy = call.parameters["sortBy"] ?: "timestamp"
             val sortOrder = call.parameters["sortOrder"] ?: "desc"
+            val assets: List<String>? = call.parameters["assets"]?.split(",")
+            val types: List<NormalizedTransactionType>? = call
+                .parameters["types"]
+                ?.split(",")
+                ?.map {
+                    NormalizedTransactionType.valueOf(it)
+                }
 
-            val paginationParams = PaginationParams(page, pageSize, sortBy, sortOrder)
+            val paginationParams = PaginationParams(
+                page,
+                pageSize,
+                sortBy,
+                sortOrder,
+                assets,
+                types,
+            )
 
             val response = getTransactions(paginationParams)
             call.respond(response)
@@ -221,7 +236,10 @@ class RawDataRouteHandler @Inject constructor(
      * @throws Exception If transaction retrieval or sorting fails
      */
     suspend fun getTransactions(params: PaginationParams): PaginatedResponse<NormalizedTransaction> {
-        val allTransactions = transactionRepository.getAllTransactions()
+        val allTransactions = transactionRepository.getFilteredTransactions(
+            types = params.types,
+            assets = params.assets,
+        )
 
         // Sort transactions based on parameters
         val sortedTransactions = when (params.sortBy) {
