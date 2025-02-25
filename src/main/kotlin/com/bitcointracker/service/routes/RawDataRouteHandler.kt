@@ -121,6 +121,7 @@ class RawDataRouteHandler @Inject constructor(
             }
         } catch (ex: Exception) {
             println(ex)
+            call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
         }
     }
 

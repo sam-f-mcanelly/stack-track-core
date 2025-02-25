@@ -10,9 +10,3 @@ data class PaginationParams(
     val assets: List<String>? = null,
     val types: List<NormalizedTransactionType>? = null,
 )
-
-enum class PaginationTypeFilter {
-    BUY,
-    SELL,
-    ALL,
-}

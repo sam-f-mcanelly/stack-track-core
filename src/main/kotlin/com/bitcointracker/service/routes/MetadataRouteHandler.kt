@@ -39,6 +39,7 @@ class MetadataRouteHandler @Inject constructor(
             println("Failed to load asset holdings!")
             println(e.localizedMessage)
             println(e.stackTrace)
+            call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
         }
 
     }
@@ -66,6 +67,7 @@ class MetadataRouteHandler @Inject constructor(
             println("Failed to load portfolio value!")
             println(e.localizedMessage)
             println(e.stackTrace)
+            call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
         }
 
     }
@@ -101,6 +103,7 @@ class MetadataRouteHandler @Inject constructor(
             )
         } catch (ex: Exception) {
             println(ex)
+            call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
         }
 
     }

@@ -2,6 +2,7 @@ package com.bitcointracker.service.routes
 
 import com.bitcointracker.core.tax.TaxReportGenerator
 import com.bitcointracker.core.tax.TaxReportSubmitter
+import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -45,13 +46,16 @@ class TaxComputationRouteHandler @Inject constructor(
                 status = HttpStatusCode.BadRequest
             )
 
-            // val taxReport = taxReportGenerator.processTaxReport()
-
-            call.respond("lol")
+            call.respond(objectMapper.readValue(request, TaxReportRequest::class.java)
+                .let { taxReportRequest ->
+                    taxReportGenerator::processTaxReport
+                }
+            )
         } catch (e: Exception) {
             println("Failed to load asset holdings!")
             println(e.localizedMessage)
             println(e.stackTrace)
+            call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
         }
     }
 }
