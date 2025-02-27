@@ -17,10 +17,12 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("io.ktor:ktor-server-netty:2.3.1")
     implementation("io.ktor:ktor-server-core:2.3.1")
     implementation("io.ktor:ktor-server-content-negotiation:2.3.1")
     implementation("io.ktor:ktor-server-cors")
+    implementation("io.ktor:ktor-server-call-logging:2.3.1")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
     implementation("com.google.dagger:dagger:2.48")
     implementation("io.ktor:ktor-serialization-jackson:2.3.4")

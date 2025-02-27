@@ -6,9 +6,11 @@ import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import kotlinx.coroutines.launch
+import org.slf4j.LoggerFactory
 import javax.inject.Inject
 
 /**
@@ -28,7 +30,10 @@ class TaxComputationRouteHandler @Inject constructor(
     private val taxReportGenerator: TaxReportGenerator,
     private val taxReportSubmitter: TaxReportSubmitter,
     private val objectMapper: ObjectMapper,
-){
+) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(TaxComputationRouteHandler::class.java)
+    }
 
     /**
      * Processes an incoming tax report submission request.
@@ -41,20 +46,13 @@ class TaxComputationRouteHandler @Inject constructor(
      */
     suspend fun submitTaxReportRequest(call: ApplicationCall) {
         try {
-            val request = call.parameters["taxReportRequest"] ?: return call.respondText(
-                "Missing or malformed asset",
-                status = HttpStatusCode.BadRequest
-            )
-
-            call.respond(objectMapper.readValue(request, TaxReportRequest::class.java)
-                .let { taxReportRequest ->
-                    taxReportGenerator::processTaxReport
-                }
-            )
+            val taxReportRequest = call.receive<TaxReportRequest>()
+            logger.info("received tax report request: $taxReportRequest")
+            val result = taxReportGenerator.processTaxReport(taxReportRequest)
+            logger.info("processTaxReport Result: $result")
+            call.respond(result)
         } catch (e: Exception) {
-            println("Failed to load asset holdings!")
-            println(e.localizedMessage)
-            println(e.stackTrace)
+            logger.error("Error while processing tax report request", e)
             call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
         }
     }

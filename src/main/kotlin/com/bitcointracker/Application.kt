@@ -17,6 +17,10 @@
  */
 package com.bitcointracker
 
+import ch.qos.logback.classic.LoggerContext
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.ConsoleAppender
 import com.bitcointracker.dagger.component.AppComponent
 import com.bitcointracker.dagger.component.DaggerAppComponent
 import com.bitcointracker.util.jackson.ExchangeAmountDeserializer
@@ -26,6 +30,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
@@ -33,12 +38,18 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.path
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 
 /**
  * Entry point of the application that sets up and starts the Ktor server.
@@ -53,9 +64,39 @@ import io.ktor.server.routing.routing
 fun main() {
     val appComponent = DaggerAppComponent.create()
 
+    setupStdOutLogging()
+
     embeddedServer(Netty, port = 3090) {
         module(appComponent)
     }.start(wait = true)
+}
+
+fun setupStdOutLogging() {
+    // Configure Logback programmatically
+    val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
+
+    // Create a console appender
+    val consoleAppender = ConsoleAppender<ILoggingEvent>().apply {
+        context = loggerContext
+        name = "STDOUT"
+
+        // Configure the output pattern
+        val encoder = PatternLayoutEncoder().apply {
+            context = loggerContext
+            pattern = "%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+            start()
+        }
+        this.encoder = encoder
+        start()
+    }
+
+    // Get the root logger and add the appender
+    val rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME)
+    rootLogger.level = ch.qos.logback.classic.Level.DEBUG
+    rootLogger.addAppender(consoleAppender)
+
+    // Set Ktor's logger to DEBUG
+    loggerContext.getLogger("io.ktor").level = ch.qos.logback.classic.Level.DEBUG
 }
 
 /**
@@ -113,7 +154,34 @@ fun Application.module(appComponent: AppComponent) {
     install(CORS) {
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Options)
+        
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Authorization)
+
         anyHost()
+    }
+
+    install(CallLogging) {
+        level = Level.DEBUG
+
+        // Log all requests to the /api/ path
+        filter { call ->
+            call.request.path().startsWith("/api/")
+        }
+
+        // Optional: Add custom information to each log entry
+        format { call ->
+            val status = call.response.status()
+            val httpMethod = call.request.httpMethod.value
+            val userAgent = call.request.headers["User-Agent"]
+            val path = call.request.path()
+            val queryParams = call.request.queryParameters.entries()
+                .joinToString(", ") { "${it.key}=${it.value}" }
+
+            "Status: $status, HTTP method: $httpMethod, User agent: $userAgent, " +
+                    "Path: $path, Query parameters: $queryParams"
+        }
     }
 
     routing {
@@ -138,7 +206,7 @@ fun Application.module(appComponent: AppComponent) {
         get("/api/metadata/accumulation/{asset}/{days}") {
             metadataRouteHandler.getAccumulationHistory(call)
         }
-        get("/api/tax/request_report/{taxReportRequest}") {
+        post("/api/tax/request_report") {
             taxComputationRouteHandler.submitTaxReportRequest(call)
         }
     }

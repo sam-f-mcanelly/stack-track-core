@@ -12,6 +12,8 @@ import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransa
  * @property gain Net gain or loss from the sale
  * @property sellTransaction Normalized transaction for the sell
  * @property usedBuyTransactions List of buy transactions used and their allocation
+ * @property uncoveredSellAmount Amount of asset that was not covered
+ * @property uncoveredSellValue Fiat value of uncovered amounts
  */
 data class TaxableEventResult(
     val sellTransactionId: String,
@@ -20,4 +22,6 @@ data class TaxableEventResult(
     val gain: ExchangeAmount,
     val sellTransaction: NormalizedTransaction,
     val usedBuyTransactions: List<UsedBuyTransaction>,
+    val uncoveredSellAmount: ExchangeAmount? = null,
+    val uncoveredSellValue: ExchangeAmount? = null,
 )

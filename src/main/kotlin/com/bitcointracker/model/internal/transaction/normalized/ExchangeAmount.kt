@@ -19,47 +19,40 @@ data class ExchangeAmount(
     }
 
     // Overload the * operator
-    operator fun times(multiplier: ExchangeAmount): ExchangeAmount {
-        return this.copy(amount = this.amount * multiplier.amount)
+    operator fun times(other: ExchangeAmount): ExchangeAmount {
+        checkUnit(other, "Cannot multiply amounts with different currencies.")
+        return this.copy(amount = this.amount * other.amount)
     }
 
     operator fun div(other: ExchangeAmount): ExchangeAmount {
-        if (this.unit != other.unit) {
-            throw IllegalArgumentException("Cannot divide amounts with different currencies.\n" +
-                " Amount 1: $this \n" +
-                " Amount 2: $other"
-            )
-        }
+        checkUnit(other, "Cannot divide amounts with different currencies.")
         return ExchangeAmount(this.amount / other.amount, this.unit)
     }
 
     operator fun minus(other: ExchangeAmount): ExchangeAmount {
-        if (this.unit != other.unit) {
-            throw IllegalArgumentException("Cannot subtract amounts with different currencies. \n" +
-                " Amount 1: $this \n" +
-                " Amount 2: $other"
-            )
-        }
+        checkUnit(other, "Cannot subtract amounts with different currencies.")
         return ExchangeAmount(this.amount - other.amount, this.unit)
     }
 
     operator fun plus(other: ExchangeAmount): ExchangeAmount {
-        if (this.unit != other.unit) {
-            throw IllegalArgumentException("Cannot add amounts with different currencies. \n" +
-                " Amount 1: $this \n" +
-                " Amount 2: $other"
-            )
-        }
+        checkUnit(other, "Cannot add amounts with different currencies.")
         return ExchangeAmount(this.amount + other.amount, this.unit)
     }
 
      override fun compareTo(other: ExchangeAmount): Int {
-         if (this.unit != other.unit) {
-             throw IllegalArgumentException("Cannot compare amounts with different currencies. \n" +
-                 " Amount 1: $this \n" +
-                 " Amount 2: $other"
-             )
-         }
+         checkUnit(other, "Cannot compare amounts with different currencies")
          return this.amount.compareTo(other.amount)
      }
+
+    private fun checkUnit(
+        other: ExchangeAmount,
+        message: String,
+        ) {
+        if (this.unit.trim().uppercase() != other.unit.trim().uppercase()) {
+            throw IllegalArgumentException("$message. \n" +
+                    " Amount 1: $this \n" +
+                    " Amount 2: $other"
+            )
+        }
+    }
 }

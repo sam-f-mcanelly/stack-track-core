@@ -5,7 +5,6 @@ import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.bitcointracker.model.api.tax.TaxTreatment
 import com.bitcointracker.model.api.tax.TaxableEventParameters
-import com.bitcointracker.model.exception.InsufficientBuyTransactionsException
 import com.bitcointracker.model.internal.tax.TaxReportResult
 import com.bitcointracker.model.internal.tax.TaxType
 import com.bitcointracker.model.internal.tax.TaxableEventResult
@@ -13,10 +12,10 @@ import com.bitcointracker.model.internal.tax.UsedBuyTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import org.slf4j.LoggerFactory
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.collections.forEach
 
 /**
  * Processes tax reports by analyzing cryptocurrency transactions according to different tax treatment strategies.
@@ -28,6 +27,9 @@ import kotlin.collections.forEach
 class TaxReportGenerator @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(TaxReportGenerator::class.java)
+    }
     /**
      * Processes a tax report request containing multiple taxable events.
      * Each event is processed according to its specified tax treatment strategy.
@@ -37,6 +39,7 @@ class TaxReportGenerator @Inject constructor(
      * @throws com.bitcointracker.model.api.exception.TaxReportProcessingException if any event fails to process
      */
     suspend fun processTaxReport(request: TaxReportRequest): TaxReportResult {
+        logger.info("processTaxReport($request)")
         val results = mutableListOf<TaxableEventResult>()
 
         for (event in request.taxableEvents) {
@@ -73,13 +76,18 @@ class TaxReportGenerator @Inject constructor(
      * @throws IllegalArgumentException if the sell transaction is not found
      */
     private suspend fun processFIFO(event: TaxableEventParameters): TaxableEventResult {
+        logger.info("processFIFO($event)")
+
         val sellTransaction = getSellTransaction(event.sellId) ?:
         throw IllegalArgumentException("Sell transaction ${event.sellId} not found")
 
-        val buyTransactions = getAllBuyTransactionsBeforeSell(sellTransaction.timestamp)
+        val buyTransactions = getAllBuyTransactionsBeforeSell(
+            sellTransaction.timestamp,
+            sellTransaction.assetAmount.unit
+        )
             .sortedBy { it.timestamp }
 
-        return processEvent(sellTransaction, buyTransactions)
+        return processEvent(sellTransaction, buyTransactions.sortedBy { it.timestamp })
     }
 
     /**
@@ -94,7 +102,10 @@ class TaxReportGenerator @Inject constructor(
         val sellTransaction = getSellTransaction(event.sellId) ?:
         throw IllegalArgumentException("Sell transaction ${event.sellId} not found")
 
-        val buyTransactions = getAllBuyTransactionsBeforeSell(sellTransaction.timestamp)
+        val buyTransactions = getAllBuyTransactionsBeforeSell(
+            sellTransaction.timestamp,
+            sellTransaction.assetAmount.unit
+        )
             .sortedByDescending { it.timestamp }
 
         return processEvent(sellTransaction, buyTransactions)
@@ -112,7 +123,10 @@ class TaxReportGenerator @Inject constructor(
         val sellTransaction = getSellTransaction(event.sellId) ?:
         throw IllegalArgumentException("Sell transaction ${event.sellId} not found")
 
-        val buyTransactions = getAllBuyTransactionsBeforeSell(sellTransaction.timestamp)
+        val buyTransactions = getAllBuyTransactionsBeforeSell(
+            sellTransaction.timestamp,
+            sellTransaction.assetAmount.unit
+        )
             .sortedBy { it.assetValueFiat.amount / it.assetAmount.amount }
 
         return processEvent(sellTransaction, buyTransactions)
@@ -130,7 +144,10 @@ class TaxReportGenerator @Inject constructor(
         val sellTransaction = getSellTransaction(event.sellId) ?:
         throw IllegalArgumentException("Sell transaction ${event.sellId} not found")
 
-        val buyTransactions = getAllBuyTransactionsBeforeSell(sellTransaction.timestamp)
+        val buyTransactions = getAllBuyTransactionsBeforeSell(
+            sellTransaction.timestamp,
+            sellTransaction.assetAmount.unit
+        )
             .sortedByDescending { it.assetValueFiat.amount / it.assetAmount.amount }
 
         return processEvent(sellTransaction, buyTransactions)
@@ -170,11 +187,12 @@ class TaxReportGenerator @Inject constructor(
     /**
      * Core processing logic for matching buy transactions to a sell transaction.
      * Calculates cost basis and gains based on the provided buy transactions.
+     * If there aren't enough buy transactions to cover the sell amount, the remaining
+     * amount is treated as having a cost basis of 0.0.
      *
      * @param sellTransaction The sell transaction to process
      * @param buyTransactions List of buy transactions to use, in order of preference
      * @return TaxableEventResult containing the calculated gains and used buy transactions
-     * @throws com.bitcointracker.model.exception.InsufficientBuyTransactionsException if buy transactions cannot cover the sell amount
      */
     private fun processEvent(
         sellTransaction: NormalizedTransaction,
@@ -184,7 +202,10 @@ class TaxReportGenerator @Inject constructor(
         val usedBuyTransactions = mutableListOf<UsedBuyTransaction>()
         var totalCostBasis = ExchangeAmount(0.0, sellTransaction.transactionAmountFiat.unit)
 
+        // Calculate the portion of buy transactions that can be covered
         for (buyTx in buyTransactions) {
+            logger.info("processing buy: ${buyTx}")
+
             if (remainingSellAmount <= ExchangeAmount(0.0, sellTransaction.assetAmount.unit)) break
 
             val amountToUse = minOf(remainingSellAmount, buyTx.assetAmount)
@@ -192,11 +213,14 @@ class TaxReportGenerator @Inject constructor(
                 (amountToUse.amount / buyTx.assetAmount.amount) * buyTx.transactionAmountFiat.amount,
                 buyTx.transactionAmountFiat.unit
             )
+            logger.info("Cost basis: $costBasis")
 
             // Calculate holding period
             val holdingPeriodMillis = sellTransaction.timestamp.time - buyTx.timestamp.time
             val holdingPeriodDays = holdingPeriodMillis / (1000 * 60 * 60 * 24)
             val taxType = if (holdingPeriodDays >= 365) TaxType.LONG_TERM else TaxType.SHORT_TERM
+
+            logger.info("Determined tax type: $taxType")
 
             usedBuyTransactions.add(
                 UsedBuyTransaction(
@@ -210,14 +234,26 @@ class TaxReportGenerator @Inject constructor(
 
             totalCostBasis += costBasis
             remainingSellAmount -= amountToUse
+
+            logger.info("Total cost basis so far: $totalCostBasis")
+            logger.info("Remaining sell: $remainingSellAmount")
         }
 
-        if (remainingSellAmount > ExchangeAmount(0.0001, sellTransaction.assetAmount.unit)) {
-            throw InsufficientBuyTransactionsException(
-                "Not enough buy transactions to cover sell amount of ${sellTransaction.assetAmount}"
-            )
+        // Calculate uncovered amount and value
+        val uncoveredSellAmount = if (remainingSellAmount.amount > 0.0001) {
+            remainingSellAmount
+        } else {
+            ExchangeAmount(0.0, sellTransaction.assetAmount.unit)
         }
 
+        // Calculate the proportion of the total sell value that's uncovered
+        val uncoveredRatio = uncoveredSellAmount.amount / sellTransaction.assetAmount.amount
+        val uncoveredSellValue = ExchangeAmount(
+            sellTransaction.assetValueFiat.amount * uncoveredRatio,
+            sellTransaction.assetValueFiat.unit
+        )
+
+        // Add the uncovered portion directly to the gain (cost basis = 0)
         val proceeds = sellTransaction.assetValueFiat
         val gain = proceeds - totalCostBasis
 
@@ -228,6 +264,8 @@ class TaxReportGenerator @Inject constructor(
             gain = gain,
             sellTransaction = sellTransaction,
             usedBuyTransactions = usedBuyTransactions,
+            uncoveredSellAmount = uncoveredSellAmount,
+            uncoveredSellValue = uncoveredSellValue
         )
     }
 
@@ -246,10 +284,15 @@ class TaxReportGenerator @Inject constructor(
      * Retrieves all buy transactions that occurred before the given sell date.
      *
      * @param sellDate The date to filter buy transactions by
+     * @param asset The asset to look up
      * @return List of buy transactions before the sell date
      */
-    private suspend fun getAllBuyTransactionsBeforeSell(sellDate: Date): List<NormalizedTransaction> {
-        return transactionRepository.getTransactionsByType(NormalizedTransactionType.BUY)
+    private suspend fun getAllBuyTransactionsBeforeSell(sellDate: Date, asset: String): List<NormalizedTransaction> {
+        return transactionRepository.getFilteredTransactions(
+            types = listOf(NormalizedTransactionType.BUY),
+            assets = listOf(asset),
+        )
+            .filter { !it.filedWithIRS }
             .filter { it.timestamp < sellDate }
     }
 
