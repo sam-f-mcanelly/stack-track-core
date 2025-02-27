@@ -95,13 +95,24 @@ class TaxReportSubmitterTest {
                 results = listOf(
                     TaxableEventResult(
                         sellTransactionId = "sell-1",
-                        proceeds = 100000.0,
-                        costBasis = 90000.0,
-                        gain = 10000.0,
+                        proceeds = ExchangeAmount(100000.0, "USD"),
+                        costBasis = ExchangeAmount(90000.0, "USD"),
+                        gain = ExchangeAmount(10000.0, "USD"),
                         sellTransaction = sellTx,
                         usedBuyTransactions = listOf(
-                            UsedBuyTransaction("buy-1", 1.0, 45000.0, TaxType.LONG_TERM, buyTx1),
-                            UsedBuyTransaction("buy-2", 1.0, 45000.0, TaxType.LONG_TERM, buyTx2),
+                            UsedBuyTransaction(
+                                "buy-1",
+                                ExchangeAmount(1.0, "BTC"),
+                                ExchangeAmount(45000.0, "USD"),
+                                TaxType.LONG_TERM, buyTx1
+                            ),
+                            UsedBuyTransaction(
+                                "buy-2",
+                                ExchangeAmount(1.0, "BTC"),
+                                ExchangeAmount(45000.0, "USD"),
+                                TaxType.LONG_TERM,
+                                buyTx2
+                            ),
                         )
                     )
                 )
@@ -150,12 +161,17 @@ class TaxReportSubmitterTest {
                 results = listOf(
                     TaxableEventResult(
                         sellTransactionId = "sell-1",
-                        proceeds = 100000.0,
-                        costBasis = 90000.0,
-                        gain = 10000.0,
+                        proceeds = ExchangeAmount(100000.0, "USD"),
+                        costBasis = ExchangeAmount(90000.0, "USD"),
+                        gain = ExchangeAmount(10000.0, "USD"),
                         sellTransaction = sellTx,
                         usedBuyTransactions = listOf(
-                            UsedBuyTransaction("buy-1", 1.0, 45000.0, TaxType.LONG_TERM, buyTx),
+                            UsedBuyTransaction(
+                                "buy-1",
+                                ExchangeAmount(1.0, "BTC"),
+                                ExchangeAmount(45000.0, "USD"),
+                                TaxType.LONG_TERM, buyTx
+                            ),
                         )
                     )
                 )
@@ -230,12 +246,18 @@ class TaxReportSubmitterTest {
         results = listOf(
             TaxableEventResult(
                 sellTransactionId = sellId,
-                proceeds = 100000.0,
-                costBasis = 90000.0,
-                gain = 10000.0,
+                proceeds = ExchangeAmount(100000.0, "USD"),
+                costBasis = ExchangeAmount(90000.0, "USD"),
+                gain = ExchangeAmount(10000.0, "USD"),
                 sellTransaction = createTransaction("sell-1", NormalizedTransactionType.SELL),
                 usedBuyTransactions = buyIds.map {
-                    UsedBuyTransaction(it, 1.0, 90000.0 / buyIds.size, TaxType.LONG_TERM, createTransaction("buy-$it", NormalizedTransactionType.BUY))
+                    UsedBuyTransaction(
+                        it,
+                        ExchangeAmount(1.0, "BTC"),
+                        ExchangeAmount(90000.0 / buyIds.size, "USD"),
+                        TaxType.LONG_TERM,
+                        createTransaction("buy-$it", NormalizedTransactionType.BUY)
+                    )
                 }
             )
         )

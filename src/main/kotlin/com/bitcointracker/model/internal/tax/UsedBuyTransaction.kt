@@ -1,5 +1,6 @@
 package com.bitcointracker.model.internal.tax
 
+import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
 
 /**
@@ -11,8 +12,8 @@ import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransa
  */
 data class UsedBuyTransaction(
     val transactionId: String,
-    val amountUsed: Double,
-    val costBasis: Double,
+    val amountUsed: ExchangeAmount,
+    val costBasis: ExchangeAmount,
     val taxType: TaxType,
     val originalTransaction: NormalizedTransaction
 )

@@ -88,9 +88,9 @@ class TaxReportGeneratorTest {
             assertEquals(1, result.results.size)
             with(result.results[0]) {
                 assertEquals("sell-1", sellTransactionId)
-                assertEquals(100000.0, proceeds)
-                assertEquals(85000.0, costBasis)
-                assertEquals(15000.0, gain)
+                assertEquals(ExchangeAmount(100000.0, "USD"), proceeds)
+                assertEquals(ExchangeAmount(85000.0, "USD"), costBasis)
+                assertEquals(ExchangeAmount(15000.0, "USD"), gain)
                 assertEquals(2, usedBuyTransactions.size)
                 assertEquals("buy-2", usedBuyTransactions[0].transactionId)
                 assertEquals("buy-1", usedBuyTransactions[1].transactionId)
@@ -186,9 +186,9 @@ class TaxReportGeneratorTest {
 
             // Assert
             with(result.results[0]) {
-                assertEquals(75000.0, proceeds)
-                assertEquals(62500.0, costBasis)
-                assertEquals(12500.0, gain)
+                assertEquals(ExchangeAmount(75000.0, "USD"), proceeds)
+                assertEquals(ExchangeAmount(62500.0, "USD"), costBasis)
+                assertEquals(ExchangeAmount(12500.0, "USD"), gain)
             }
         }
     }
@@ -233,9 +233,9 @@ class TaxReportGeneratorTest {
 
             // Assert
             with(result.results[0]) {
-                assertEquals(50000.0, proceeds)
-                assertEquals(40000.0, costBasis)
-                assertEquals(10000.0, gain)
+                assertEquals(ExchangeAmount(50000.0, "USD"), proceeds)
+                assertEquals(ExchangeAmount(40000.0, "USD"), costBasis)
+                assertEquals(ExchangeAmount(10000.0, "USD"), gain)
             }
         }
 

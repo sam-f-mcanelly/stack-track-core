@@ -138,7 +138,7 @@ fun Application.module(appComponent: AppComponent) {
         get("/api/metadata/accumulation/{asset}/{days}") {
             metadataRouteHandler.getAccumulationHistory(call)
         }
-        post("/api/tax/request_report/{taxReportRequest}") {
+        get("/api/tax/request_report/{taxReportRequest}") {
             taxComputationRouteHandler.submitTaxReportRequest(call)
         }
     }

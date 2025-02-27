@@ -10,6 +10,7 @@ import com.bitcointracker.model.internal.tax.TaxReportResult
 import com.bitcointracker.model.internal.tax.TaxType
 import com.bitcointracker.model.internal.tax.TaxableEventResult
 import com.bitcointracker.model.internal.tax.UsedBuyTransaction
+import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
 import java.util.Date
@@ -175,19 +176,22 @@ class TaxReportGenerator @Inject constructor(
      * @return TaxableEventResult containing the calculated gains and used buy transactions
      * @throws com.bitcointracker.model.exception.InsufficientBuyTransactionsException if buy transactions cannot cover the sell amount
      */
-    private suspend fun processEvent(
+    private fun processEvent(
         sellTransaction: NormalizedTransaction,
         buyTransactions: List<NormalizedTransaction>
     ): TaxableEventResult {
-        var remainingSellAmount = sellTransaction.assetAmount.amount
+        var remainingSellAmount = sellTransaction.assetAmount
         val usedBuyTransactions = mutableListOf<UsedBuyTransaction>()
-        var totalCostBasis = 0.0
+        var totalCostBasis = ExchangeAmount(0.0, sellTransaction.transactionAmountFiat.unit)
 
         for (buyTx in buyTransactions) {
-            if (remainingSellAmount <= 0) break
+            if (remainingSellAmount <= ExchangeAmount(0.0, sellTransaction.assetAmount.unit)) break
 
-            val amountToUse = minOf(remainingSellAmount, buyTx.assetAmount.amount)
-            val costBasis = (amountToUse / buyTx.assetAmount.amount) * buyTx.assetValueFiat.amount
+            val amountToUse = minOf(remainingSellAmount, buyTx.assetAmount)
+            val costBasis = ExchangeAmount(
+                (amountToUse.amount / buyTx.assetAmount.amount) * buyTx.transactionAmountFiat.amount,
+                buyTx.transactionAmountFiat.unit
+            )
 
             // Calculate holding period
             val holdingPeriodMillis = sellTransaction.timestamp.time - buyTx.timestamp.time
@@ -208,13 +212,13 @@ class TaxReportGenerator @Inject constructor(
             remainingSellAmount -= amountToUse
         }
 
-        if (remainingSellAmount > 0.0001) {
+        if (remainingSellAmount > ExchangeAmount(0.0001, sellTransaction.assetAmount.unit)) {
             throw InsufficientBuyTransactionsException(
-                "Not enough buy transactions to cover sell amount of ${sellTransaction.assetAmount.amount}"
+                "Not enough buy transactions to cover sell amount of ${sellTransaction.assetAmount}"
             )
         }
 
-        val proceeds = sellTransaction.assetValueFiat.amount
+        val proceeds = sellTransaction.assetValueFiat
         val gain = proceeds - totalCostBasis
 
         return TaxableEventResult(
