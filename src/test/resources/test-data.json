@@ -1,0 +1,6 @@
+{
+    "items": [
+        {"id": 1, "name": "Test Item 1", "amount": 100.50},
+        {"id": 2, "name": "Test Item 2", "amount": 200.75}
+    ]
+}

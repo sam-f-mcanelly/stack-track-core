@@ -24,6 +24,9 @@ jobs:
     
     - name: Run tests
       run: ./gradlew test
+
+    - name: Run integration tests
+      run: ./gradlew integrationTest
       
     - name: Upload test results
       if: always()
