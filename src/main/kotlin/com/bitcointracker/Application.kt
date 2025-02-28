@@ -92,11 +92,9 @@ fun setupStdOutLogging() {
 
     // Get the root logger and add the appender
     val rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME)
-    rootLogger.level = ch.qos.logback.classic.Level.DEBUG
+    rootLogger.level = ch.qos.logback.classic.Level.INFO
     rootLogger.addAppender(consoleAppender)
-
-    // Set Ktor's logger to DEBUG
-    loggerContext.getLogger("io.ktor").level = ch.qos.logback.classic.Level.DEBUG
+    loggerContext.getLogger("io.ktor").level = ch.qos.logback.classic.Level.INFO
 }
 
 /**

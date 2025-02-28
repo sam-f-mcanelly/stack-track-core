@@ -68,14 +68,14 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
         var transactionType: NormalizedTransactionType
         var transactionAmountFiat: ExchangeAmount
         var assetAmount: ExchangeAmount
-        if (transaction.asset1!!.unit != "USD") {
+        if (transaction.asset1!!.amount > 0.0) {
             transactionType = NormalizedTransactionType.SELL
-            transactionAmountFiat = transaction.asset2!!
-            assetAmount = transaction.asset1
+            transactionAmountFiat = transaction.asset1.absoluteValue
+            assetAmount = transaction.asset2!!.absoluteValue
         } else {
             transactionType = NormalizedTransactionType.BUY
             transactionAmountFiat = transaction.asset1.absoluteValue
-            assetAmount = transaction.asset2!!
+            assetAmount = transaction.asset2!!.absoluteValue
         }
 
         return NormalizedTransaction(
@@ -85,7 +85,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             transactionAmountFiat = transactionAmountFiat,
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
             assetAmount = assetAmount,
-            assetValueFiat = transaction.assetValue ?: ExchangeAmount(0.0, "USD"),
+            assetValueFiat = transaction.assetValue ?: computeAssetValue(transaction),
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             filedWithIRS = false,
@@ -201,4 +201,19 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             StrikeTransactionSource.MONTHLY_STATEMENT -> TransactionSource.STRIKE_MONTHLY
             StrikeTransactionSource.ANNUAL_STATEMENT -> TransactionSource.STRIKE_ANNUAL
         }
+
+
+    /**
+     * Infer the asset value from the transaction.
+     *
+     * @param transaction StrikeTransaction
+     */
+    private fun computeAssetValue(transaction: StrikeTransaction): ExchangeAmount {
+        val assetValuePerUnit = transaction.asset1!!.absoluteValue.amount / transaction.asset2!!.absoluteValue.amount
+
+        return ExchangeAmount(
+            amount = assetValuePerUnit,
+            unit = transaction.asset1.unit
+        )
+    }
 }

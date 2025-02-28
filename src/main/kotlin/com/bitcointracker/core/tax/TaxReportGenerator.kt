@@ -127,7 +127,7 @@ class TaxReportGenerator @Inject constructor(
             sellTransaction.timestamp,
             sellTransaction.assetAmount.unit
         )
-            .sortedBy { it.assetValueFiat.amount / it.assetAmount.amount }
+            .sortedBy { it.assetValueFiat }
 
         return processEvent(sellTransaction, buyTransactions)
     }
@@ -148,7 +148,7 @@ class TaxReportGenerator @Inject constructor(
             sellTransaction.timestamp,
             sellTransaction.assetAmount.unit
         )
-            .sortedByDescending { it.assetValueFiat.amount / it.assetAmount.amount }
+            .sortedByDescending { it.assetValueFiat }
 
         return processEvent(sellTransaction, buyTransactions)
     }

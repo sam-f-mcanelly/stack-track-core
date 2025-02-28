@@ -42,7 +42,7 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
                     fee = columns[9].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
                     asset1 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
                     asset2 = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11]) },
-                    assetValue = columns[12].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
+                    assetValue = columns[13].toDoubleOrNull()?.let { ExchangeAmount(it, "USD") },
                     balance = columns[14].toDoubleOrNull()?.let { ExchangeAmount(it, columns[15].uppercase(Locale.ROOT)) },
                     balanceBtc = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                     destination = if (columns.size > 16) columns[16] else null,
