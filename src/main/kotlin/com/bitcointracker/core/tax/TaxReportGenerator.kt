@@ -249,12 +249,12 @@ class TaxReportGenerator @Inject constructor(
         // Calculate the proportion of the total sell value that's uncovered
         val uncoveredRatio = uncoveredSellAmount.amount / sellTransaction.assetAmount.amount
         val uncoveredSellValue = ExchangeAmount(
-            sellTransaction.assetValueFiat.amount * uncoveredRatio,
-            sellTransaction.assetValueFiat.unit
+            sellTransaction.transactionAmountFiat.amount * uncoveredRatio,
+            sellTransaction.transactionAmountFiat.unit
         )
 
         // Add the uncovered portion directly to the gain (cost basis = 0)
-        val proceeds = sellTransaction.assetValueFiat
+        val proceeds = sellTransaction.transactionAmountFiat
         val gain = proceeds - totalCostBasis
 
         return TaxableEventResult(

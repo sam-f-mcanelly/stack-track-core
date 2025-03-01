@@ -14,7 +14,6 @@ import io.mockk.coEvery
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -41,27 +40,25 @@ class TaxReportGeneratorTest {
         @Test
         fun `should process FIFO tax treatment with sufficient buy transactions`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 2.0,
-                value = 100000.0,
+                assetAmount = 2.0,
+                fiatAmount = 100000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
-            val buyTx1 = createTransaction(
+            val buyTx1 = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 40000.0,
+                assetAmount = 1.0,
+                fiatAmount = 40000.0, // The USD spent
                 date = buyDate1
             )
 
-            val buyTx2 = createTransaction(
+            val buyTx2 = createBuyTransaction(
                 id = "buy-2",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 45000.0,
+                assetAmount = 1.0,
+                fiatAmount = 45000.0, // The USD spent
                 date = buyDate2
             )
 
@@ -69,7 +66,7 @@ class TaxReportGeneratorTest {
             coEvery { transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
                 assets = listOf("BTC"),
-                )
+            )
             } returns listOf(
                 buyTx1,
                 buyTx2
@@ -92,6 +89,7 @@ class TaxReportGeneratorTest {
             assertEquals(1, result.results.size)
             with(result.results[0]) {
                 assertEquals("sell-1", sellTransactionId)
+                // Now validating against the correct proceeds amount
                 assertEquals(ExchangeAmount(100000.0, "USD"), proceeds)
                 assertEquals(ExchangeAmount(85000.0, "USD"), costBasis)
                 assertEquals(ExchangeAmount(15000.0, "USD"), gain)
@@ -106,19 +104,18 @@ class TaxReportGeneratorTest {
         @Test
         fun `should handle insufficient buy transactions for FIFO by using zero cost basis for uncovered portion`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 2.0,
-                value = 100000.0,
+                assetAmount = 2.0,
+                fiatAmount = 100000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
-            val buyTx = createTransaction(
+            val buyTx = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 40000.0,
+                assetAmount = 1.0,
+                fiatAmount = 40000.0, // The USD spent
                 date = buyDate1
             )
 
@@ -126,7 +123,7 @@ class TaxReportGeneratorTest {
             coEvery { transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
                 assets = listOf("BTC"),
-                )
+            )
             } returns listOf(buyTx)
 
             val request = TaxReportRequest(
@@ -161,27 +158,25 @@ class TaxReportGeneratorTest {
         @Test
         fun `should process LIFO tax treatment correctly`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 1.5,
-                value = 75000.0,
+                assetAmount = 1.5,
+                fiatAmount = 75000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
-            val buyTx1 = createTransaction(
+            val buyTx1 = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 40000.0,
+                assetAmount = 1.0,
+                fiatAmount = 40000.0, // The USD spent
                 date = buyDate1
             )
 
-            val buyTx2 = createTransaction(
+            val buyTx2 = createBuyTransaction(
                 id = "buy-2",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 45000.0,
+                assetAmount = 1.0,
+                fiatAmount = 45000.0, // The USD spent
                 date = buyDate2
             )
 
@@ -189,7 +184,7 @@ class TaxReportGeneratorTest {
             coEvery { transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
                 assets = listOf("BTC"),
-                )
+            )
             } returns listOf(
                 buyTx1,
                 buyTx2
@@ -221,27 +216,25 @@ class TaxReportGeneratorTest {
         @Test
         fun `should handle insufficient buy transactions for LIFO by using zero cost basis for uncovered portion`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 2.5,
-                value = 125000.0,
+                assetAmount = 2.5,
+                fiatAmount = 125000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
-            val buyTx1 = createTransaction(
+            val buyTx1 = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 40000.0,
+                assetAmount = 1.0,
+                fiatAmount = 40000.0, // The USD spent
                 date = buyDate1
             )
 
-            val buyTx2 = createTransaction(
+            val buyTx2 = createBuyTransaction(
                 id = "buy-2",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 45000.0,
+                assetAmount = 1.0,
+                fiatAmount = 45000.0, // The USD spent
                 date = buyDate2
             )
 
@@ -249,7 +242,7 @@ class TaxReportGeneratorTest {
             coEvery { transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
                 assets = listOf("BTC"),
-                )
+            )
             } returns listOf(
                 buyTx1,
                 buyTx2
@@ -286,19 +279,18 @@ class TaxReportGeneratorTest {
         @Test
         fun `should process custom tax treatment with valid buy transactions`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 1.0,
-                value = 50000.0,
+                assetAmount = 1.0,
+                fiatAmount = 50000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
-            val buyTx = createTransaction(
+            val buyTx = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 40000.0,
+                assetAmount = 1.0,
+                fiatAmount = 40000.0, // The USD spent
                 date = buyDate1
             )
 
@@ -332,19 +324,18 @@ class TaxReportGeneratorTest {
         @Test
         fun `should handle insufficient buy transactions for custom matching by using zero cost basis for uncovered portion`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 1.5,
-                value = 75000.0,
+                assetAmount = 1.5,
+                fiatAmount = 75000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
-            val buyTx = createTransaction(
+            val buyTx = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 1.0,
-                value = 40000.0,
+                assetAmount = 1.0,
+                fiatAmount = 40000.0, // The USD spent
                 date = buyDate1
             )
 
@@ -398,28 +389,26 @@ class TaxReportGeneratorTest {
         @Test
         fun `should process MAX_PROFIT strategy correctly`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 1.0,
-                value = 50000.0,
+                assetAmount = 1.0,
+                fiatAmount = 50000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
             // Creating buy transactions with different cost basis values
-            val buyTx1 = createTransaction(
+            val buyTx1 = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 0.5,
-                value = 15000.0, // Higher cost per coin (30000 per BTC)
+                assetAmount = 0.5,
+                fiatAmount = 15000.0, // Higher cost per coin (30000 per BTC)
                 date = buyDate1
             )
 
-            val buyTx2 = createTransaction(
+            val buyTx2 = createBuyTransaction(
                 id = "buy-2",
-                type = NormalizedTransactionType.BUY,
-                amount = 0.5,
-                value = 10000.0, // Lower cost per coin (20000 per BTC)
+                assetAmount = 0.5,
+                fiatAmount = 10000.0, // Lower cost per coin (20000 per BTC)
                 date = buyDate2
             )
 
@@ -427,7 +416,7 @@ class TaxReportGeneratorTest {
             coEvery { transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
                 assets = listOf("BTC"),
-                )
+            )
             } returns listOf(
                 buyTx1,
                 buyTx2
@@ -463,28 +452,26 @@ class TaxReportGeneratorTest {
         @Test
         fun `should process MIN_PROFIT strategy correctly`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 1.0,
-                value = 50000.0,
+                assetAmount = 1.0,
+                fiatAmount = 50000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
             // Creating buy transactions with different cost basis values
-            val buyTx1 = createTransaction(
+            val buyTx1 = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 0.5,
-                value = 15000.0, // Higher cost per coin (30000 per BTC)
+                assetAmount = 0.5,
+                fiatAmount = 15000.0, // Higher cost per coin (30000 per BTC)
                 date = buyDate1
             )
 
-            val buyTx2 = createTransaction(
+            val buyTx2 = createBuyTransaction(
                 id = "buy-2",
-                type = NormalizedTransactionType.BUY,
-                amount = 0.5,
-                value = 10000.0, // Lower cost per coin (20000 per BTC)
+                assetAmount = 0.5,
+                fiatAmount = 10000.0, // Lower cost per coin (20000 per BTC)
                 date = buyDate2
             )
 
@@ -492,7 +479,7 @@ class TaxReportGeneratorTest {
             coEvery { transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
                 assets = listOf("BTC"),
-                )
+            )
             } returns listOf(
                 buyTx1,
                 buyTx2
@@ -528,27 +515,25 @@ class TaxReportGeneratorTest {
         @Test
         fun `should handle insufficient buy transactions for MAX_PROFIT strategy`() = runTest {
             // Arrange
-            val sellTx = createTransaction(
+            val sellTx = createSellTransaction(
                 id = "sell-1",
-                type = NormalizedTransactionType.SELL,
-                amount = 1.5,
-                value = 75000.0,
+                assetAmount = 1.5,
+                fiatAmount = 75000.0, // The actual USD received
+                price = 50000.0, // Price per BTC
                 date = baseDate
             )
 
-            val buyTx1 = createTransaction(
+            val buyTx1 = createBuyTransaction(
                 id = "buy-1",
-                type = NormalizedTransactionType.BUY,
-                amount = 0.5,
-                value = 15000.0,
+                assetAmount = 0.5,
+                fiatAmount = 15000.0,
                 date = buyDate1
             )
 
-            val buyTx2 = createTransaction(
+            val buyTx2 = createBuyTransaction(
                 id = "buy-2",
-                type = NormalizedTransactionType.BUY,
-                amount = 0.5,
-                value = 10000.0,
+                assetAmount = 0.5,
+                fiatAmount = 10000.0,
                 date = buyDate2
             )
 
@@ -556,7 +541,7 @@ class TaxReportGeneratorTest {
             coEvery { transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
                 assets = listOf("BTC"),
-                )
+            )
             } returns listOf(
                 buyTx1,
                 buyTx2
@@ -587,25 +572,47 @@ class TaxReportGeneratorTest {
         }
     }
 
-    private fun createTransaction(
+    // New helper methods to create the right types of transactions
+    private fun createBuyTransaction(
         id: String,
-        type: NormalizedTransactionType,
-        amount: Double,
-        value: Double,
+        assetAmount: Double,
+        fiatAmount: Double,
         date: Date
     ): NormalizedTransaction {
         return NormalizedTransaction(
             id = id,
-            type = type,
+            type = NormalizedTransactionType.BUY,
             source = TransactionSource.COINBASE_STANDARD,
-            transactionAmountFiat = ExchangeAmount(value, "USD"),
+            transactionAmountFiat = ExchangeAmount(fiatAmount, "USD"), // Amount spent
             fee = ExchangeAmount(0.0, "USD"),
-            assetAmount = ExchangeAmount(amount, "BTC"),
-            assetValueFiat = ExchangeAmount(value, "USD"),
+            assetAmount = ExchangeAmount(assetAmount, "BTC"),
+            assetValueFiat = ExchangeAmount(fiatAmount, "USD"), // For buys, this is same as transactionAmountFiat
             timestamp = date,
             timestampText = date.toString(),
             notes = "",
-            filedWithIRS = false, // Adding this field which was used in the implementation
+            filedWithIRS = false,
+        )
+    }
+
+    private fun createSellTransaction(
+        id: String,
+        assetAmount: Double,
+        fiatAmount: Double, // Actual USD received
+        price: Double,      // Price per BTC
+        date: Date
+    ): NormalizedTransaction {
+        return NormalizedTransaction(
+            id = id,
+            type = NormalizedTransactionType.SELL,
+            source = TransactionSource.COINBASE_STANDARD,
+            transactionAmountFiat = ExchangeAmount(fiatAmount, "USD"), // Amount received
+            fee = ExchangeAmount(0.0, "USD"),
+            assetAmount = ExchangeAmount(assetAmount, "BTC"),
+            assetValueFiat = ExchangeAmount(price, "USD"), // Price per unit, not total value
+            timestamp = date,
+            timestampText = date.toString(),
+            notes = "",
+            filedWithIRS = false,
         )
     }
 }
