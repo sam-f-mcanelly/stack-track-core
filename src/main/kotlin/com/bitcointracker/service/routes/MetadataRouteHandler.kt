@@ -1,7 +1,7 @@
 package com.bitcointracker.service.routes
 
 import com.bitcointracker.model.api.QuickLookData
-import com.bitcointracker.service.BackendService
+import com.bitcointracker.service.manager.MetadataManager
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
@@ -12,10 +12,10 @@ import javax.inject.Inject
  * Handler for cryptocurrency metadata-related HTTP routes.
  * Provides endpoints for retrieving asset holdings, portfolio values, and accumulation history.
  *
- * @property service Backend service for processing cryptocurrency data
+ * @property metadataManager Manager class for metadata related information
  */
 class MetadataRouteHandler @Inject constructor(
-    private val service: BackendService
+    private val metadataManager: MetadataManager
 ) {
 
     /**
@@ -32,7 +32,7 @@ class MetadataRouteHandler @Inject constructor(
         )
 
         try {
-            val assetHoldings = service.getAssetHoldings(assetInput, "USD") // TODO: support other currencies
+            val assetHoldings = metadataManager.getAssetHoldings(assetInput, "USD") // TODO: support other currencies
 
             call.respond(assetHoldings)
         } catch (e: Exception) {
@@ -59,7 +59,7 @@ class MetadataRouteHandler @Inject constructor(
 
         try {
             println("Getting portfolio value for $fiatInput")
-            val value = service.getPortfolioValue(fiatInput) // TODO: support other currencies
+            val value = metadataManager.getPortfolioValue(fiatInput) // TODO: support other currencies
             println("portfolio value: $value")
 
             call.respond(value)
@@ -93,7 +93,7 @@ class MetadataRouteHandler @Inject constructor(
         println("Fetching accumulation data for $tokenInput - $dayInput days")
 
         try {
-            val data = service.getAccumulation(dayInput, tokenInput)
+            val data = metadataManager.getAccumulation(dayInput, tokenInput)
             call.respond(
                 QuickLookData(
                     title = "$tokenInput Accumulation",
