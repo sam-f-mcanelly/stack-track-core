@@ -1,26 +1,34 @@
 package com.bitcointracker.unit.core.tax
 
 import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.tax.TaxCalculator
 import com.bitcointracker.core.tax.TaxReportGenerator
+import com.bitcointracker.core.tax.TransactionTracker
+import com.bitcointracker.core.tax.TransactionTrackerFactory
 import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.bitcointracker.model.api.tax.TaxTreatment
 import com.bitcointracker.model.api.tax.TaxableEventParameters
+import com.bitcointracker.model.internal.tax.TaxableEventResult
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
 import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
 import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Nested
+import io.mockk.slot
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import java.util.Date
-import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
 class TaxReportGeneratorTest {
@@ -28,591 +36,661 @@ class TaxReportGeneratorTest {
     @MockK
     private lateinit var transactionRepository: TransactionRepository
 
+    @MockK
+    private lateinit var taxCalculator: TaxCalculator
+
+    @MockK
+    private lateinit var transactionTrackerFactory: TransactionTrackerFactory
+
+    @MockK
+    private lateinit var transactionTracker: TransactionTracker
+
     @InjectMockKs
-    private lateinit var processor: TaxReportGenerator
+    private lateinit var taxReportGenerator: TaxReportGenerator
 
-    private val baseDate = Date(1700000000000) // Fixed date for testing
-    private val buyDate1 = Date(1699900000000) // 1 day earlier
-    private val buyDate2 = Date(1699800000000) // 2 days earlier
+    // Test constants
+    private val sellTxId = "sell1"
+    private val buyTx1Id = "buy1"
+    private val buyTx2Id = "buy2"
+    private val requestId = "request1"
+    private val btcUnit = "BTC"
+    private val usdUnit = "USD"
 
-    @Nested
-    inner class FIFO {
-        @Test
-        fun `should process FIFO tax treatment with sufficient buy transactions`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 2.0,
-                fiatAmount = 100000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
+    // Base date for creating transactions with correct chronology
+    private val baseDate = Date(1000000000000) // A fixed point in time
+    private val beforeBaseDate = Date(900000000000) // Earlier than baseDate
 
-            val buyTx1 = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 1.0,
-                fiatAmount = 40000.0, // The USD spent
-                date = buyDate1
-            )
+    @BeforeEach
+    fun setUp() {
+        // Setup transaction tracker factory
+        every { transactionTrackerFactory.create() } returns transactionTracker
+    }
 
-            val buyTx2 = createBuyTransaction(
-                id = "buy-2",
-                assetAmount = 1.0,
-                fiatAmount = 45000.0, // The USD spent
-                date = buyDate2
-            )
+    @Test
+    fun `processTaxReport processes events in correct order with CUSTOM first`() = runBlocking {
+        // Arrange
+        val customEvent = TaxableEventParameters(
+            sellId = "customSell",
+            taxTreatment = TaxTreatment.CUSTOM,
+            buyTransactionIds = listOf(buyTx1Id)
+        )
 
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getFilteredTransactions(
+        val fifoEvent = TaxableEventParameters(
+            sellId = "fifoSell",
+            taxTreatment = TaxTreatment.FIFO
+        )
+
+        val request = TaxReportRequest(
+            requestId = requestId,
+            taxableEvents = listOf(fifoEvent, customEvent) // FIFO first, should be reordered
+        )
+
+        // Mock sell transactions - must be after buy transactions
+        val customSellTx = createMockTransaction(
+            "customSell",
+            NormalizedTransactionType.SELL,
+            timestamp = baseDate // Sell happens at baseDate
+        )
+
+        val fifoSellTx = createMockTransaction(
+            "fifoSell",
+            NormalizedTransactionType.SELL,
+            timestamp = baseDate // Sell happens at baseDate
+        )
+
+        coEvery { transactionRepository.getTransactionById("customSell") } returns customSellTx
+        coEvery { transactionRepository.getTransactionById("fifoSell") } returns fifoSellTx
+
+        // Mock buy transactions - must be before sell transactions
+        val buyTx = createMockTransaction(
+            buyTx1Id,
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate // Buy happens BEFORE sell
+        )
+
+        coEvery {
+            transactionRepository.getTransactionById(buyTx1Id)
+        } returns buyTx
+
+        // Mock filtered transactions for FIFO
+        coEvery {
+            transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
-                assets = listOf("BTC"),
+                assets = listOf(btcUnit)
             )
-            } returns listOf(
-                buyTx1,
-                buyTx2
+        } returns listOf(buyTx)
+
+        // Mock transaction tracker behavior
+        every { transactionTracker.getAvailableAmount(any()) } returns ExchangeAmount(1.0, btcUnit)
+
+        // Mock tax calculator results
+        val customResult = mockTaxableEventResult("customSell")
+        val fifoResult = mockTaxableEventResult("fifoSell")
+
+        every {
+            taxCalculator.calculateTaxableEvent(
+                eq(customSellTx),
+                any(),
+                eq(transactionTracker)
             )
+        } returns customResult
 
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.FIFO
-                    )
-                )
+        every {
+            taxCalculator.calculateTaxableEvent(
+                eq(fifoSellTx),
+                any(),
+                eq(transactionTracker)
             )
+        } returns fifoResult
 
-            // Act
-            val result = processor.processTaxReport(request)
+        // Act
+        val result = taxReportGenerator.processTaxReport(request)
 
-            // Assert
-            assertEquals(1, result.results.size)
-            with(result.results[0]) {
-                assertEquals("sell-1", sellTransactionId)
-                // Now validating against the correct proceeds amount
-                assertEquals(ExchangeAmount(100000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(85000.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(15000.0, "USD"), gain)
-                assertEquals(2, usedBuyTransactions.size)
-                assertEquals("buy-2", usedBuyTransactions[0].transactionId)
-                assertEquals("buy-1", usedBuyTransactions[1].transactionId)
-                assertEquals(ExchangeAmount(0.0, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(0.0, "USD"), uncoveredSellValue)
-            }
+        // Assert
+        assertEquals(requestId, result.requestId)
+        assertEquals(2, result.results.size)
+
+        // First result should be from the CUSTOM strategy (should be processed first)
+        assertEquals("customSell", result.results[0].sellTransactionId)
+
+        // Second result should be from the FIFO strategy
+        assertEquals("fifoSell", result.results[1].sellTransactionId)
+
+        // Verify the correct order of calls
+        coVerify(exactly = 1) {
+            transactionRepository.getTransactionById("customSell")
+            transactionRepository.getTransactionById(buyTx1Id)
         }
 
-        @Test
-        fun `should handle insufficient buy transactions for FIFO by using zero cost basis for uncovered portion`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 2.0,
-                fiatAmount = 100000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
-
-            val buyTx = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 1.0,
-                fiatAmount = 40000.0, // The USD spent
-                date = buyDate1
-            )
-
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getFilteredTransactions(
+        coVerify(exactly = 1) {
+            transactionRepository.getTransactionById("fifoSell")
+            transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
-                assets = listOf("BTC"),
+                assets = listOf(btcUnit)
             )
-            } returns listOf(buyTx)
-
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.FIFO
-                    )
-                )
-            )
-
-            // Act
-            val result = processor.processTaxReport(request)
-
-            // Assert
-            with(result.results[0]) {
-                assertEquals("sell-1", sellTransactionId)
-                assertEquals(ExchangeAmount(100000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(40000.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(60000.0, "USD"), gain)
-                assertEquals(1, usedBuyTransactions.size)
-                assertEquals("buy-1", usedBuyTransactions[0].transactionId)
-                assertEquals(ExchangeAmount(1.0, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(50000.0, "USD"), uncoveredSellValue)
-            }
         }
     }
 
-    @Nested
-    inner class LIFO {
-        @Test
-        fun `should process LIFO tax treatment correctly`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 1.5,
-                fiatAmount = 75000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
+    @Test
+    fun `processFIFO should use oldest buy transactions first`() = runBlocking {
+        // Arrange
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.FIFO
+        )
 
-            val buyTx1 = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 1.0,
-                fiatAmount = 40000.0, // The USD spent
-                date = buyDate1
-            )
+        val sellTransaction = createMockTransaction(
+            sellTxId,
+            NormalizedTransactionType.SELL,
+            timestamp = baseDate // Sell happens at baseDate
+        )
 
-            val buyTx2 = createBuyTransaction(
-                id = "buy-2",
-                assetAmount = 1.0,
-                fiatAmount = 45000.0, // The USD spent
-                date = buyDate2
-            )
+        val oldBuyTx = createMockTransaction(
+            buyTx1Id,
+            NormalizedTransactionType.BUY,
+            timestamp = Date(800000000000) // Oldest buy
+        )
 
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getFilteredTransactions(
+        val newBuyTx = createMockTransaction(
+            buyTx2Id,
+            NormalizedTransactionType.BUY,
+            timestamp = Date(900000000000) // Newer buy, but still before sell
+        )
+
+        coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
+        coEvery {
+            transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
-                assets = listOf("BTC"),
+                assets = listOf(btcUnit)
             )
-            } returns listOf(
-                buyTx1,
-                buyTx2
+        } returns listOf(newBuyTx, oldBuyTx) // Deliberately unsorted
+
+        every { transactionTracker.getAvailableAmount(any()) } returns ExchangeAmount(1.0, btcUnit)
+
+        val expectedResult = mockTaxableEventResult(sellTxId)
+
+        // Capture the buy transactions passed to calculateTaxableEvent to verify order
+        val buyTxSlot = slot<List<NormalizedTransaction>>()
+
+        every {
+            taxCalculator.calculateTaxableEvent(
+                eq(sellTransaction),
+                capture(buyTxSlot),
+                eq(transactionTracker)
             )
+        } returns expectedResult
 
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.LIFO
-                    )
-                )
-            )
+        // Act
+        val result = taxReportGenerator.processTaxReport(
+            TaxReportRequest(requestId, listOf(event))
+        )
 
-            // Act
-            val result = processor.processTaxReport(request)
+        // Assert
+        assertEquals(expectedResult, result.results[0])
 
-            // Assert
-            with(result.results[0]) {
-                assertEquals(ExchangeAmount(75000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(62500.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(12500.0, "USD"), gain)
-                assertEquals(ExchangeAmount(0.0, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(0.0, "USD"), uncoveredSellValue)
-            }
-        }
+        // Verify buy transactions are passed in date order (oldest first)
+        assertEquals(2, buyTxSlot.captured.size)
+        assertEquals(oldBuyTx.id, buyTxSlot.captured[0].id) // Oldest should be first
+        assertEquals(newBuyTx.id, buyTxSlot.captured[1].id)
+    }
 
-        @Test
-        fun `should handle insufficient buy transactions for LIFO by using zero cost basis for uncovered portion`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 2.5,
-                fiatAmount = 125000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
+    @Test
+    fun `processLIFO should use newest buy transactions first`() = runBlocking {
+        // Arrange
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.LIFO
+        )
 
-            val buyTx1 = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 1.0,
-                fiatAmount = 40000.0, // The USD spent
-                date = buyDate1
-            )
+        val sellTransaction = createMockTransaction(
+            sellTxId,
+            NormalizedTransactionType.SELL,
+            timestamp = baseDate // Sell happens at baseDate
+        )
 
-            val buyTx2 = createBuyTransaction(
-                id = "buy-2",
-                assetAmount = 1.0,
-                fiatAmount = 45000.0, // The USD spent
-                date = buyDate2
-            )
+        val oldBuyTx = createMockTransaction(
+            buyTx1Id,
+            NormalizedTransactionType.BUY,
+            timestamp = Date(800000000000) // Older timestamp
+        )
 
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getFilteredTransactions(
+        val newBuyTx = createMockTransaction(
+            buyTx2Id,
+            NormalizedTransactionType.BUY,
+            timestamp = Date(900000000000) // Newer timestamp, but still before sell
+        )
+
+        coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
+        coEvery {
+            transactionRepository.getFilteredTransactions(
                 types = listOf(NormalizedTransactionType.BUY),
-                assets = listOf("BTC"),
+                assets = listOf(btcUnit)
             )
-            } returns listOf(
-                buyTx1,
-                buyTx2
+        } returns listOf(oldBuyTx, newBuyTx) // Deliberately unsorted
+
+        every { transactionTracker.getAvailableAmount(any()) } returns ExchangeAmount(1.0, btcUnit)
+
+        val expectedResult = mockTaxableEventResult(sellTxId)
+
+        // Capture the buy transactions passed to calculateTaxableEvent to verify order
+        val buyTxSlot = slot<List<NormalizedTransaction>>()
+
+        every {
+            taxCalculator.calculateTaxableEvent(
+                eq(sellTransaction),
+                capture(buyTxSlot),
+                eq(transactionTracker)
             )
+        } returns expectedResult
 
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.LIFO
-                    )
-                )
+        // Act
+        val result = taxReportGenerator.processTaxReport(
+            TaxReportRequest(requestId, listOf(event))
+        )
+
+        // Assert
+        assertEquals(expectedResult, result.results[0])
+
+        // Verify buy transactions are passed in reverse date order (newest first)
+        assertEquals(2, buyTxSlot.captured.size)
+        assertEquals(newBuyTx.id, buyTxSlot.captured[0].id) // Newest should be first
+        assertEquals(oldBuyTx.id, buyTxSlot.captured[1].id)
+    }
+
+    @Test
+    fun `processMaxProfit should use lowest value buy transactions first`() = runBlocking {
+        // Arrange
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.MAX_PROFIT
+        )
+
+        val sellTransaction = createMockTransaction(
+            sellTxId,
+            NormalizedTransactionType.SELL,
+            timestamp = baseDate // Sell happens at baseDate
+        )
+
+        val cheapBuyTx = createMockTransaction(
+            buyTx1Id,
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate, // Must be before sell date
+            assetValueFiat = ExchangeAmount(100.0, usdUnit) // Lower value
+        )
+
+        val expensiveBuyTx = createMockTransaction(
+            buyTx2Id,
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate, // Must be before sell date
+            assetValueFiat = ExchangeAmount(200.0, usdUnit) // Higher value
+        )
+
+        coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
+        coEvery {
+            transactionRepository.getFilteredTransactions(
+                types = listOf(NormalizedTransactionType.BUY),
+                assets = listOf(btcUnit)
             )
+        } returns listOf(expensiveBuyTx, cheapBuyTx) // Deliberately unsorted
 
-            // Act
-            val result = processor.processTaxReport(request)
+        every { transactionTracker.getAvailableAmount(any()) } returns ExchangeAmount(1.0, btcUnit)
 
-            // Assert
-            with(result.results[0]) {
-                assertEquals("sell-1", sellTransactionId)
-                assertEquals(ExchangeAmount(125000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(85000.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(40000.0, "USD"), gain)
-                assertEquals(2, usedBuyTransactions.size)
-                assertEquals(ExchangeAmount(0.5, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(25000.0, "USD"), uncoveredSellValue)
-            }
+        val expectedResult = mockTaxableEventResult(sellTxId)
+
+        // Capture the buy transactions passed to calculateTaxableEvent to verify order
+        val buyTxSlot = slot<List<NormalizedTransaction>>()
+
+        every {
+            taxCalculator.calculateTaxableEvent(
+                eq(sellTransaction),
+                capture(buyTxSlot),
+                eq(transactionTracker)
+            )
+        } returns expectedResult
+
+        // Act
+        val result = taxReportGenerator.processTaxReport(
+            TaxReportRequest(requestId, listOf(event))
+        )
+
+        // Assert
+        assertEquals(expectedResult, result.results[0])
+
+        // Verify buy transactions are passed in value order (cheapest first)
+        assertEquals(2, buyTxSlot.captured.size)
+        assertEquals(cheapBuyTx.id, buyTxSlot.captured[0].id) // Cheapest should be first
+        assertEquals(expensiveBuyTx.id, buyTxSlot.captured[1].id)
+    }
+
+    @Test
+    fun `processMinProfit should use highest value buy transactions first`() = runBlocking {
+        // Arrange
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.MIN_PROFIT
+        )
+
+        val sellTransaction = createMockTransaction(
+            sellTxId,
+            NormalizedTransactionType.SELL,
+            timestamp = baseDate // Sell happens at baseDate
+        )
+
+        val cheapBuyTx = createMockTransaction(
+            buyTx1Id,
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate, // Must be before sell date
+            assetValueFiat = ExchangeAmount(100.0, usdUnit) // Lower value
+        )
+
+        val expensiveBuyTx = createMockTransaction(
+            buyTx2Id,
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate, // Must be before sell date
+            assetValueFiat = ExchangeAmount(200.0, usdUnit) // Higher value
+        )
+
+        coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
+        coEvery {
+            transactionRepository.getFilteredTransactions(
+                types = listOf(NormalizedTransactionType.BUY),
+                assets = listOf(btcUnit)
+            )
+        } returns listOf(cheapBuyTx, expensiveBuyTx) // Deliberately unsorted
+
+        every { transactionTracker.getAvailableAmount(any()) } returns ExchangeAmount(1.0, btcUnit)
+
+        val expectedResult = mockTaxableEventResult(sellTxId)
+
+        // Capture the buy transactions passed to calculateTaxableEvent to verify order
+        val buyTxSlot = slot<List<NormalizedTransaction>>()
+
+        every {
+            taxCalculator.calculateTaxableEvent(
+                eq(sellTransaction),
+                capture(buyTxSlot),
+                eq(transactionTracker)
+            )
+        } returns expectedResult
+
+        // Act
+        val result = taxReportGenerator.processTaxReport(
+            TaxReportRequest(requestId, listOf(event))
+        )
+
+        // Assert
+        assertEquals(expectedResult, result.results[0])
+
+        // Verify buy transactions are passed in reverse value order (most expensive first)
+        assertEquals(2, buyTxSlot.captured.size)
+        assertEquals(expensiveBuyTx.id, buyTxSlot.captured[0].id) // Most expensive should be first
+        assertEquals(cheapBuyTx.id, buyTxSlot.captured[1].id)
+    }
+
+    @Test
+    fun `processCustom should use specified buy transactions`() = runBlocking {
+        // Arrange
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.CUSTOM,
+            buyTransactionIds = listOf(buyTx1Id, buyTx2Id)
+        )
+
+        val sellTransaction = createMockTransaction(
+            sellTxId,
+            NormalizedTransactionType.SELL,
+            timestamp = baseDate // Sell happens at baseDate
+        )
+
+        val buyTx1 = createMockTransaction(
+            buyTx1Id,
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate // Buy happens BEFORE sell
+        )
+
+        val buyTx2 = createMockTransaction(
+            buyTx2Id,
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate // Buy happens BEFORE sell
+        )
+
+        coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
+        coEvery { transactionRepository.getTransactionById(buyTx1Id) } returns buyTx1
+        coEvery { transactionRepository.getTransactionById(buyTx2Id) } returns buyTx2
+
+        every { transactionTracker.getAvailableAmount(any()) } returns ExchangeAmount(1.0, btcUnit)
+
+        val expectedResult = mockTaxableEventResult(sellTxId)
+
+        // Capture the buy transactions passed to calculateTaxableEvent
+        val buyTxSlot = slot<List<NormalizedTransaction>>()
+
+        every {
+            taxCalculator.calculateTaxableEvent(
+                eq(sellTransaction),
+                capture(buyTxSlot),
+                eq(transactionTracker)
+            )
+        } returns expectedResult
+
+        // Act
+        val result = taxReportGenerator.processTaxReport(
+            TaxReportRequest(requestId, listOf(event))
+        )
+
+        // Assert
+        assertEquals(expectedResult, result.results[0])
+
+        // Verify both specified buy transactions are used
+        assertEquals(2, buyTxSlot.captured.size)
+
+        // Both specified buys should be included
+        val capturedIds = buyTxSlot.captured.map { it.id }
+        assertTrue(capturedIds.contains(buyTx1Id))
+        assertTrue(capturedIds.contains(buyTx2Id))
+
+        // Verify repository was called for each specified buy
+        coVerify(exactly = 1) {
+            transactionRepository.getTransactionById(buyTx1Id)
+            transactionRepository.getTransactionById(buyTx2Id)
         }
     }
 
-    @Nested
-    inner class CustomMatching {
-        @Test
-        fun `should process custom tax treatment with valid buy transactions`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 1.0,
-                fiatAmount = 50000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
+    @Test
+    fun `processCustom should throw exception when buyTransactionIds is empty`() = runBlocking {
+        // Arrange
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.CUSTOM,
+            buyTransactionIds = emptyList() // Empty list
+        )
 
-            val buyTx = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 1.0,
-                fiatAmount = 40000.0, // The USD spent
-                date = buyDate1
-            )
-
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getTransactionById("buy-1") } returns buyTx
-
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.CUSTOM,
-                        buyTransactionIds = listOf("buy-1")
-                    )
+        // Act & Assert
+        val exception = assertThrows(TaxReportProcessingException::class.java) {
+            runBlocking {
+                taxReportGenerator.processTaxReport(
+                    TaxReportRequest(requestId, listOf(event))
                 )
-            )
-
-            // Act
-            val result = processor.processTaxReport(request)
-
-            // Assert
-            with(result.results[0]) {
-                assertEquals(ExchangeAmount(50000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(40000.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(10000.0, "USD"), gain)
-                assertEquals(ExchangeAmount(0.0, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(0.0, "USD"), uncoveredSellValue)
             }
         }
 
-        @Test
-        fun `should handle insufficient buy transactions for custom matching by using zero cost basis for uncovered portion`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 1.5,
-                fiatAmount = 75000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
-
-            val buyTx = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 1.0,
-                fiatAmount = 40000.0, // The USD spent
-                date = buyDate1
-            )
-
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getTransactionById("buy-1") } returns buyTx
-
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.CUSTOM,
-                        buyTransactionIds = listOf("buy-1")
-                    )
-                )
-            )
-
-            // Act
-            val result = processor.processTaxReport(request)
-
-            // Assert
-            with(result.results[0]) {
-                assertEquals(ExchangeAmount(75000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(40000.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(35000.0, "USD"), gain)
-                assertEquals(ExchangeAmount(0.5, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(25000.0, "USD"), uncoveredSellValue)
-            }
-        }
-
-        @Test
-        fun `should throw exception for custom treatment without buy IDs`() = runTest {
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.CUSTOM
-                    )
-                )
-            )
-
-            assertThrows<TaxReportProcessingException> {
-                processor.processTaxReport(request)
-            }
-        }
+        // Check for exception cause rather than direct exception message
+        val cause = exception.cause
+        assertTrue(cause is IllegalArgumentException)
+        assertTrue(cause?.message?.contains("Custom tax treatment requires buy transaction IDs") ?: false)
     }
 
-    @Nested
-    inner class ProfitOptimization {
-        @Test
-        fun `should process MAX_PROFIT strategy correctly`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 1.0,
-                fiatAmount = 50000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
+    @Test
+    fun `processCustom should throw exception when buy transaction is not found`() = runBlocking {
+        // Arrange
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.CUSTOM,
+            buyTransactionIds = listOf(buyTx1Id)
+        )
 
-            // Creating buy transactions with different cost basis values
-            val buyTx1 = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 0.5,
-                fiatAmount = 15000.0, // Higher cost per coin (30000 per BTC)
-                date = buyDate1
-            )
+        val sellTransaction = createMockTransaction(
+            sellTxId,
+            NormalizedTransactionType.SELL,
+            timestamp = baseDate
+        )
 
-            val buyTx2 = createBuyTransaction(
-                id = "buy-2",
-                assetAmount = 0.5,
-                fiatAmount = 10000.0, // Lower cost per coin (20000 per BTC)
-                date = buyDate2
-            )
+        coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
+        coEvery { transactionRepository.getTransactionById(buyTx1Id) } returns null // Not found
 
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getFilteredTransactions(
-                types = listOf(NormalizedTransactionType.BUY),
-                assets = listOf("BTC"),
-            )
-            } returns listOf(
-                buyTx1,
-                buyTx2
-            )
-
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.MAX_PROFIT
-                    )
+        // Act & Assert
+        val exception = assertThrows(TaxReportProcessingException::class.java) {
+            runBlocking {
+                taxReportGenerator.processTaxReport(
+                    TaxReportRequest(requestId, listOf(event))
                 )
-            )
-
-            // Act
-            val result = processor.processTaxReport(request)
-
-            // Assert - should use lower cost basis first to maximize profit
-            with(result.results[0]) {
-                assertEquals(ExchangeAmount(50000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(25000.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(25000.0, "USD"), gain)
-                assertEquals(2, usedBuyTransactions.size)
-                // Should use the lower cost basis transaction first
-                assertEquals("buy-2", usedBuyTransactions[0].transactionId)
-                assertEquals("buy-1", usedBuyTransactions[1].transactionId)
-                assertEquals(ExchangeAmount(0.0, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(0.0, "USD"), uncoveredSellValue)
             }
         }
 
-        @Test
-        fun `should process MIN_PROFIT strategy correctly`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 1.0,
-                fiatAmount = 50000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
-
-            // Creating buy transactions with different cost basis values
-            val buyTx1 = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 0.5,
-                fiatAmount = 15000.0, // Higher cost per coin (30000 per BTC)
-                date = buyDate1
-            )
-
-            val buyTx2 = createBuyTransaction(
-                id = "buy-2",
-                assetAmount = 0.5,
-                fiatAmount = 10000.0, // Lower cost per coin (20000 per BTC)
-                date = buyDate2
-            )
-
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getFilteredTransactions(
-                types = listOf(NormalizedTransactionType.BUY),
-                assets = listOf("BTC"),
-            )
-            } returns listOf(
-                buyTx1,
-                buyTx2
-            )
-
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.MIN_PROFIT
-                    )
-                )
-            )
-
-            // Act
-            val result = processor.processTaxReport(request)
-
-            // Assert - should use higher cost basis first to minimize profit
-            with(result.results[0]) {
-                assertEquals(ExchangeAmount(50000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(25000.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(25000.0, "USD"), gain)
-                assertEquals(2, usedBuyTransactions.size)
-                // Should use the higher cost basis transaction first
-                assertEquals("buy-1", usedBuyTransactions[0].transactionId)
-                assertEquals("buy-2", usedBuyTransactions[1].transactionId)
-                assertEquals(ExchangeAmount(0.0, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(0.0, "USD"), uncoveredSellValue)
-            }
-        }
-
-        @Test
-        fun `should handle insufficient buy transactions for MAX_PROFIT strategy`() = runTest {
-            // Arrange
-            val sellTx = createSellTransaction(
-                id = "sell-1",
-                assetAmount = 1.5,
-                fiatAmount = 75000.0, // The actual USD received
-                price = 50000.0, // Price per BTC
-                date = baseDate
-            )
-
-            val buyTx1 = createBuyTransaction(
-                id = "buy-1",
-                assetAmount = 0.5,
-                fiatAmount = 15000.0,
-                date = buyDate1
-            )
-
-            val buyTx2 = createBuyTransaction(
-                id = "buy-2",
-                assetAmount = 0.5,
-                fiatAmount = 10000.0,
-                date = buyDate2
-            )
-
-            coEvery { transactionRepository.getTransactionById("sell-1") } returns sellTx
-            coEvery { transactionRepository.getFilteredTransactions(
-                types = listOf(NormalizedTransactionType.BUY),
-                assets = listOf("BTC"),
-            )
-            } returns listOf(
-                buyTx1,
-                buyTx2
-            )
-
-            val request = TaxReportRequest(
-                requestId = "request-1",
-                taxableEvents = listOf(
-                    TaxableEventParameters(
-                        sellId = "sell-1",
-                        taxTreatment = TaxTreatment.MAX_PROFIT
-                    )
-                )
-            )
-
-            // Act
-            val result = processor.processTaxReport(request)
-
-            // Assert
-            with(result.results[0]) {
-                assertEquals(ExchangeAmount(75000.0, "USD"), proceeds)
-                assertEquals(ExchangeAmount(25000.0, "USD"), costBasis)
-                assertEquals(ExchangeAmount(50000.0, "USD"), gain)
-                assertEquals(2, usedBuyTransactions.size)
-                assertEquals(ExchangeAmount(0.5, "BTC"), uncoveredSellAmount)
-                assertEquals(ExchangeAmount(25000.0, "USD"), uncoveredSellValue)
-            }
-        }
+        // Check for exception cause rather than direct exception message
+        val cause = exception.cause
+        assertTrue(cause is IllegalArgumentException)
+        assertTrue(cause?.message?.contains("No valid buy transactions") ?: false)
     }
 
-    // New helper methods to create the right types of transactions
-    private fun createBuyTransaction(
+    @Test
+    fun `processTaxReport should throw exception when sell transaction is not found`() = runBlocking {
+        // Arrange
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.FIFO
+        )
+
+        coEvery { transactionRepository.getTransactionById(sellTxId) } returns null // Not found
+
+        // Act & Assert
+        val exception = assertThrows(TaxReportProcessingException::class.java) {
+            runBlocking {
+                taxReportGenerator.processTaxReport(
+                    TaxReportRequest(requestId, listOf(event))
+                )
+            }
+        }
+
+        // Check for exception cause rather than direct exception message
+        val cause = exception.cause
+        assertTrue(cause is IllegalArgumentException)
+        assertTrue(cause?.message?.contains("Sell transaction $sellTxId not found") ?: false)
+    }
+
+    @Test
+    fun `getAvailableBuyTransactionsBeforeSell should filter correctly`() = runBlocking {
+        // Arrange
+        val sellDate = baseDate
+        val asset = btcUnit
+
+        val validBuyTx = createMockTransaction(
+            buyTx1Id,
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate // Before sell date
+        )
+
+        val invalidBuyTx1 = createMockTransaction(
+            "invalid1",
+            NormalizedTransactionType.BUY,
+            timestamp = Date(baseDate.time + 1000) // After sell date
+        )
+
+        val invalidBuyTx2 = createMockTransaction(
+            "invalid2",
+            NormalizedTransactionType.BUY,
+            timestamp = beforeBaseDate,
+            filedWithIRS = true // Filed with IRS
+        )
+
+        coEvery {
+            transactionRepository.getFilteredTransactions(
+                types = listOf(NormalizedTransactionType.BUY),
+                assets = listOf(asset)
+            )
+        } returns listOf(validBuyTx, invalidBuyTx1, invalidBuyTx2)
+
+        // Mock available amounts - only valid transaction has available amount
+        every { transactionTracker.getAvailableAmount(validBuyTx) } returns ExchangeAmount(1.0, btcUnit)
+        every { transactionTracker.getAvailableAmount(invalidBuyTx1) } returns ExchangeAmount(1.0, btcUnit)
+        every { transactionTracker.getAvailableAmount(invalidBuyTx2) } returns ExchangeAmount(0.0, btcUnit)
+
+        val event = TaxableEventParameters(
+            sellId = sellTxId,
+            taxTreatment = TaxTreatment.FIFO
+        )
+
+        val sellTransaction = createMockTransaction(
+            sellTxId,
+            NormalizedTransactionType.SELL,
+            timestamp = sellDate
+        )
+
+        coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
+
+        val expectedResult = mockTaxableEventResult(sellTxId)
+
+        // Capture the buy transactions passed to calculateTaxableEvent
+        val buyTxSlot = slot<List<NormalizedTransaction>>()
+
+        every {
+            taxCalculator.calculateTaxableEvent(
+                eq(sellTransaction),
+                capture(buyTxSlot),
+                eq(transactionTracker)
+            )
+        } returns expectedResult
+
+        // Act
+        taxReportGenerator.processTaxReport(
+            TaxReportRequest(requestId, listOf(event))
+        )
+
+        // Assert
+        assertEquals(1, buyTxSlot.captured.size)
+        assertEquals(validBuyTx.id, buyTxSlot.captured[0].id)
+
+        // invalidBuyTx1 is filtered out due to date
+        // invalidBuyTx2 is filtered out due to no available amount
+    }
+
+    /**
+     * Helper method to create a transaction for testing
+     */
+    private fun createMockTransaction(
         id: String,
-        assetAmount: Double,
-        fiatAmount: Double,
-        date: Date
+        type: NormalizedTransactionType,
+        timestamp: Date = Date(),
+        assetValueFiat: ExchangeAmount = ExchangeAmount(100.0, usdUnit),
+        assetAmount: ExchangeAmount = ExchangeAmount(1.0, btcUnit),
+        filedWithIRS: Boolean = false
     ): NormalizedTransaction {
+        val transactionSource = io.mockk.mockk<TransactionSource>()
+
         return NormalizedTransaction(
             id = id,
-            type = NormalizedTransactionType.BUY,
-            source = TransactionSource.COINBASE_STANDARD,
-            transactionAmountFiat = ExchangeAmount(fiatAmount, "USD"), // Amount spent
-            fee = ExchangeAmount(0.0, "USD"),
-            assetAmount = ExchangeAmount(assetAmount, "BTC"),
-            assetValueFiat = ExchangeAmount(fiatAmount, "USD"), // For buys, this is same as transactionAmountFiat
-            timestamp = date,
-            timestampText = date.toString(),
-            notes = "",
-            filedWithIRS = false,
+            source = transactionSource,
+            type = type,
+            transactionAmountFiat = ExchangeAmount(100.0, usdUnit),
+            fee = ExchangeAmount(10.0, usdUnit),
+            assetAmount = assetAmount,
+            assetValueFiat = assetValueFiat,
+            timestamp = timestamp,
+            timestampText = timestamp.toString(),
+            address = "0xabc123",
+            notes = "Test transaction",
+            filedWithIRS = filedWithIRS
         )
     }
 
-    private fun createSellTransaction(
-        id: String,
-        assetAmount: Double,
-        fiatAmount: Double, // Actual USD received
-        price: Double,      // Price per BTC
-        date: Date
-    ): NormalizedTransaction {
-        return NormalizedTransaction(
-            id = id,
-            type = NormalizedTransactionType.SELL,
-            source = TransactionSource.COINBASE_STANDARD,
-            transactionAmountFiat = ExchangeAmount(fiatAmount, "USD"), // Amount received
-            fee = ExchangeAmount(0.0, "USD"),
-            assetAmount = ExchangeAmount(assetAmount, "BTC"),
-            assetValueFiat = ExchangeAmount(price, "USD"), // Price per unit, not total value
-            timestamp = date,
-            timestampText = date.toString(),
-            notes = "",
-            filedWithIRS = false,
-        )
+    /**
+     * Helper method to create a mock taxable event result
+     */
+    private fun mockTaxableEventResult(
+        sellTxId: String
+    ): TaxableEventResult {
+        return io.mockk.mockk {
+            every { sellTransactionId } returns sellTxId
+        }
     }
 }
