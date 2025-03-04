@@ -1,6 +1,6 @@
 package com.bitcointracker.model.api
 
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 
 data class PaginationParams(
     val page: Int,

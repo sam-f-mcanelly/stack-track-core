@@ -1,10 +1,10 @@
 package com.bitcointracker.core.tax
 
-import com.bitcointracker.model.internal.tax.TaxType
-import com.bitcointracker.model.internal.tax.TaxableEventResult
-import com.bitcointracker.model.internal.tax.UsedBuyTransaction
+import com.bitcointracker.model.api.tax.TaxType
+import com.bitcointracker.model.api.tax.TaxableEventResult
+import com.bitcointracker.model.api.tax.UsedBuyTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Singleton

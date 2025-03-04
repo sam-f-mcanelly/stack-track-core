@@ -6,7 +6,7 @@ import com.bitcointracker.core.mapper.CoinbaseStandardTransactionNormalizingMapp
 import com.bitcointracker.core.mapper.FileContentNormalizingMapper
 import com.bitcointracker.core.mapper.StrikeTransactionNormalizingMapper
 import com.bitcointracker.model.internal.file.FileType
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import java.io.File
 import javax.inject.Inject
 

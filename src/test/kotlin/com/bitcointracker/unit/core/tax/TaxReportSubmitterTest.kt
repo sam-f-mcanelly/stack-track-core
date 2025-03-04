@@ -2,14 +2,14 @@ package com.bitcointracker.unit.core.tax
 
 import com.bitcointracker.core.TransactionRepository
 import com.bitcointracker.core.tax.TaxReportSubmitter
-import com.bitcointracker.model.internal.tax.TaxReportResult
-import com.bitcointracker.model.internal.tax.TaxType
-import com.bitcointracker.model.internal.tax.TaxableEventResult
-import com.bitcointracker.model.internal.tax.UsedBuyTransaction
+import com.bitcointracker.model.api.tax.TaxReportResult
+import com.bitcointracker.model.api.tax.TaxType
+import com.bitcointracker.model.api.tax.TaxableEventResult
+import com.bitcointracker.model.api.tax.UsedBuyTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK

@@ -1,7 +1,7 @@
 package com.bitcointracker.core.tax
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import org.slf4j.LoggerFactory
 
 /**

@@ -2,11 +2,11 @@ package com.bitcointracker.unit.core.tax
 
 import com.bitcointracker.core.tax.TaxCalculator
 import com.bitcointracker.core.tax.TransactionTracker
-import com.bitcointracker.model.internal.tax.TaxType
+import com.bitcointracker.model.api.tax.TaxType
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot

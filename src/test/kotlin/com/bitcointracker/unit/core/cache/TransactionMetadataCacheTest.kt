@@ -2,9 +2,9 @@ package com.bitcointracker.unit.core.cache
 
 import com.bitcointracker.core.cache.TransactionMetadataCache
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test

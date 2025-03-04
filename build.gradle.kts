@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation("com.itextpdf:itext7-core:7.2.4")
     implementation("ch.qos.logback:logback-classic:1.4.11")
     implementation("io.ktor:ktor-server-netty:2.3.1")
     implementation("io.ktor:ktor-server-core:2.3.1")
@@ -51,11 +52,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.20")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.slf4j:slf4j-simple:2.0.9")
-
-    // Chronometer dependencies
-    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
-    testImplementation("io.kotest:kotest-assertions-core:5.8.0")
-    testImplementation("io.kotest:kotest-property:5.8.0")
 
     // JaCoCo for code coverage
     implementation("org.jacoco:org.jacoco.core:0.8.11")

@@ -1,4 +1,4 @@
-package com.bitcointracker.model.internal.transaction.normalized
+package com.bitcointracker.model.api.transaction
 
 enum class NormalizedTransactionType {
     BUY,

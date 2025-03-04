@@ -1,7 +1,7 @@
-package com.bitcointracker.model.internal.tax
+package com.bitcointracker.model.api.tax
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
 
 /**
  * Details of how a buy transaction was used in tax calculations.

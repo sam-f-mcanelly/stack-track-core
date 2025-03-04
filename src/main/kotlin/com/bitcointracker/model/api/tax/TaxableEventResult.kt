@@ -1,7 +1,8 @@
-package com.bitcointracker.model.internal.tax
+package com.bitcointracker.model.api.tax
 
+import com.bitcointracker.model.api.tax.UsedBuyTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
 
 /**
  * Contains the results of processing a single taxable event.

@@ -2,9 +2,9 @@ package com.bitcointracker.core.mapper
 
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsSide
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import javax.inject.Inject
 
 /**

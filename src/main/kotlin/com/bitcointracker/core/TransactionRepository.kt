@@ -1,8 +1,8 @@
 package com.bitcointracker.core
 
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import java.util.Date
 
 interface TransactionRepository {

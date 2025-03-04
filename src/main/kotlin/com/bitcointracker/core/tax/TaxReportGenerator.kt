@@ -5,10 +5,10 @@ import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.bitcointracker.model.api.tax.TaxTreatment
 import com.bitcointracker.model.api.tax.TaxableEventParameters
-import com.bitcointracker.model.internal.tax.TaxReportResult
-import com.bitcointracker.model.internal.tax.TaxableEventResult
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.api.tax.TaxReportResult
+import com.bitcointracker.model.api.tax.TaxableEventResult
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import org.slf4j.LoggerFactory
 import java.util.Date
 import javax.inject.Inject

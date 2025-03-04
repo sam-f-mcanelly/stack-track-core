@@ -4,8 +4,8 @@ import com.bitcointracker.core.TransactionRepository
 import com.bitcointracker.core.parser.UniversalFileLoader
 import com.bitcointracker.model.api.PaginatedResponse
 import com.bitcointracker.model.api.PaginationParams
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders

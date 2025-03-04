@@ -1,6 +1,6 @@
 package com.bitcointracker.core.mapper
 
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
 
 /**
  * Generic interface for mappers that convert from exchange specific

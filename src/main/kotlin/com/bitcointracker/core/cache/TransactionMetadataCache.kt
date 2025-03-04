@@ -1,8 +1,8 @@
 package com.bitcointracker.core.cache
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import java.lang.IllegalArgumentException
 import javax.inject.Inject
 import javax.inject.Singleton

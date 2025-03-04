@@ -4,8 +4,8 @@ import com.bitcointracker.core.mapper.CoinbaseStandardTransactionNormalizingMapp
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseStandardTransaction
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseTransactionType
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Nested

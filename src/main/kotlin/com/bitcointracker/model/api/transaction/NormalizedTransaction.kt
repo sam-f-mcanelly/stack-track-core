@@ -1,5 +1,8 @@
-package com.bitcointracker.model.internal.transaction.normalized
+package com.bitcointracker.model.api.transaction
 
+import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import java.util.Date
 
 data class NormalizedTransaction(

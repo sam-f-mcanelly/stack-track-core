@@ -3,9 +3,9 @@ package com.bitcointracker.integration.parsing.strike
 import com.bitcointracker.module
 import com.bitcointracker.dagger.component.DaggerAppComponent
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import com.bitcointracker.util.jackson.ExchangeAmountDeserializer
 import com.bitcointracker.util.jackson.ExchangeAmountSerializer
 import com.fasterxml.jackson.databind.SerializationFeature

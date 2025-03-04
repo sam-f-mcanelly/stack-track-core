@@ -1,9 +1,9 @@
 package com.bitcointracker.core.mapper
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransaction
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
-import com.bitcointracker.model.internal.transaction.normalized.TransactionSource
+import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.TransactionSource
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType

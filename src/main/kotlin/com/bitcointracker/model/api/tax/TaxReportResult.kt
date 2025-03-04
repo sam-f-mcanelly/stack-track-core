@@ -1,4 +1,4 @@
-package com.bitcointracker.model.internal.tax
+package com.bitcointracker.model.api.tax
 
 /**
  * Contains the results of processing a tax report request.

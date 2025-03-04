@@ -1,7 +1,7 @@
 package com.bitcointracker.core
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.internal.transaction.normalized.NormalizedTransactionType
+import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
