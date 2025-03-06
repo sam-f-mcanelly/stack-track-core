@@ -74,8 +74,8 @@ class TaxCalculatorTest {
         // Assert
         assertEquals(sellTxId, result.sellTransactionId)
         assertEquals(sellPrice, result.proceeds)
-        assertEquals(buyPrice, result.costBasis)
-        assertEquals(ExchangeAmount(20000.0, usdUnit), result.gain) // $50k - $30k = $20k profit
+        assertEquals(buyPrice + buyTx.fee, result.costBasis)
+        assertEquals(ExchangeAmount(19990.0, usdUnit), result.gain) // $50k - $30k - $10 fee = $19,990 profit
         assertEquals(1, result.usedBuyTransactions.size)
         assertEquals(TaxType.LONG_TERM, result.usedBuyTransactions[0].taxType)
         assertEquals(buyTx1Id, result.usedBuyTransactions[0].transactionId)
@@ -134,11 +134,11 @@ class TaxCalculatorTest {
         assertEquals(sellTxId, result.sellTransactionId)
         assertEquals(sellPrice, result.proceeds)
 
-        // Total cost basis should be $20,000 + $15,000 = $35,000
-        assertEquals(ExchangeAmount(35000.0, usdUnit), result.costBasis)
+        // Total cost basis should be $20,000 + $15,000 + (2 * $10 fee) = $35,020
+        assertEquals(ExchangeAmount(35020.0, usdUnit), result.costBasis)
 
-        // Gain should be $50,000 - $35,000 = $15,000
-        assertEquals(ExchangeAmount(15000.0, usdUnit), result.gain)
+        // Gain should be $50,000 - $35,000 - $20 fees = $14,980
+        assertEquals(ExchangeAmount(14980.0, usdUnit), result.gain)
 
         // Should have used both buy transactions
         assertEquals(2, result.usedBuyTransactions.size)
@@ -190,10 +190,10 @@ class TaxCalculatorTest {
         // Assert
         assertEquals(sellTxId, result.sellTransactionId)
         assertEquals(sellPrice, result.proceeds)
-        assertEquals(buyPrice, result.costBasis)
+        assertEquals(buyPrice + buyTx.fee, result.costBasis)
 
-        // Gain should be $50,000 - $20,000 = $30,000
-        assertEquals(ExchangeAmount(30000.0, usdUnit), result.gain)
+        // Gain should be $50,000 - $20,000 - $10 fee = $29,990
+        assertEquals(ExchangeAmount(29990.0, usdUnit), result.gain)
 
         // Should have used the one buy transaction
         assertEquals(1, result.usedBuyTransactions.size)
@@ -254,8 +254,8 @@ class TaxCalculatorTest {
         // Should have uncovered amount of 0.5 BTC
         assertEquals(halfBitcoin, result.uncoveredSellAmount)
 
-        // Cost basis should be half of the buy price
-        assertEquals(ExchangeAmount(15000.0, usdUnit), result.costBasis)
+        // Cost basis should be half of the buy price + half the fee
+        assertEquals(ExchangeAmount(15005.0, usdUnit), result.costBasis)
 
         // Verify the tracker's updateUsedAmount was called
         verify(exactly = 1) { mockedTracker.updateUsedAmount(buyTx1Id, any()) }

@@ -225,13 +225,13 @@ class TaxReportPdfGenerator @Inject constructor() {
             transactionSummaryTable.addCell(
                 createSummaryCell(
                     "Proceeds:",
-                    "$${String.format("%.2f", event.proceeds.amount)}"
+                    "$${String.format("%,.2f", event.proceeds.amount)}"
                 )
             )
             transactionSummaryTable.addCell(
                 createSummaryCell(
                     "Cost Basis:",
-                    "$${String.format("%.2f", event.costBasis.amount)}"
+                    "$${String.format("%,.2f", event.costBasis.amount)}"
                 )
             )
 
@@ -239,7 +239,7 @@ class TaxReportPdfGenerator @Inject constructor() {
             val isGain = event.gain.amount >= 0
             val gainLossCell = createSummaryCell(
                 "Gain/Loss:",
-                "$${String.format("%.2f", event.gain.amount)}"
+                "$${String.format("%,.2f", event.gain.amount)}"
             )
 
             if (isGain) {

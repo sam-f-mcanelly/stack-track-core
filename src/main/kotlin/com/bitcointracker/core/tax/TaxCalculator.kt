@@ -52,7 +52,7 @@ class TaxCalculator @Inject constructor() {
             // Calculate the ratio of the amount being used to the total buy amount
             val ratio = (amountToUse.amount / buyTx.assetAmount.amount)
             // Use the ratio to calculate cost basis
-            val costBasis = buyTx.transactionAmountFiat * ratio
+            val costBasis = (buyTx.transactionAmountFiat + buyTx.fee) * ratio
 
             logger.info("Cost basis: $costBasis")
 
