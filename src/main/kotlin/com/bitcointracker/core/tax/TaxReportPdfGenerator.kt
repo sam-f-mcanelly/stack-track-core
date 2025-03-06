@@ -13,6 +13,13 @@ import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
 class TaxReportPdfGenerator @Inject constructor() {
+
+    /**
+     * Generate a PDF of the Tax Report Result so the user
+     * can print it and add it to their records.
+     *
+     * @param report the TaxReportResult
+     */
     fun generateTaxReportPdf(report: TaxReportResult): ByteArray {
         val outputStream = ByteArrayOutputStream()
         val writer = PdfWriter(outputStream)
@@ -22,7 +29,7 @@ class TaxReportPdfGenerator @Inject constructor() {
         // Add title and header information
         document.add(Paragraph("Cryptocurrency Tax Report")
             .setFontSize(20f)
-            .setBold()
+            .simulateBold()
             .setTextAlignment(TextAlignment.CENTER))
 
         document.add(Paragraph("Report ID: ${report.requestId}")
@@ -36,7 +43,7 @@ class TaxReportPdfGenerator @Inject constructor() {
         // Create summary section
         document.add(Paragraph("Summary")
             .setFontSize(16f)
-            .setBold())
+            .simulateBold())
 
         // Add summary data
         val totalProceeds = report.results.sumOf { it.proceeds.amount }
@@ -61,14 +68,14 @@ class TaxReportPdfGenerator @Inject constructor() {
         // Create detailed transactions table
         document.add(Paragraph("Detailed Transactions")
             .setFontSize(16f)
-            .setBold())
+            .simulateBold())
 
         val transactionsTable = Table(UnitValue.createPercentArray(floatArrayOf(16f, 14f, 14f, 14f, 14f, 14f, 14f)))
             .useAllAvailableWidth()
 
         // Add table headers
         arrayOf("Transaction ID", "Date", "Type", "Asset Amount", "Proceeds", "Cost Basis", "Gain/Loss").forEach {
-            transactionsTable.addHeaderCell(Cell().add(Paragraph(it).setBold()))
+            transactionsTable.addHeaderCell(Cell().add(Paragraph(it).simulateBold()))
         }
 
         // Add transaction rows
@@ -88,7 +95,7 @@ class TaxReportPdfGenerator @Inject constructor() {
         // Add Form 8949 instructions
         document.add(Paragraph("IRS Form 8949 Instructions")
             .setFontSize(16f)
-            .setBold())
+            .simulateBold())
 
         document.add(Paragraph("""
         To report these transactions on your taxes using IRS Form 8949:
