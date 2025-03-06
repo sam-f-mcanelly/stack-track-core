@@ -1,13 +1,20 @@
 package com.bitcointracker.service.routes
 
 import com.bitcointracker.core.tax.TaxReportGenerator
+import com.bitcointracker.core.tax.TaxReportPdfGenerator
 import com.bitcointracker.core.tax.TaxReportSubmitter
 import com.bitcointracker.model.api.tax.TaxReportRequest
+import com.bitcointracker.model.api.tax.TaxReportResult
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.ktor.http.ContentDisposition
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytes
 import org.slf4j.LoggerFactory
 import javax.inject.Inject
 
@@ -19,6 +26,7 @@ import javax.inject.Inject
  *
  * @property taxReportGenerator class responsible for generating tax reports
  * @property taxReportSubmitter class responsible for submitting generated tax reports
+ * @property taxReportPdfGenerator class responsible for generating downloadable PDFs of tax reports
  * @property objectMapper jackson object mapper
  *
  * @throws IllegalArgumentException if the tax report request is malformed
@@ -27,6 +35,7 @@ import javax.inject.Inject
 class TaxComputationRouteHandler @Inject constructor(
     private val taxReportGenerator: TaxReportGenerator,
     private val taxReportSubmitter: TaxReportSubmitter,
+    private val taxReportPdfGenerator: TaxReportPdfGenerator,
     private val objectMapper: ObjectMapper,
 ) {
     companion object {
@@ -53,5 +62,25 @@ class TaxComputationRouteHandler @Inject constructor(
             logger.error("Error while processing tax report request", e)
             call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
         }
+    }
+
+    /**
+     * Generates a PDF of the Tax Report Result.
+     *
+     * @param call The ApplicationCall containing the tax report result
+     */
+    suspend fun generateTaxReportPdf(call: ApplicationCall) {
+        val taxReport = call.receive<TaxReportResult>()
+
+        val pdfBytes = taxReportPdfGenerator.generateTaxReportPdf(taxReport)
+
+        call.response.header(
+            HttpHeaders.ContentDisposition,
+            ContentDisposition.Attachment.withParameter(
+                ContentDisposition.Parameters.FileName,
+                "tax-report-${taxReport.requestId}.pdf"
+            ).toString()
+        )
+        call.respondBytes(pdfBytes, ContentType.Application.Pdf)
     }
 }

@@ -186,6 +186,8 @@ fun Application.module(appComponent: AppComponent) {
         get("/health") {
             call.respondText("OK", status = HttpStatusCode.OK)
         }
+
+        // Data routes
         post("/api/data/upload") {
             rawDataRouteHandler.handleFileUpload(call)
         }
@@ -198,14 +200,21 @@ fun Application.module(appComponent: AppComponent) {
         get("/api/data/sells/{year}") {
             rawDataRouteHandler.handleGetSellTransactionsByYear(call)
         }
+
+        // Metadata routes
         get("/api/metadata/portfolio_value/{fiat}") {
             metadataRouteHandler.getPortfolioValue(call)
         }
         get("/api/metadata/accumulation/{asset}/{days}") {
             metadataRouteHandler.getAccumulationHistory(call)
         }
+
+        // Tax routes
         post("/api/tax/request_report") {
             taxComputationRouteHandler.submitTaxReportRequest(call)
+        }
+        post("/api/tax/report/pdf") {
+            taxComputationRouteHandler.generateTaxReportPdf(call)
         }
     }
 }

@@ -28,9 +28,9 @@ dependencies {
     implementation("com.google.dagger:dagger:2.48")
     implementation("io.ktor:ktor-serialization-jackson:2.3.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
-    kapt("com.google.dagger:dagger-compiler:2.48")
     implementation("javax.inject:javax.inject:1")
     implementation("org.slf4j:slf4j-api:2.0.9")
+    implementation("org.apache.pdfbox:pdfbox:3.0.4")
 
     // H2 database
     implementation("com.h2database:h2:2.2.224")
@@ -48,6 +48,7 @@ dependencies {
 
     // Testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("io.ktor:ktor-server-test-host:2.3.7")
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.20")
     testImplementation("io.mockk:mockk:1.13.8")
@@ -56,6 +57,9 @@ dependencies {
     // JaCoCo for code coverage
     implementation("org.jacoco:org.jacoco.core:0.8.11")
     implementation("org.jacoco:org.jacoco.report:0.8.11")
+
+    // Annotation processing
+    kapt("com.google.dagger:dagger-compiler:2.48")
 }
 
 application {
