@@ -146,7 +146,7 @@ class TaxReportPdfGenerator @Inject constructor() {
             )
 
             // Sell transaction details
-            val sellDetailsTable = Table(UnitValue.createPercentArray(floatArrayOf(8f, 8f, 8f, 8f, 8f, 8f, 8f)))
+            val sellDetailsTable = Table(UnitValue.createPercentArray(floatArrayOf(8f, 8f, 8f, 8f, 8f, 8f)))
                 .useAllAvailableWidth()
                 .setBorder(Border.NO_BORDER)
 
@@ -162,11 +162,10 @@ class TaxReportPdfGenerator @Inject constructor() {
             sellDetailsTable.addCell(createCell(event.sellTransaction.source.name))
             sellDetailsTable.addCell(createCell(event.sellTransaction.id))
             sellDetailsTable.addCell(createCell(event.sellTransaction.timestampText))
-            sellDetailsTable.addCell(createCell(event.sellTransaction.assetAmount.unit))
-            sellDetailsTable.addCell(createCell("${String.format("%.8f", event.sellTransaction.assetAmount.amount)} ${event.sellTransaction.assetAmount.unit}"))
+            sellDetailsTable.addCell(createCell("${String.format("%,.8f", event.sellTransaction.assetAmount.amount)} ${event.sellTransaction.assetAmount.unit}"))
             val pricePerUnit = event.proceeds.amount / event.sellTransaction.assetAmount.amount
-            sellDetailsTable.addCell(createCell("$${String.format("%.2f", pricePerUnit)}"))
-            sellDetailsTable.addCell(createCell("$${String.format("%.2f", event.proceeds.amount)}"))
+            sellDetailsTable.addCell(createCell("$${String.format("%,.2f", pricePerUnit)}"))
+            sellDetailsTable.addCell(createCell("$${String.format("%,.2f", event.proceeds.amount)}"))
 
             transactionCard.add(sellDetailsTable)
 
@@ -195,10 +194,10 @@ class TaxReportPdfGenerator @Inject constructor() {
                 buyTable.addCell(createCell(buyTx.originalTransaction.source.name))
                 buyTable.addCell(createCell(buyTx.transactionId))
                 buyTable.addCell(createCell(buyTx.originalTransaction.timestampText))
-                buyTable.addCell(createCell("${String.format("%.8f", buyTx.amountUsed.amount)} ${buyTx.amountUsed.unit}"))
+                buyTable.addCell(createCell("${String.format("%,.8f", buyTx.amountUsed.amount)} ${buyTx.amountUsed.unit}"))
                 val buyPrice = buyTx.costBasis.amount / buyTx.amountUsed.amount
-                buyTable.addCell(createCell("$${String.format("%.2f", buyPrice)}"))
-                buyTable.addCell(createCell("$${String.format("%.2f", buyTx.costBasis.amount)}"))
+                buyTable.addCell(createCell("$${String.format("%,.2f", buyPrice)}"))
+                buyTable.addCell(createCell("$${String.format("%,.2f", buyTx.costBasis.amount)}"))
 
                 // Add tax type with appropriate styling
                 val taxTypeCell = Cell()
