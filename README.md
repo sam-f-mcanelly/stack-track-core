@@ -134,9 +134,9 @@ class NewExchangeFileProcessor @Inject constructor(
 }
 ```
 
-### 6. Update the FileContentNormalizingMapper
+### 6. Update the FileContentLoader
 
-Add your file's header pattern to the `FileContentNormalizingMapper`:
+Add your file's header pattern to the `FileContentLoader`:
 
 ```kotlin
 companion object {

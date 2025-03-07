@@ -30,6 +30,7 @@ class FileContentLoader @Inject constructor() {
         private const val STRIKE_MONTHLY_TRANSACTIONS_COLUMNS = "Transaction ID,Initiated Date (UTC),Initiated Time (UTC),Completed Time (UTC),Completed Time (UTC),Transaction Type,State,Amount 1,Currency 1,Fee 1,Amount 2,Currency 2,Fee 2,BTC Price,Balance 1,Currency 1,Balance - BTC,Destination,Description"
         private const val STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V2 = "Transaction ID,Initiated Date (UTC),Initiated Time (UTC),Completed Date (UTC),Completed Time (UTC),Transaction Type,State,Amount 1,Currency 1,Fee 1,Amount 2,Currency 2,Fee 2,BTC Price,Balance 1,Currency 1,Balance - BTC,Destination,Description"
         private const val STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V3 = "Transaction ID,Initiated Date (UTC),Initiated Time (UTC),Completed Date (UTC),Completed Time (UTC),Transaction Type,State,Amount 1,Currency 1,Fee 1,Amount 2,Currency 2,Fee 2,BTC Price,Balance 1,Currency 1,Balance - BTC,Destination,Description,Note"
+        private const val STRIKE_MONTHLY_V2_TRANSACTIONS_HEADER = "Reference,Date & Time (UTC),Transaction Type,Amount USD,Fee USD,Amount BTC,Fee BTC,BTC Price,Cost Basis (USD),Destination,Description,Note"
         private const val COINBASE_FILLS_TRANSACTIONS_COLUMNS = "portfolio,trade id,product,side,created at,size,size unit,price,fee,total,price/fee/total unit"
         private const val COINBASE_ANNUAL_TRANSACTIONS_COLUMNS = "ID,Timestamp,Transaction Type,Asset,Quantity Transacted,Price Currency,Price at Transaction,Subtotal,Total (inclusive of fees and/or spread),Fees and/or Spread,Notes"
     }
@@ -79,6 +80,7 @@ class FileContentLoader @Inject constructor() {
             STRIKE_MONTHLY_TRANSACTIONS_COLUMNS,
             STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V2,
             STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V3 -> FileType.STRIKE_MONTHLY
+            STRIKE_MONTHLY_V2_TRANSACTIONS_HEADER -> FileType.STRIKE_MONTHLY_V2
             COINBASE_FILLS_TRANSACTIONS_COLUMNS -> FileType.COINBASE_PRO_FILLS
             COINBASE_ANNUAL_TRANSACTIONS_COLUMNS -> FileType.COINBASE_ANNUAL
             else -> null

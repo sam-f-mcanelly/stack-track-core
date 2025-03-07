@@ -5,6 +5,7 @@ import com.bitcointracker.core.parser.exchange.processor.CoinbaseProFillsFilePro
 import com.bitcointracker.core.parser.exchange.processor.FileProcessor
 import com.bitcointracker.core.parser.exchange.processor.StrikeAnnualFileProcessor
 import com.bitcointracker.core.parser.exchange.processor.StrikeMonthlyFileProcessor
+import com.bitcointracker.core.parser.exchange.processor.StrikeV2MonthlyFileProcessor
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -28,6 +29,11 @@ abstract class FileProcessorModule {
     @IntoMap
     @StringKey("STRIKE_MONTHLY")
     abstract fun bindStrikeMonthlyFileProcessor(processor: StrikeMonthlyFileProcessor): FileProcessor
+
+    @Binds
+    @IntoMap
+    @StringKey("STRIKE_MONTHLY_V2")
+    abstract fun bindStrikeMonthlyV2FileProcessor(processor: StrikeV2MonthlyFileProcessor): FileProcessor
 
     @Binds
     @IntoMap
