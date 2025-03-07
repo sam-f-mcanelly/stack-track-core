@@ -75,26 +75,9 @@ fun setupStdOutLogging() {
     // Configure Logback programmatically
     val loggerContext = LoggerFactory.getILoggerFactory() as LoggerContext
 
-    // Create a console appender
-    val consoleAppender = ConsoleAppender<ILoggingEvent>().apply {
-        context = loggerContext
-        name = "STDOUT"
-
-        // Configure the output pattern
-        val encoder = PatternLayoutEncoder().apply {
-            context = loggerContext
-            pattern = "%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
-            start()
-        }
-        this.encoder = encoder
-        start()
-    }
-
     // Get the root logger and add the appender
     val rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME)
-    rootLogger.level = ch.qos.logback.classic.Level.OFF
-    rootLogger.addAppender(consoleAppender)
-    loggerContext.getLogger("io.ktor").level = ch.qos.logback.classic.Level.OFF
+    rootLogger.level = ch.qos.logback.classic.Level.INFO
 }
 
 /**
@@ -161,7 +144,7 @@ fun Application.module(appComponent: AppComponent) {
     }
 
     install(CallLogging) {
-        level = Level.DEBUG
+        level = Level.INFO
 
         // Log all requests to the /api/ path
         filter { call ->

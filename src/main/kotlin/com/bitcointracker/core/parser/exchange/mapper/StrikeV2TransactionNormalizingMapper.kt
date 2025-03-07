@@ -15,7 +15,6 @@ import kotlin.math.absoluteValue
 class StrikeV2TransactionNormalizingMapper @Inject constructor() : NormalizingMapper<StrikeV2Transaction> {
 
     companion object {
-        private const val SOURCE_NAME = "STRIKE_V2"
         private const val USD_CURRENCY = "USD"
         private const val BTC_CURRENCY = "BTC"
         private const val DEFAULT_VALUE = 0.0

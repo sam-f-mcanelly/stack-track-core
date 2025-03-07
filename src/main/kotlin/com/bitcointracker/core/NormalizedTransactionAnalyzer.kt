@@ -1,15 +1,21 @@
 package com.bitcointracker.core
 
+import com.bitcointracker.core.chart.BitcoinDataRepository
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import org.slf4j.LoggerFactory
 import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class NormalizedTransactionAnalyzer @Inject constructor(
-    private val transactionRepository: TransactionRepository
-){
+    private val transactionRepository: TransactionRepository,
+    private val bitcoinDataRepository: BitcoinDataRepository,
+) {
+    companion object {
+        val logger = LoggerFactory.getLogger(NormalizedTransactionAnalyzer::class.java)!!
+    }
 
     suspend fun getAccumulation(days: Int, asset: String): List<ExchangeAmount> {
         // Calculate the cutoff date n days ago
