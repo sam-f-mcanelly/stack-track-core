@@ -1,5 +1,6 @@
-package com.bitcointracker.core.parser
+package com.bitcointracker.core.parser.exchange.loader
 
+import com.bitcointracker.core.parser.FileLoader
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
@@ -9,7 +10,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
 
-class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction>  {
+class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction> {
 
     override fun readCsv(lines: List<String>): List<StrikeTransaction> {
         val dateFormatter = SimpleDateFormat("MMM dd yyyy HH:mm:ss")
@@ -33,12 +34,13 @@ class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<S
                     type = StrikeTransactionType.valueOf(columns[3].uppercase(Locale.ROOT).replace(" ", "_")),
                     state = StrikeTransactionState.valueOf(columns[4].uppercase(Locale.ROOT).replace(" ", "_")),
                     source = StrikeTransactionSource.ANNUAL_STATEMENT,
-                    fee = ExchangeAmount(0.0, "USD") ,
+                    fee = ExchangeAmount(0.0, "USD"),
                     // TODO remove nullability
                     asset1 = columns[5].toDoubleOrNull()?.let { ExchangeAmount(it, columns[6]) },
                     asset2 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
                     assetValue = columns[9].toDoubleOrNull()?.let { ExchangeAmount(it, "USD") },
-                    balance = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11].uppercase(Locale.ROOT)) },
+                    balance = columns[10].toDoubleOrNull()
+                        ?.let { ExchangeAmount(it, columns[11].uppercase(Locale.ROOT)) },
                     balanceBtc = columns[12].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                     destination = if (columns.size > 13) columns[13] else null,
                     description = if (columns.size > 14) columns[14] else ""

@@ -1,5 +1,6 @@
-package com.bitcointracker.core.parser
+package com.bitcointracker.core.parser.exchange.loader
 
+import com.bitcointracker.core.parser.FileLoader
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
@@ -43,7 +44,8 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
                     asset1 = columns[7].toDoubleOrNull()?.let { ExchangeAmount(it, columns[8]) },
                     asset2 = columns[10].toDoubleOrNull()?.let { ExchangeAmount(it, columns[11]) },
                     assetValue = columns[13].toDoubleOrNull()?.let { ExchangeAmount(it, "USD") },
-                    balance = columns[14].toDoubleOrNull()?.let { ExchangeAmount(it, columns[15].uppercase(Locale.ROOT)) },
+                    balance = columns[14].toDoubleOrNull()
+                        ?.let { ExchangeAmount(it, columns[15].uppercase(Locale.ROOT)) },
                     balanceBtc = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                     destination = if (columns.size > 16) columns[16] else null,
                     description = if (columns.size > 17) columns[17] else ""

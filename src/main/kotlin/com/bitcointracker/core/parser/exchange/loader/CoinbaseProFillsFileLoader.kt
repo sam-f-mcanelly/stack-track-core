@@ -1,5 +1,6 @@
-package com.bitcointracker.core.parser
+package com.bitcointracker.core.parser.exchange.loader
 
+import com.bitcointracker.core.parser.FileLoader
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsSide
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount

@@ -51,7 +51,7 @@ class MetadataManager @Inject constructor(
      * @param fiat The fiat currency for valuation
      * @return Total portfolio value as ExchangeAmount
      */
-    suspend fun getPortfolioValue(fiat: String): ExchangeAmount =
+    fun getPortfolioValue(fiat: String): ExchangeAmount =
         ExchangeAmount(
             transactionCache.getAllAssetAmounts()
                 .map {
@@ -69,7 +69,7 @@ class MetadataManager @Inject constructor(
      * @param currency The fiat currency for valuation
      * @return Asset holdings with quantity and current value
      */
-    suspend fun getAssetHoldings(asset: String, currency: String): AssetHoldingsReport {
+    fun getAssetHoldings(asset: String, currency: String): AssetHoldingsReport {
         val assetAmount = transactionCache.getAssetAmount(asset)
         val totalValue = coinbaseClient.getCurrentPrice(asset, currency)?.let {
             assetAmount * it

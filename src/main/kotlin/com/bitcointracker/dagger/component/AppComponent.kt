@@ -3,6 +3,7 @@ package com.bitcointracker.dagger.component
 import com.bitcointracker.dagger.module.ConcurrencyModule
 import com.bitcointracker.dagger.module.DatabaseModule
 import com.bitcointracker.dagger.module.ExternalClientModule
+import com.bitcointracker.dagger.module.FileProcessorModule
 import com.bitcointracker.service.routes.MetadataRouteHandler
 import com.bitcointracker.service.routes.RawDataRouteHandler
 import com.bitcointracker.service.routes.TaxComputationRouteHandler
@@ -14,6 +15,7 @@ import javax.inject.Singleton
     ConcurrencyModule::class,
     DatabaseModule::class,
     ExternalClientModule::class,
+    FileProcessorModule::class,
 ])
 interface AppComponent {
     fun getMetadataRouteHandler(): MetadataRouteHandler

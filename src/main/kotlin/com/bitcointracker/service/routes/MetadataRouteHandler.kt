@@ -32,7 +32,7 @@ class MetadataRouteHandler @Inject constructor(
         )
 
         try {
-            val assetHoldings = metadataManager.getAssetHoldings(assetInput, "USD") // TODO: support other currencies
+            val assetHoldings = metadataManager.getAssetHoldings(assetInput, "USD")
 
             call.respond(assetHoldings)
         } catch (e: Exception) {

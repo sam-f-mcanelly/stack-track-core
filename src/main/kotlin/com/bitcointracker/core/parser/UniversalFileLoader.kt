@@ -1,33 +1,46 @@
 package com.bitcointracker.core.parser
 
 import com.bitcointracker.core.exception.FileParsingException
-import com.bitcointracker.core.mapper.CoinbaseProFillsNormalizingMapper
-import com.bitcointracker.core.mapper.CoinbaseStandardTransactionNormalizingMapper
-import com.bitcointracker.core.mapper.FileContentNormalizingMapper
-import com.bitcointracker.core.mapper.StrikeTransactionNormalizingMapper
-import com.bitcointracker.model.internal.file.FileType
+import com.bitcointracker.core.exception.UnsupportedFileTypeException
+import com.bitcointracker.core.parser.exchange.FileContentLoader
+import com.bitcointracker.core.parser.exchange.processor.FileProcessor
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import org.slf4j.LoggerFactory
 import java.io.File
 import javax.inject.Inject
 
-// TODO create type for each report and replace all these dependencies with maps
+/**
+ * Universal file loader for cryptocurrency transaction files.
+ * Uses a map of file processors to handle different file types.
+ */
 class UniversalFileLoader @Inject constructor(
-    private val fileContentNormalizingMapper: FileContentNormalizingMapper,
-    private val strikeTransactionNormalizingMapper: StrikeTransactionNormalizingMapper,
-    private val strikeAccountAnnualStatementFileLoader: StrikeAccountAnnualStatementFileLoader,
-    private val strikeAccountStatementFileLoader: StrikeAccountStatementFileLoader,
-    private val coinbaseProFillsNormalizingMapper: CoinbaseProFillsNormalizingMapper,
-    private val coinbaseProFillsFileLoader: CoinbaseProFillsFileLoader,
-    private val coinbaseStandardTransactionNormalizingMapper: CoinbaseStandardTransactionNormalizingMapper,
-    private val coinbaseAnnualFileLoader: CoinbaseStandardAnnualStatementFileLoader,
+    private val fileContentLoader: FileContentLoader,
+    private val fileProcessors: Map<String, @JvmSuppressWildcards FileProcessor>
 ) {
-    fun loadFiles(files: List<File>): List<NormalizedTransaction>
-        = files.map { loadFile(it) }
-            .flatMap { it }
-            .toList()
+    companion object {
+        private const val LOADING_FILE_MESSAGE = "Loading file: %s"
 
+        private val logger = LoggerFactory.getLogger(UniversalFileLoader::class.java)
+    }
+
+    /**
+     * Load and process multiple files.
+     *
+     * @param files List of files to process
+     * @return List of normalized transactions from all files
+     */
+    fun loadFiles(files: List<File>): List<NormalizedTransaction> =
+        files.flatMap { loadFile(it) }
+
+    /**
+     * Load and process a single file.
+     *
+     * @param file The file to process
+     * @return List of normalized transactions from the file
+     * @throws FileParsingException if the file cannot be parsed
+     */
     private fun loadFile(file: File): List<NormalizedTransaction> {
-        println("Loading file: ${file.absolutePath}")
+        logger.info(LOADING_FILE_MESSAGE.format(file.absolutePath))
         return try {
             loadFromFileContents(loadLocalFile(file))
         } catch (e: Exception) {
@@ -35,43 +48,26 @@ class UniversalFileLoader @Inject constructor(
         }
     }
 
+    /**
+     * Load and process file contents.
+     *
+     * @param contents The contents of the file
+     * @return List of normalized transactions
+     */
     fun loadFromFileContents(contents: String): List<NormalizedTransaction> {
-        val normalizedFile = fileContentNormalizingMapper.normalizeFile(contents)
-        return when (normalizedFile.fileType) {
-            FileType.STRIKE_ANNUAL -> {
-                println("Loading a strike annual statement...")
-                val transactions = strikeAccountAnnualStatementFileLoader.readCsv(normalizedFile.fileLines)
-                strikeTransactionNormalizingMapper.normalizeTransactions(transactions)
-            }
-            FileType.STRIKE_MONTHLY -> {
-                println("Loading a strike monthly statement...")
-                strikeTransactionNormalizingMapper.normalizeTransactions(
-                    strikeAccountStatementFileLoader.readCsv(normalizedFile.fileLines)
-                )
-            }
-            FileType.COINBASE_PRO_FILLS -> {
-                println("Loading a coinbase fills report...")
-                coinbaseProFillsNormalizingMapper.normalizeTransactions(
-                    coinbaseProFillsFileLoader.readCsv(normalizedFile.fileLines)
-                )
-            }
-            FileType.COINBASE_ANNUAL -> {
-                println("Loading a coinbase annual report...")
-                coinbaseStandardTransactionNormalizingMapper.normalizeTransactions(
-                    coinbaseAnnualFileLoader.readCsv(normalizedFile.fileLines)
-                )
-            }
-            else -> {
-                println("Ignoring unsupported file: ")
-                listOf()
-            }
-        }
+        val normalizedFile = fileContentLoader.normalizeFile(contents)
+        val fileType = normalizedFile.fileType
+
+        return fileProcessors[fileType.name]?.processFile(normalizedFile.fileLines)
+            ?: throw UnsupportedFileTypeException("Unsupported file type: $fileType")
     }
 
-    // Drop 4 for coinbase standard, 1 otherwise
-    fun loadLocalFile(file: File): String {
-        return file.useLines { lines ->
-            lines
-        }.joinToString { "\n" }
-    }
+    /**
+     * Read the contents of a local file.
+     *
+     * @param file The file to read
+     * @return The contents of the file as a string
+     */
+    fun loadLocalFile(file: File): String =
+        file.useLines { lines -> lines.joinToString("\n") }
 }

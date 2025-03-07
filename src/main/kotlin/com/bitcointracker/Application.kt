@@ -92,9 +92,9 @@ fun setupStdOutLogging() {
 
     // Get the root logger and add the appender
     val rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME)
-    rootLogger.level = ch.qos.logback.classic.Level.INFO
+    rootLogger.level = ch.qos.logback.classic.Level.OFF
     rootLogger.addAppender(consoleAppender)
-    loggerContext.getLogger("io.ktor").level = ch.qos.logback.classic.Level.INFO
+    loggerContext.getLogger("io.ktor").level = ch.qos.logback.classic.Level.OFF
 }
 
 /**
@@ -204,6 +204,9 @@ fun Application.module(appComponent: AppComponent) {
         // Metadata routes
         get("/api/metadata/portfolio_value/{fiat}") {
             metadataRouteHandler.getPortfolioValue(call)
+        }
+        get("/api/metadata/holdings/{asset}") {
+            metadataRouteHandler.getAssetHoldings(call)
         }
         get("/api/metadata/accumulation/{asset}/{days}") {
             metadataRouteHandler.getAccumulationHistory(call)

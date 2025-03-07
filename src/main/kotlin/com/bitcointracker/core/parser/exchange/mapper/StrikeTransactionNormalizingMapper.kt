@@ -1,4 +1,4 @@
-package com.bitcointracker.core.mapper
+package com.bitcointracker.core.parser.exchange.mapper
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
@@ -15,7 +15,6 @@ import javax.inject.Inject
  * This class handles various types of Strike transactions including deposits, trades,
  * withdrawals, on-chain transactions, and Strike credits.
  *
- * TODO: Implement handling for reversed deposits
  */
 class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMapper<StrikeTransaction> {
 

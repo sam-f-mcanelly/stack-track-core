@@ -1,6 +1,6 @@
-package com.bitcointracker.unit.core.mapper
+package com.bitcointracker.unit.core.parser.exchange.mapper
 
-import com.bitcointracker.core.mapper.CoinbaseProFillsNormalizingMapper
+import com.bitcointracker.core.parser.exchange.mapper.CoinbaseProFillsNormalizingMapper
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsSide
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test
 import java.util.Date
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class CoinbaseProFillsNormalizingMapperTest {
 

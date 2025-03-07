@@ -1,6 +1,6 @@
-package com.bitcointracker.unit.core.mapper
+package com.bitcointracker.unit.core.parser.exchange.mapper
 
-import com.bitcointracker.core.mapper.CoinbaseStandardTransactionNormalizingMapper
+import com.bitcointracker.core.parser.exchange.mapper.CoinbaseStandardTransactionNormalizingMapper
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseStandardTransaction
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseTransactionType
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount

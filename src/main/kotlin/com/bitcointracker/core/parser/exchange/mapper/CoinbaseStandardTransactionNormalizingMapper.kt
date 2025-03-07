@@ -1,4 +1,4 @@
-package com.bitcointracker.core.mapper
+package com.bitcointracker.core.parser.exchange.mapper
 
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseStandardTransaction
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseTransactionType

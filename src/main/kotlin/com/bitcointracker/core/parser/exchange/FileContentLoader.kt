@@ -1,8 +1,9 @@
-package com.bitcointracker.core.mapper
+package com.bitcointracker.core.parser.exchange
 
 import com.bitcointracker.core.exception.UnsupportedFileTypeException
 import com.bitcointracker.model.internal.file.FileType
 import com.bitcointracker.model.internal.file.NormalizedFile
+import org.slf4j.LoggerFactory
 import javax.inject.Inject
 
 /**
@@ -15,8 +16,9 @@ import javax.inject.Inject
  *
  * @constructor Creates a new FileContentNormalizingMapper instance with dependency injection
  */
-class FileContentNormalizingMapper @Inject constructor() {
+class FileContentLoader @Inject constructor() {
     companion object {
+        private val logger = LoggerFactory.getLogger(FileContentLoader::class.java)
         private const val SEARCH_LENGTH = 5
 
         /**
@@ -41,51 +43,44 @@ class FileContentNormalizingMapper @Inject constructor() {
      * of the file to find a matching header pattern.
      *
      * @param contents The raw string contents of the file to be normalized
-     * @return [NormalizedFile] containing the identified file type and processed contents
-     * @throws UnsupportedFileTypeException if the file type cannot be determined from the header
+     * @return [com.bitcointracker.model.internal.file.NormalizedFile] containing the identified file type and processed contents
+     * @throws com.bitcointracker.core.exception.UnsupportedFileTypeException if the file type cannot be determined from the header
      *
-     * @see FileType for supported file types
-     * @see NormalizedFile for the structure of the normalized output
+     * @see com.bitcointracker.model.internal.file.FileType for supported file types
+     * @see com.bitcointracker.model.internal.file.NormalizedFile for the structure of the normalized output
      */
     fun normalizeFile(contents: String): NormalizedFile {
-        println("\n Searching for a matching header in the file \n")
         val lines = contents.split("\n")
-        var fileType: FileType? = null
-        for (i in 0 until SEARCH_LENGTH) {
-            println("Searching line $i")
-            val trimmedLine = lines[i].trim()
-            println("Trimmed line: $trimmedLine")
-            println("File type: $fileType")
-            if (fileType != null) {
-                return NormalizedFile(
-                    fileType,
-                    lines.drop(i)
-                )
-            }
-            fileType = when (trimmedLine) {
-                STRIKE_ANNUAL_TRANSACTIONS_HEADER -> {
-                    println("STRIKE ANNUAL TRANSACTIONS HEADER FOUND")
-                    FileType.STRIKE_ANNUAL
-                }
-                STRIKE_MONTHLY_TRANSACTIONS_COLUMNS, STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V2, STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V3 -> {
-                    println("STRIKE MONTHLY TRANSACTIONS HEADER FOUND")
-                    FileType.STRIKE_MONTHLY
-                }
-                COINBASE_FILLS_TRANSACTIONS_COLUMNS -> {
-                    println("COINBASE PRO FILLS TRANSACTIONS HEADER FOUND")
-                    FileType.COINBASE_PRO_FILLS
-                }
-                COINBASE_ANNUAL_TRANSACTIONS_COLUMNS -> {
-                    println("COINBASE ANNUAL TRANSACTIONS HEADER FOUND")
-                    FileType.COINBASE_ANNUAL
-                }
-                else -> {
-                    println("No valid header in $trimmedLine")
-                    null
-                }
-            }
-        }
 
-        throw UnsupportedFileTypeException(contents)
+        return (0 until SEARCH_LENGTH)
+            .asSequence()
+            .mapNotNull { index ->
+                val trimmedLine = lines[index].trim()
+                logger.info("Searching line $index")
+                logger.info("Trimmed line: $trimmedLine")
+
+                identifyFileType(trimmedLine)?.let { fileType ->
+                    logger.info("$fileType HEADER FOUND")
+                    NormalizedFile(fileType, lines.drop(index + 1))
+                }
+            }
+            .firstOrNull() ?: throw UnsupportedFileTypeException(contents)
     }
+
+    /**
+     * Identifies the file type based on header pattern.
+     *
+     * @param header The header line to match
+     * @return FileType if a match is found, null otherwise
+     */
+    private fun identifyFileType(header: String): FileType? =
+        when (header) {
+            STRIKE_ANNUAL_TRANSACTIONS_HEADER -> FileType.STRIKE_ANNUAL
+            STRIKE_MONTHLY_TRANSACTIONS_COLUMNS,
+            STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V2,
+            STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V3 -> FileType.STRIKE_MONTHLY
+            COINBASE_FILLS_TRANSACTIONS_COLUMNS -> FileType.COINBASE_PRO_FILLS
+            COINBASE_ANNUAL_TRANSACTIONS_COLUMNS -> FileType.COINBASE_ANNUAL
+            else -> null
+        }
 }
