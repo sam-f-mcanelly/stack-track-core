@@ -6,12 +6,16 @@ import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionState
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType
+import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
 class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction> {
+    companion object {
+        private val logger = LoggerFactory.getLogger(StrikeAccountStatementFileLoader::class.java)
+    }
 
     override fun readCsv(lines: List<String>): List<StrikeTransaction> {
         val dateFormatter = SimpleDateFormat("MMM dd yyyy")
@@ -47,8 +51,8 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
                     balance = columns[14].toDoubleOrNull()
                         ?.let { ExchangeAmount(it, columns[15].uppercase(Locale.ROOT)) },
                     balanceBtc = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
-                    destination = if (columns.size > 16) columns[16] else null,
-                    description = if (columns.size > 17) columns[17] else ""
+                    destination = if (columns.size > 16) columns[17] else null,
+                    description = "" // TODO: support this? I've never used it
                 )
             }.toList()
 

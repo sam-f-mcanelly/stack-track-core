@@ -1,6 +1,6 @@
 package com.bitcointracker.core.tax
 
-import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.database.TransactionRepository
 import com.bitcointracker.model.api.exception.TaxReportProcessingException
 import com.bitcointracker.model.api.tax.TaxReportRequest
 import com.bitcointracker.model.api.tax.TaxTreatment

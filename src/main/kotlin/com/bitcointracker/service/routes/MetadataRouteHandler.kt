@@ -1,6 +1,5 @@
 package com.bitcointracker.service.routes
 
-import com.bitcointracker.model.api.QuickLookData
 import com.bitcointracker.service.manager.MetadataManager
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -17,6 +16,24 @@ import javax.inject.Inject
 class MetadataRouteHandler @Inject constructor(
     private val metadataManager: MetadataManager
 ) {
+
+    suspend fun getAddresses(call: ApplicationCall) {
+        val assetInput = call.parameters["asset"] ?: return call.respondText(
+            "Missing or malformed asset",
+            status = HttpStatusCode.BadRequest
+        )
+
+        try {
+            val addresses = metadataManager.getAddresses(assetInput)
+
+            call.respond(addresses)
+        } catch (e: Exception) {
+            println("Failed to load addresses!")
+            println(e.localizedMessage)
+            println(e.stackTrace)
+            call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
+        }
+    }
 
     /**
      * Retrieves the holdings for a specific cryptocurrency asset.
@@ -94,13 +111,7 @@ class MetadataRouteHandler @Inject constructor(
 
         try {
             val data = metadataManager.getAccumulation(dayInput, tokenInput)
-            call.respond(
-                QuickLookData(
-                    title = "$tokenInput Accumulation",
-                    value = "${data.last()} $tokenInput",
-                    data = data,
-                )
-            )
+            call.respond(data)
         } catch (ex: Exception) {
             println(ex)
             call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")

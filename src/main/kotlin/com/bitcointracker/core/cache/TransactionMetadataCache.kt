@@ -3,6 +3,7 @@ package com.bitcointracker.core.cache
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import org.slf4j.LoggerFactory
 import java.lang.IllegalArgumentException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,6 +21,9 @@ import javax.inject.Singleton
  */
 @Singleton
 class TransactionMetadataCache @Inject constructor() {
+    companion object {
+        val logger = LoggerFactory.getLogger(TransactionMetadataCache::class.java)!!
+    }
 
     /**
      * The total number of transactions that have been processed by this cache.
@@ -33,6 +37,8 @@ class TransactionMetadataCache @Inject constructor() {
      * The value is an [ExchangeAmount] representing the current amount held.
      */
     var assetToAmountHeld: MutableMap<String, ExchangeAmount> = mutableMapOf()
+
+    var addresses: MutableMap<String, MutableSet<String>> = mutableMapOf()
 
     /**
      * Updates the cache with a new list of transactions, recalculating all holdings.
@@ -52,16 +58,27 @@ class TransactionMetadataCache @Inject constructor() {
         transactions.forEach {
             try {
                 val asset = it.assetAmount.unit
-                if (it.type == NormalizedTransactionType.BUY) {
-                    assetToAmountHeld[asset] = assetToAmountHeld.getOrDefault(
-                        asset,
-                        ExchangeAmount(0.0, asset)
-                    ) + it.assetAmount
-                } else if (it.type == NormalizedTransactionType.SELL) {
-                    assetToAmountHeld[asset] = assetToAmountHeld.getOrDefault(
-                        asset,
-                        ExchangeAmount(0.0, asset)
-                    ) - it.assetAmount
+                when (it.type) {
+                    NormalizedTransactionType.BUY -> {
+                        assetToAmountHeld[asset] = assetToAmountHeld.getOrDefault(
+                            asset,
+                            ExchangeAmount(0.0, asset)
+                        ) + it.assetAmount
+                    }
+                    NormalizedTransactionType.SELL -> {
+                        assetToAmountHeld[asset] = assetToAmountHeld.getOrDefault(
+                            asset,
+                            ExchangeAmount(0.0, asset)
+                        ) - it.assetAmount
+                    }
+                    NormalizedTransactionType.WITHDRAWAL -> {
+                        if (it.address.isNotBlank()) {
+                            addresses.computeIfAbsent(it.assetAmount.unit) { mutableSetOf() }.add(it.address)
+                        }
+                    }
+                    else -> {
+                        // No -op
+                    }
                 }
             } catch(e: IllegalArgumentException) {
                 println("Error updating the transaction cache when adding the transaction: \n $it")
@@ -92,4 +109,12 @@ class TransactionMetadataCache @Inject constructor() {
      */
     fun getAllAssetAmounts(): List<ExchangeAmount> =
         assetToAmountHeld.values.toList().also { println("getting all asset amounts: $it") }
+
+    /**
+     * Get all the withdrawal addresses associated with an asset
+     *
+     * @param asset The asset
+     */
+    fun getAddresses(asset: String) =
+        addresses.getOrDefault(asset.uppercase(), mutableSetOf())
 }

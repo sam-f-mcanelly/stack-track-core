@@ -1,6 +1,6 @@
 package com.bitcointracker.dagger.module
 
-import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.database.TransactionRepository
 import com.bitcointracker.core.cache.TransactionMetadataCache
 import com.bitcointracker.core.database.H2TransactionRepository
 import dagger.Module

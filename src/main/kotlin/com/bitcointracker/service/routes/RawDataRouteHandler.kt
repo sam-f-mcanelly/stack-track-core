@@ -1,6 +1,6 @@
 package com.bitcointracker.service.routes
 
-import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.database.TransactionRepository
 import com.bitcointracker.core.parser.UniversalFileLoader
 import com.bitcointracker.model.api.PaginatedResponse
 import com.bitcointracker.model.api.PaginationParams

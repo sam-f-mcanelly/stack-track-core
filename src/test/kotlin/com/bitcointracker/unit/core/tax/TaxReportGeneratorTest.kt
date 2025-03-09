@@ -1,6 +1,6 @@
 package com.bitcointracker.unit.core.tax
 
-import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.database.TransactionRepository
 import com.bitcointracker.core.tax.TaxCalculator
 import com.bitcointracker.core.tax.TaxReportGenerator
 import com.bitcointracker.core.tax.TransactionTracker

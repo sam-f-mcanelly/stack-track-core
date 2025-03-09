@@ -1,6 +1,6 @@
 package com.bitcointracker.core.tax
 
-import com.bitcointracker.core.TransactionRepository
+import com.bitcointracker.core.database.TransactionRepository
 import com.bitcointracker.model.api.tax.TaxReportResult
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

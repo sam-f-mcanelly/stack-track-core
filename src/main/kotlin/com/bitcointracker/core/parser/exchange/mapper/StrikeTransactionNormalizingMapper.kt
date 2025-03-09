@@ -7,6 +7,7 @@ import com.bitcointracker.model.api.transaction.TransactionSource
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType
+import org.slf4j.LoggerFactory
 import javax.inject.Inject
 
 
@@ -17,6 +18,9 @@ import javax.inject.Inject
  *
  */
 class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMapper<StrikeTransaction> {
+    companion object {
+        private val logger = LoggerFactory.getLogger(StrikeTransactionNormalizingMapper::class.java)
+    }
 
     /**
      * Converts a Strike transaction into a normalized transaction format based on its type.
@@ -100,7 +104,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
      * @return A normalized withdrawal transaction
      */
     private fun normalizeWithdrawal(transaction: StrikeTransaction): NormalizedTransaction {
-        // println("Normalizing withdrawal: " + transaction)
+        logger.info("Normalizing withdrawal transaction $transaction")
 
         // old reporting style
         if (transaction.asset1 == null) {
@@ -118,6 +122,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             filedWithIRS = false,
+            address = transaction.destination ?: "",
         )
     }
 

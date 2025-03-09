@@ -1,4 +1,4 @@
-package com.bitcointracker.core
+package com.bitcointracker.core.database
 
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
