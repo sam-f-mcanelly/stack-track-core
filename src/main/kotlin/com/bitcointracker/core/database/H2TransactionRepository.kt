@@ -170,7 +170,6 @@ class H2TransactionRepository @Inject constructor(
         startDate: Instant?,
         endDate: Instant?
     ): List<NormalizedTransaction> {
-        println("getFilteredTransactions()")
         return dbQuery {
             TransactionTable.select {
                 val conditions = mutableListOf<Op<Boolean>>()
@@ -188,14 +187,12 @@ class H2TransactionRepository @Inject constructor(
                 }
 
                 if (startDate != null) {
-                    println("parsing startDate")
                     conditions.add(TransactionTable.timestamp greaterEq startDate
                         .atZone(ZoneOffset.UTC)
                         .toLocalDateTime())
                 }
 
                 if (endDate != null) {
-                    println("parsing endDate")
                     conditions.add(TransactionTable.timestamp lessEq endDate
                         .atZone(ZoneOffset.UTC)
                         .toLocalDateTime())

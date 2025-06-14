@@ -56,7 +56,6 @@ class TaxComputationRouteHandler @Inject constructor(
             val taxReportRequest = call.receive<TaxReportRequest>()
             logger.info("received tax report request: $taxReportRequest")
             val result = taxReportGenerator.processTaxReport(taxReportRequest)
-            logger.info("processTaxReport Result: $result")
             call.respond(result)
         } catch (e: Exception) {
             logger.error("Error while processing tax report request", e)

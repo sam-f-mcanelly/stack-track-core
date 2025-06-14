@@ -55,14 +55,10 @@ class TaxCalculator @Inject constructor() {
             // Use the ratio to calculate cost basis
             val costBasis = (buyTx.transactionAmountFiat + buyTx.fee) * ratio
 
-            logger.info("Cost basis: $costBasis")
-
             // Calculate holding period
             val holdingPeriodMillis = Duration.between(buyTx.timestamp, sellTransaction.timestamp).toMillis()
             val holdingPeriodDays = holdingPeriodMillis / (1000 * 60 * 60 * 24)
             val taxType = if (holdingPeriodDays >= 365) TaxType.LONG_TERM else TaxType.SHORT_TERM
-
-            logger.info("Determined tax type: $taxType")
 
             usedBuyTransactions.add(
                 UsedBuyTransaction(

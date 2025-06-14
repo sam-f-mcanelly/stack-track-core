@@ -317,8 +317,6 @@ class RawDataRouteHandler @Inject constructor(
             total = total,
             page = params.page,
             pageSize = params.pageSize
-        ).also {
-            println("Response: $it")
-        }
+        )
     }
 }

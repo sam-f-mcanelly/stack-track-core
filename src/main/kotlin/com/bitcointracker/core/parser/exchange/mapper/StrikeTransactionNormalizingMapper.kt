@@ -58,9 +58,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             filedWithIRS = false,
-    ).also {
-        logger.info("Strike deposit normalized: $it")
-    }
+    )
 
     /**
      * Normalizes a trade transaction, determining whether it's a buy or sell based on the assets involved.
@@ -106,8 +104,6 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
      * @return A normalized withdrawal transaction
      */
     private fun normalizeWithdrawal(transaction: StrikeTransaction): NormalizedTransaction {
-        logger.info("Normalizing withdrawal transaction $transaction")
-
         // old reporting style
         if (transaction.asset1 == null) {
             return normalizeBitcoinWithdrawal(transaction)

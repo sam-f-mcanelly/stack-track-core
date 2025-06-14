@@ -57,8 +57,6 @@ class FileContentLoader @Inject constructor() {
             .asSequence()
             .mapNotNull { index ->
                 val trimmedLine = lines[index].trim()
-                logger.info("Searching line $index")
-                logger.info("Trimmed line: $trimmedLine")
 
                 identifyFileType(trimmedLine)?.let { fileType ->
                     logger.info("$fileType HEADER FOUND")

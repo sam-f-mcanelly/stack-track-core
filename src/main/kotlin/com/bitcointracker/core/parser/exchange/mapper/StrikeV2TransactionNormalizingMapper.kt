@@ -65,9 +65,7 @@ class StrikeV2TransactionNormalizingMapper @Inject constructor() : NormalizingMa
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             filedWithIRS = false,
-        ).also {
-            logger.info("Normalized deposit: $it")
-        }
+        )
 
     /**
      * Normalizes a purchase transaction.

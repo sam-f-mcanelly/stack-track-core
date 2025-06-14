@@ -65,7 +65,6 @@ class StrikeV2AccountStatementFileLoader @Inject constructor(): FileLoader<Strik
      */
     private fun parseTransaction(line: String, dateFormatter: DateTimeFormatter): StrikeV2Transaction {
         val columns = line.split(",")
-        logger.info("parsing line: $line")
 
         return StrikeV2Transaction(
             reference = columns[REFERENCE_INDEX],
@@ -81,9 +80,6 @@ class StrikeV2AccountStatementFileLoader @Inject constructor(): FileLoader<Strik
             description = getNonEmptyStringOrNull(columns, DESCRIPTION_INDEX),
             note = if (columns.size > NOTE_INDEX) getNonEmptyStringOrNull(columns, NOTE_INDEX) else null
         )
-            .also {
-                logger.info("Parsed transaction: $it")
-            }
     }
 
     /**

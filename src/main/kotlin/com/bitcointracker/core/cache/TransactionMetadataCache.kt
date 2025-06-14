@@ -90,8 +90,6 @@ class TransactionMetadataCache @Inject constructor() {
             }
         }
         transactionCount = transactions.size
-        println("Updated transaction count: $transactionCount")
-        println("Updated assetToAmountHeld map: $assetToAmountHeld")
     }
 
     /**
