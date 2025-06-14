@@ -1,5 +1,6 @@
 package com.bitcointracker.service.routes
 
+import com.bitcointracker.core.chart.BitcoinDataRepository
 import com.bitcointracker.core.database.TransactionRepository
 import com.bitcointracker.core.parser.UniversalFileLoader
 import com.bitcointracker.model.api.PaginatedResponse
@@ -31,6 +32,7 @@ import kotlin.collections.chunked
 class RawDataRouteHandler @Inject constructor(
     private val fileLoader: UniversalFileLoader,
     private val transactionRepository: TransactionRepository,
+    private val bitcoinDataRepository: BitcoinDataRepository,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -216,10 +218,38 @@ class RawDataRouteHandler @Inject constructor(
             }.awaitAll()
         }
 
-        // Flatten the results and insert into database
-        val allTransactions = parsedTransactions.flatten()
+        // Flatten the results, filter, and insert into database
+        val allTransactions = parsedTransactions.flatten().map { transaction ->
+            when {
+                // Case 1: Both conditions need fixing - handle both missing asset value AND transaction amount
+                transaction.assetValueFiat.amount < 0 &&
+                        transaction.assetAmount.amount > 0 &&
+                        transaction.transactionAmountFiat.amount < 0 -> {
+                    val bitcoinPrice = bitcoinDataRepository.findByDate(transaction.timestamp)?.close
+                    val updatedAssetValue = bitcoinPrice ?: transaction.assetValueFiat
+                    val calculatedTransactionAmount = updatedAssetValue * transaction.assetAmount.amount
+                    transaction.copy(
+                        assetValueFiat = updatedAssetValue,
+                        transactionAmountFiat = calculatedTransactionAmount
+                    )
+                }
 
-        // Optional: Process in batches if dealing with large datasets
+                // Case 2: Missing asset value only - look up Bitcoin price
+                transaction.assetValueFiat.amount < 0 -> {
+                    val bitcoinPrice = bitcoinDataRepository.findByDate(transaction.timestamp)?.close
+                    transaction.copy(assetValueFiat = bitcoinPrice ?: transaction.assetValueFiat)
+                }
+
+                // Case 3: Missing transaction amount only - calculate from asset value and amount
+                transaction.assetAmount.amount > 0 && transaction.transactionAmountFiat.amount < 0 -> {
+                    val calculatedTransactionAmount = transaction.assetValueFiat * transaction.assetAmount.amount
+                    transaction.copy(transactionAmountFiat = calculatedTransactionAmount)
+                }
+
+                else -> transaction
+            }
+        }
+
         println("Adding files to the database in chunks")
         val batchSize = 1000
         allTransactions.chunked(batchSize).forEach { batch ->

@@ -45,6 +45,7 @@ class StrikeV2TransactionNormalizingMapper @Inject constructor() : NormalizingMa
             StrikeV2TransactionType.PURCHASE -> normalizePurchase(transaction)
             StrikeV2TransactionType.WITHDRAWAL -> normalizeWithdrawal(transaction)
             StrikeV2TransactionType.SELL -> normalizeSell(transaction)
+            StrikeV2TransactionType.SEND -> normalizeSend(transaction)
             else -> normalizeUnknown(transaction)
         }
     }
@@ -107,6 +108,25 @@ class StrikeV2TransactionNormalizingMapper @Inject constructor() : NormalizingMa
                 USD_CURRENCY
             ),
             assetValueFiat = ExchangeAmount(USD_TO_USD_RATE, USD_CURRENCY),
+            timestamp = transaction.date,
+            timestampText = transaction.date.toString(),
+            filedWithIRS = false,
+        )
+
+    /**
+     * Normalizes a Send which is a withdrawal of bitcoin.
+     *
+     * The negative -1.0 indicates no data. It will be replaced later
+     */
+    private fun normalizeSend(transaction: StrikeV2Transaction): NormalizedTransaction =
+        NormalizedTransaction(
+            id = transaction.reference,
+            source = TransactionSource.STRIKE_MONTHLY_V2,
+            type = NormalizedTransactionType.WITHDRAWAL,
+            transactionAmountFiat = ExchangeAmount(-1.0, USD_CURRENCY),
+            fee = ExchangeAmount(transaction.feeUsd ?: DEFAULT_VALUE, USD_CURRENCY),
+            assetAmount = ExchangeAmount(transaction.amountBtc!!.absoluteValue, BTC_CURRENCY),
+            assetValueFiat = ExchangeAmount(-1.0, USD_CURRENCY),
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             filedWithIRS = false,

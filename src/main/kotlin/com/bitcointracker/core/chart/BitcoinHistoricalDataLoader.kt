@@ -45,6 +45,7 @@ class BitcoinHistoricalDataLoader @Inject constructor(
             .sortedBy { it.date }
 
         logger.info("Returning ${uniqueDataPoints.size} unique data points")
+        logger.info("Historical data ranges from ${uniqueDataPoints[0].date} to ${uniqueDataPoints[uniqueDataPoints.size - 1].date}")
         return uniqueDataPoints
     }
 }

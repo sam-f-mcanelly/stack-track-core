@@ -168,7 +168,7 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             transactionAmountFiat = ExchangeAmount(-1.0, "USD"),
             fee = transaction.fee ?: ExchangeAmount(0.0, "USD"),
             assetAmount = transaction.asset2!!.absoluteValue,
-            assetValueFiat = ExchangeAmount(0.0, "USD"), // TODO call API for this
+            assetValueFiat = ExchangeAmount(-1.0, "USD"), // -1.0 signals no data and it should be pulled from an API
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             address = transaction.destination ?: "",

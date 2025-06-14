@@ -5,25 +5,27 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.time.Instant
+import java.time.ZoneOffset
 
 /**
  * Repository that holds Bitcoin data loaded at application startup
  */
+
 @Singleton
 class BitcoinDataRepository @Inject constructor(
-    private val bitcoinHistoricalDataLoader: BitcoinHistoricalDataLoader
+    bitcoinHistoricalDataLoader: BitcoinHistoricalDataLoader
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(BitcoinDataRepository::class.java)
     }
 
-    private val _data: MutableList<BitcoinData> = mutableListOf()
+    private val _data: List<BitcoinData>
 
     /**
      * Returns a list of all Bitcoin data, sorted by date
      */
     val data: List<BitcoinData>
-        get() = _data.toList()
+        get() = _data
 
     /**
      * Initializes the repository by loading all Bitcoin data
@@ -32,13 +34,26 @@ class BitcoinDataRepository @Inject constructor(
     init {
         logger.info("Initializing Bitcoin data repository")
         try {
-            val loadedData = bitcoinHistoricalDataLoader.loadAllData()
-            _data.clear()
-            _data.addAll(loadedData)
+            _data = bitcoinHistoricalDataLoader.loadAllData()
+                .sortedBy { it.date }
             logger.info("Successfully loaded ${_data.size} Bitcoin data points")
         } catch (e: Exception) {
             logger.error("Failed to load Bitcoin data during initialization", e)
             throw e
+        }
+    }
+
+    /**
+     * Find Bitcoin data for a specific date
+     *
+     * @param date The date to search for
+     * @return BitcoinData for the given date, or null if not found
+     */
+    fun findByDate(date: Instant): BitcoinData? {
+        val targetDate = date.atZone(ZoneOffset.UTC).toLocalDate()
+        return _data.find { bitcoinData ->
+            val bitcoinDate = bitcoinData.date.atZone(ZoneOffset.UTC).toLocalDate()
+            bitcoinDate == targetDate
         }
     }
 
@@ -51,7 +66,7 @@ class BitcoinDataRepository @Inject constructor(
      */
     fun findByDateRange(startDate: Instant, endDate: Instant): List<BitcoinData> {
         return _data.filter {
-            it.date >= startDate && it.date <= endDate
-        }.sortedBy { it.date }
+            it.date in startDate..endDate
+        }
     }
 }

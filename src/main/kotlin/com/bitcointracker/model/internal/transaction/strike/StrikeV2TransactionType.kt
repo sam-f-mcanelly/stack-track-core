@@ -8,6 +8,7 @@ enum class StrikeV2TransactionType {
     PURCHASE,
     WITHDRAWAL,
     SELL,
+    SEND,
     UNKNOWN;
 
     companion object {
