@@ -4,6 +4,7 @@ import com.bitcointracker.model.internal.historical.BitcoinData
 import javax.inject.Inject
 import javax.inject.Singleton
 import org.slf4j.LoggerFactory
+import java.time.Instant
 
 /**
  * Repository that holds Bitcoin data loaded at application startup
@@ -42,25 +43,15 @@ class BitcoinDataRepository @Inject constructor(
     }
 
     /**
-     * Find Bitcoin data for a specific date
-     *
-     * @param date The date to search for
-     * @return The BitcoinData for the date, or null if not found
-     */
-    fun findByDate(date: java.util.Date): BitcoinData? {
-        return _data.find { it.date.time == date.time }
-    }
-
-    /**
      * Find Bitcoin data within a date range
      *
      * @param startDate The start date (inclusive)
      * @param endDate The end date (inclusive)
      * @return List of BitcoinData within the range, sorted by date
      */
-    fun findByDateRange(startDate: java.util.Date, endDate: java.util.Date): List<BitcoinData> {
+    fun findByDateRange(startDate: Instant, endDate: Instant): List<BitcoinData> {
         return _data.filter {
-            it.date.time >= startDate.time && it.date.time <= endDate.time
-        }.sortedBy { it.date.time }
+            it.date >= startDate && it.date <= endDate
+        }.sortedBy { it.date }
     }
 }

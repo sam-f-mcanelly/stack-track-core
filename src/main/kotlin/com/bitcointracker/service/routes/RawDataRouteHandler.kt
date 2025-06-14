@@ -23,7 +23,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
-import java.util.Date
+import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.collections.chunked
@@ -104,7 +104,7 @@ class RawDataRouteHandler @Inject constructor(
      */
     suspend fun handleFileDownload(call: ApplicationCall) {
         try {
-            val date = Date()
+            val date = Instant.now()
             val transactions = transactionRepository.getAllTransactions()
             val serializedTransactions = objectMapper.writeValueAsString(transactions)
             val jsonFileName =
@@ -134,6 +134,7 @@ class RawDataRouteHandler @Inject constructor(
      */
     suspend fun handleGetTransactions(call: ApplicationCall) {
         try {
+            println("handleGetTransactions(call = $call)")
             // Extract pagination parameters from query parameters
             val page = call.parameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.parameters["pageSize"]?.toIntOrNull() ?: 10
@@ -237,6 +238,7 @@ class RawDataRouteHandler @Inject constructor(
      * @throws Exception If transaction retrieval or sorting fails
      */
     suspend fun getTransactions(params: PaginationParams): PaginatedResponse<NormalizedTransaction> {
+        println("getTransactions(params = $params)")
         val allTransactions = transactionRepository.getFilteredTransactions(
             types = params.types,
             assets = params.assets,
@@ -256,8 +258,10 @@ class RawDataRouteHandler @Inject constructor(
             "assetValueFiat.amount" -> allTransactions.sortedBy {
                 if (params.sortOrder == "desc") -it.assetValueFiat.amount else it.assetValueFiat.amount
             }
-            "timestamp" -> allTransactions.sortedBy {
-                if (params.sortOrder == "desc") -it.timestamp.time else it.timestamp.time
+            "timestamp" -> if (params.sortOrder == "desc") {
+                allTransactions.sortedByDescending { it.timestamp }
+            } else {
+                allTransactions.sortedBy { it.timestamp }
             }
             else -> allTransactions.sortedBy {
                 @Suppress("UNCHECKED_CAST")
@@ -283,6 +287,8 @@ class RawDataRouteHandler @Inject constructor(
             total = total,
             page = params.page,
             pageSize = params.pageSize
-        )
+        ).also {
+            println("Response: $it")
+        }
     }
 }

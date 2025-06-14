@@ -9,7 +9,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.Date
+import java.time.Instant
 
 class TransactionTrackerTest {
 
@@ -27,7 +27,7 @@ class TransactionTrackerTest {
     private val halfBitcoin = ExchangeAmount(0.5, btcUnit)
     private val quarterBitcoin = ExchangeAmount(0.25, btcUnit)
     private val zeroBitcoin = ExchangeAmount(0.0, btcUnit)
-    private val now = Date()
+    private val now = Instant.now()
 
     @BeforeEach
     fun setUp() {

@@ -40,6 +40,11 @@ class TransactionMetadataCache @Inject constructor() {
 
     var addresses: MutableMap<String, MutableSet<String>> = mutableMapOf()
 
+    fun clear() {
+        assetToAmountHeld = mutableMapOf()
+        addresses = mutableMapOf()
+    }
+
     /**
      * Updates the cache with a new list of transactions, recalculating all holdings.
      * This method clears the existing cache and processes all transactions from scratch.

@@ -1,9 +1,7 @@
 package com.bitcointracker.model.api.transaction
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import com.bitcointracker.model.api.transaction.NormalizedTransactionType
-import com.bitcointracker.model.api.transaction.TransactionSource
-import java.util.Date
+import java.time.Instant
 
 data class NormalizedTransaction(
     val id: String,
@@ -13,7 +11,7 @@ data class NormalizedTransaction(
     val fee: ExchangeAmount,
     var assetAmount: ExchangeAmount,
     val assetValueFiat: ExchangeAmount,
-    val timestamp: Date,
+    val timestamp: Instant,
     val timestampText: String,
     val address: String = "",
     val notes: String = "",

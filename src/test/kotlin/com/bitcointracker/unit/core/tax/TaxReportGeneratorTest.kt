@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import java.util.Date
+import java.time.Instant
 
 @ExtendWith(MockKExtension::class)
 class TaxReportGeneratorTest {
@@ -57,8 +57,8 @@ class TaxReportGeneratorTest {
     private val usdUnit = "USD"
 
     // Base date for creating transactions with correct chronology
-    private val baseDate = Date(1000000000000) // A fixed point in time
-    private val beforeBaseDate = Date(900000000000) // Earlier than baseDate
+    private val baseDate = Instant.ofEpochMilli(1000000000000) // A fixed point in time
+    private val beforeBaseDate = Instant.ofEpochMilli(900000000000) // Earlier than baseDate
 
     @BeforeEach
     fun setUp() {
@@ -188,13 +188,13 @@ class TaxReportGeneratorTest {
         val oldBuyTx = createMockTransaction(
             buyTx1Id,
             NormalizedTransactionType.BUY,
-            timestamp = Date(800000000000) // Oldest buy
+            timestamp = Instant.ofEpochMilli(800000000000) // Oldest buy
         )
 
         val newBuyTx = createMockTransaction(
             buyTx2Id,
             NormalizedTransactionType.BUY,
-            timestamp = Date(900000000000) // Newer buy, but still before sell
+            timestamp = Instant.ofEpochMilli(900000000000) // Newer buy, but still before sell
         )
 
         coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
@@ -251,13 +251,13 @@ class TaxReportGeneratorTest {
         val oldBuyTx = createMockTransaction(
             buyTx1Id,
             NormalizedTransactionType.BUY,
-            timestamp = Date(800000000000) // Older timestamp
+            timestamp = Instant.ofEpochMilli(800000000000) // Older timestamp
         )
 
         val newBuyTx = createMockTransaction(
             buyTx2Id,
             NormalizedTransactionType.BUY,
-            timestamp = Date(900000000000) // Newer timestamp, but still before sell
+            timestamp = Instant.ofEpochMilli(900000000000) // Newer timestamp, but still before sell
         )
 
         coEvery { transactionRepository.getTransactionById(sellTxId) } returns sellTransaction
@@ -593,7 +593,7 @@ class TaxReportGeneratorTest {
         val invalidBuyTx1 = createMockTransaction(
             "invalid1",
             NormalizedTransactionType.BUY,
-            timestamp = Date(baseDate.time + 1000) // After sell date
+            timestamp = baseDate.plusSeconds(1000) // After sell date
         )
 
         val invalidBuyTx2 = createMockTransaction(
@@ -660,7 +660,7 @@ class TaxReportGeneratorTest {
     private fun createMockTransaction(
         id: String,
         type: NormalizedTransactionType,
-        timestamp: Date = Date(),
+        timestamp: Instant = Instant.now(),
         assetValueFiat: ExchangeAmount = ExchangeAmount(100.0, usdUnit),
         assetAmount: ExchangeAmount = ExchangeAmount(1.0, btcUnit),
         filedWithIRS: Boolean = false

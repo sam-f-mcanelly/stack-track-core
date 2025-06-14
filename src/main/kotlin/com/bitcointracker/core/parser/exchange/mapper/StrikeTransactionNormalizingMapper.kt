@@ -58,7 +58,9 @@ class StrikeTransactionNormalizingMapper @Inject constructor () : NormalizingMap
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             filedWithIRS = false,
-    )
+    ).also {
+        logger.info("Strike deposit normalized: $it")
+    }
 
     /**
      * Normalizes a trade transaction, determining whether it's a buy or sell based on the assets involved.

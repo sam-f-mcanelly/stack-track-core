@@ -1,13 +1,13 @@
 package com.bitcointracker.model.internal.transaction.strike
 
-import java.util.Date
+import java.time.Instant
 
 /**
  * Model representing Strike V2 monthly statement transactions
  */
 data class StrikeV2Transaction(
     val reference: String,
-    val date: Date,
+    val date: Instant,
     val type: StrikeV2TransactionType,
     val amountUsd: Double?,
     val feeUsd: Double?,

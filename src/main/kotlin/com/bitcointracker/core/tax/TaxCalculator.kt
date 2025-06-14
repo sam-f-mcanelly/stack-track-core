@@ -6,6 +6,7 @@ import com.bitcointracker.model.api.tax.UsedBuyTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import org.slf4j.LoggerFactory
+import java.time.Duration
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -57,7 +58,7 @@ class TaxCalculator @Inject constructor() {
             logger.info("Cost basis: $costBasis")
 
             // Calculate holding period
-            val holdingPeriodMillis = sellTransaction.timestamp.time - buyTx.timestamp.time
+            val holdingPeriodMillis = Duration.between(buyTx.timestamp, sellTransaction.timestamp).toMillis()
             val holdingPeriodDays = holdingPeriodMillis / (1000 * 60 * 60 * 24)
             val taxType = if (holdingPeriodDays >= 365) TaxType.LONG_TERM else TaxType.SHORT_TERM
 

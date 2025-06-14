@@ -1,5 +1,6 @@
 package com.bitcointracker.dagger.component
 
+import com.bitcointracker.core.database.TransactionRepository
 import com.bitcointracker.dagger.module.ConcurrencyModule
 import com.bitcointracker.dagger.module.DatabaseModule
 import com.bitcointracker.dagger.module.ExternalClientModule
@@ -21,4 +22,7 @@ interface AppComponent {
     fun getMetadataRouteHandler(): MetadataRouteHandler
     fun getRawDataRouteHandler(): RawDataRouteHandler
     fun getTaxComputationRouteHandler(): TaxComputationRouteHandler
+
+    // Database should only be directly accessed in niteg tests
+    fun getDatabase(): TransactionRepository
 }

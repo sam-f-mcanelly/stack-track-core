@@ -1,11 +1,11 @@
 package com.bitcointracker.model.internal.transaction.strike
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import java.util.Date
+import java.time.Instant
 
 data class StrikeTransaction(
     val transactionId: String,
-    val date: Date, // TODO replace with better library?
+    val date: Instant,
     val type: StrikeTransactionType,
     val source: StrikeTransactionSource,
     val state: StrikeTransactionState,

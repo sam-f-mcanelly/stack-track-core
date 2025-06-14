@@ -3,7 +3,15 @@ package com.bitcointracker.core.parser.exchange.loader
 import com.bitcointracker.core.parser.FileLoader
 import com.bitcointracker.model.internal.transaction.strike.StrikeV2Transaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeV2TransactionType
-import java.text.SimpleDateFormat
+import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.util.Locale
 import javax.inject.Inject
 
 /**
@@ -13,6 +21,8 @@ import javax.inject.Inject
 class StrikeV2AccountStatementFileLoader @Inject constructor(): FileLoader<StrikeV2Transaction> {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(StrikeV2AccountStatementFileLoader::class.java)
+
         private const val DATE_FORMAT = "MMM dd yyyy HH:mm:ss"
         private const val MIN_COLUMNS = 11
 
@@ -38,7 +48,8 @@ class StrikeV2AccountStatementFileLoader @Inject constructor(): FileLoader<Strik
      * @return List of parsed StrikeV2Transaction objects
      */
     override fun readCsv(lines: List<String>): List<StrikeV2Transaction> {
-        val dateFormatter = SimpleDateFormat(DATE_FORMAT)
+        val dateFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.ENGLISH)
+            .withZone(ZoneOffset.UTC)
 
         return lines
             .filter { it.split(",").size >= MIN_COLUMNS }
@@ -49,15 +60,16 @@ class StrikeV2AccountStatementFileLoader @Inject constructor(): FileLoader<Strik
      * Parses a single CSV line into a StrikeV2Transaction.
      *
      * @param line The CSV line to parse
-     * @param dateFormatter SimpleDateFormat for parsing dates
+     * @param dateFormatter DateTimeFormatter for parsing dates
      * @return Parsed StrikeV2Transaction
      */
-    private fun parseTransaction(line: String, dateFormatter: SimpleDateFormat): StrikeV2Transaction {
+    private fun parseTransaction(line: String, dateFormatter: DateTimeFormatter): StrikeV2Transaction {
         val columns = line.split(",")
+        logger.info("parsing line: $line")
 
         return StrikeV2Transaction(
             reference = columns[REFERENCE_INDEX],
-            date = dateFormatter.parse(columns[DATE_INDEX]),
+            date = parseDate(columns[DATE_INDEX], dateFormatter),
             type = StrikeV2TransactionType.fromString(columns[TYPE_INDEX]),
             amountUsd = columns[AMOUNT_USD_INDEX].toDoubleOrNull(),
             feeUsd = columns[FEE_USD_INDEX].toDoubleOrNull(),
@@ -69,6 +81,9 @@ class StrikeV2AccountStatementFileLoader @Inject constructor(): FileLoader<Strik
             description = getNonEmptyStringOrNull(columns, DESCRIPTION_INDEX),
             note = if (columns.size > NOTE_INDEX) getNonEmptyStringOrNull(columns, NOTE_INDEX) else null
         )
+            .also {
+                logger.info("Parsed transaction: $it")
+            }
     }
 
     /**

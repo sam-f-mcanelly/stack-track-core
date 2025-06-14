@@ -35,14 +35,14 @@ class BitcoinHistoricalDataLoader @Inject constructor(
 
         // Handle duplicate dates by taking the first occurrence
         val uniqueDataPoints = dataPoints
-            .groupBy { it.date.time }
+            .groupBy { it.date }
             .map { (_, points) ->
                 if (points.size > 1) {
                     logger.debug("Found ${points.size} entries for date ${points.first().date}, using first entry")
                 }
                 points.first()
             }
-            .sortedBy { it.date.time }
+            .sortedBy { it.date }
 
         logger.info("Returning ${uniqueDataPoints.size} unique data points")
         return uniqueDataPoints

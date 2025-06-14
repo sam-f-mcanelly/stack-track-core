@@ -4,13 +4,19 @@ import com.bitcointracker.core.parser.FileLoader
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseStandardTransaction
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseTransactionType
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import java.text.SimpleDateFormat
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 
 class CoinbaseStandardAnnualStatementFileLoader @Inject constructor() : FileLoader<CoinbaseStandardTransaction> {
+    companion object {
+        private const val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss 'UTC'"
+    }
+
     override fun readCsv(lines: List<String>): List<CoinbaseStandardTransaction>  {
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss 'UTC'")
+        val dateFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.ENGLISH)
+            .withZone(ZoneOffset.UTC)
 
         return lines
             .filter {
@@ -23,7 +29,7 @@ class CoinbaseStandardAnnualStatementFileLoader @Inject constructor() : FileLoad
             }
             .map { line ->
                 val columns = line.split(",")
-                val timestamp = dateFormatter.parse(columns[1])
+                val timestamp = parseDate(columns[1], dateFormatter)
 
                 CoinbaseStandardTransaction(
                     id = columns[0],

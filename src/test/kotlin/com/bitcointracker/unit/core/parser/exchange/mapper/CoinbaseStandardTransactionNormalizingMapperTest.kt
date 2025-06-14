@@ -9,13 +9,13 @@ import com.bitcointracker.model.api.transaction.TransactionSource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Nested
-import java.util.Date
+import java.time.Instant
 import kotlin.test.assertEquals
 
 class CoinbaseStandardTransactionNormalizingMapperTest {
 
     private lateinit var mapper: CoinbaseStandardTransactionNormalizingMapper
-    private val testDate = Date()
+    private val testDate = Instant.now()
     private val testId = "test-transaction-id"
     private val testNotes = "test notes"
 

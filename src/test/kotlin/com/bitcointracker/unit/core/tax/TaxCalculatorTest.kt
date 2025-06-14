@@ -14,8 +14,8 @@ import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.Calendar
-import java.util.Date
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class TaxCalculatorTest {
 
@@ -40,7 +40,7 @@ class TaxCalculatorTest {
     @Test
     fun `calculateTaxableEvent should properly calculate gains with single buy transaction`() {
         // Arrange
-        val now = Date()
+        val now = Instant.now()
         val oneYearAgo = getDateBefore(now, 366) // Long-term capital gain
 
         // Create transactions
@@ -86,7 +86,7 @@ class TaxCalculatorTest {
     @Test
     fun `calculateTaxableEvent should handle multiple buy transactions`() {
         // Arrange
-        val now = Date()
+        val now = Instant.now()
         val twoMonthsAgo = getDateBefore(now, 60) // Short-term capital gain
         val threeMonthsAgo = getDateBefore(now, 90) // Short-term capital gain
 
@@ -154,7 +154,7 @@ class TaxCalculatorTest {
     @Test
     fun `calculateTaxableEvent should handle uncovered amounts`() {
         // Arrange
-        val now = Date()
+        val now = Instant.now()
         val oneMonthAgo = getDateBefore(now, 30)
 
         // Sell 1 BTC at $50,000
@@ -208,7 +208,7 @@ class TaxCalculatorTest {
     @Test
     fun `calculateTaxableEvent should respect transaction tracker`() {
         // Arrange
-        val now = Date()
+        val now = Instant.now()
         val oneMonthAgo = getDateBefore(now, 30)
 
         // Create sell and buy transactions
@@ -264,7 +264,7 @@ class TaxCalculatorTest {
     @Test
     fun `calculateTaxableEvent should determine tax type based on holding period`() {
         // Arrange
-        val now = Date()
+        val now = Instant.now()
         val sixMonthsAgo = getDateBefore(now, 182) // Short-term
         val fifteenMonthsAgo = getDateBefore(now, 456) // Long-term
 
@@ -319,7 +319,7 @@ class TaxCalculatorTest {
         id: String,
         assetAmount: ExchangeAmount,
         transactionAmountFiat: ExchangeAmount,
-        timestamp: Date,
+        timestamp: Instant,
         type: NormalizedTransactionType
     ): NormalizedTransaction {
         val transactionSource = mockk<TransactionSource>()
@@ -339,13 +339,11 @@ class TaxCalculatorTest {
         )
     }
 
+
     /**
-     * Helper method to get a date N days before the specified date
+     * Helper method to get an Instant N days before the specified Instant
      */
-    private fun getDateBefore(date: Date, days: Int): Date {
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        calendar.add(Calendar.DAY_OF_YEAR, -days)
-        return calendar.time
+    private fun getDateBefore(instant: Instant, days: Int): Instant {
+        return instant.minus(days.toLong(), ChronoUnit.DAYS)
     }
 }

@@ -7,8 +7,11 @@ import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSou
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionState
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType
 import org.slf4j.LoggerFactory
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 
@@ -18,8 +21,8 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
     }
 
     override fun readCsv(lines: List<String>): List<StrikeTransaction> {
-        val dateFormatter = SimpleDateFormat("MMM dd yyyy")
-        val timeFormatter = SimpleDateFormat("HH:mm:ss")
+        val dateFormatter = DateTimeFormatter.ofPattern("MMM dd yyyy", Locale.ENGLISH)
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
         val unfilteredTransactions = lines
             .filter {
@@ -32,11 +35,15 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
             }
             .map { line ->
                 val columns = line.split(",")
-                val datePart = dateFormatter.parse(columns[1]) // Parsing "Jan 01 2024"
-                val timePart = timeFormatter.parse(columns[2]) // Parsing "13:30:07"
 
-                // Combine date and time into a single Date object
-                val dateTime = Date(datePart.time + timePart.time)
+                // Parse date and time separately
+                val datePart = LocalDate.parse(columns[1], dateFormatter) // Parsing "Jan 01 2024"
+                val timePart = LocalTime.parse(columns[2], timeFormatter) // Parsing "13:30:07"
+
+                // Combine into UTC LocalDateTime, then convert to Instant
+                val dateTime = LocalDateTime.of(datePart, timePart)
+                    .atZone(ZoneOffset.UTC)
+                    .toInstant()
 
                 StrikeTransaction(
                     transactionId = columns[0],
@@ -53,7 +60,9 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
                     balanceBtc = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                     destination = if (columns.size > 16) columns[17] else null,
                     description = "" // TODO: support this? I've never used it
-                )
+                ).also {
+                    logger.info("Strike transaction: $it")
+                }
             }.toList()
 
         return filter(unfilteredTransactions)

@@ -6,6 +6,7 @@ import com.bitcointracker.util.jackson.ExchangeAmountSerializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import dagger.Module
@@ -21,6 +22,8 @@ class ExternalClientModule {
     fun provideObjectMapper(): ObjectMapper {
         return ObjectMapper().apply {
             enable(SerializationFeature.INDENT_OUTPUT)
+            registerModule(JavaTimeModule())
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             registerModule(
                 KotlinModule.Builder()
                     .configure(KotlinFeature.NullToEmptyCollection, true)

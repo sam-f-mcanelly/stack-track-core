@@ -1,1 +1,1 @@
-rootProject.name = "hodl-tax-core"
+rootProject.name = "stack-track-core"

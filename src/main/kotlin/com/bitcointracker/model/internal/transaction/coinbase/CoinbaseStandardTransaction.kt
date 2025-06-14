@@ -1,11 +1,11 @@
 package com.bitcointracker.model.internal.transaction.coinbase
 
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import java.util.Date
+import java.time.Instant
 
 data class CoinbaseStandardTransaction(
     val id: String,
-    val timestamp: Date,
+    val timestamp: Instant,
     val type: CoinbaseTransactionType,
     val quantityTransacted: ExchangeAmount,
     val assetValue: ExchangeAmount,

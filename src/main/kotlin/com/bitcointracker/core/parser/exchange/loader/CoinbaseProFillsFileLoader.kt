@@ -4,14 +4,19 @@ import com.bitcointracker.core.parser.FileLoader
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsSide
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsTransaction
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 
 class CoinbaseProFillsFileLoader @Inject constructor(): FileLoader<CoinbaseFillsTransaction> {
+    companion object {
+        private const val DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+    }
+
     override fun readCsv(lines: List<String>): List<CoinbaseFillsTransaction> {
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        val dateFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.ENGLISH)
+            .withZone(ZoneOffset.UTC)
 
         return lines
             .filter {
@@ -24,14 +29,14 @@ class CoinbaseProFillsFileLoader @Inject constructor(): FileLoader<CoinbaseFills
             }
             .map { line ->
                 val columns = line.split(",")
-                val timestamp = dateFormatter.parse(columns[4])
+                val timestamp = parseDate(columns[4], dateFormatter)
 
                 CoinbaseFillsTransaction(
                     portfolio = columns[0],
                     tradeId = columns[1],
                     product = columns[2],
                     side = CoinbaseFillsSide.valueOf(columns[3].uppercase(Locale.ROOT)),
-                    createdAt = Date(timestamp.time),
+                    createdAt = timestamp,
                     size = ExchangeAmount(columns[5].toDouble(), columns[6]),
                     price = ExchangeAmount(columns[7].toDouble(), columns[10]),
                     fee = ExchangeAmount(columns[8].toDouble(), columns[10]),

@@ -1,6 +1,5 @@
 package com.bitcointracker.core.database
 
-import com.bitcointracker.core.database.TransactionRepository
 import com.bitcointracker.core.cache.TransactionMetadataCache
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
@@ -24,8 +23,10 @@ import org.jetbrains.exposed.sql.ExpressionWithColumnType
 import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.deleteAll
+import java.time.Instant
 import java.time.ZoneId
-import java.util.Date
+import java.time.ZoneOffset
 import javax.inject.Inject
 
 class H2TransactionRepository @Inject constructor(
@@ -40,10 +41,31 @@ class H2TransactionRepository @Inject constructor(
         }
     }
 
-    private suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO, database) {
-            block()
+    private suspend fun <T> dbQuery(block: suspend () -> T): T {
+        return try {
+            newSuspendedTransaction(Dispatchers.IO, database) {
+                block()
+            }
+        } catch (e: Exception) {
+            println("Database query failed: ${e.message}")
+            e.printStackTrace()
+            throw e // Re-throw to let caller handle
         }
+    }
+    /**
+     * Clears all data from the database tables.
+     * This should only be used in test environments.
+     */
+    override suspend fun clearDatabase() {
+        dbQuery {
+            TransactionTable.deleteAll()
+        }
+        try {
+            transactionCache.clear()
+        } catch (e: Exception) {
+            println("Failed to clear cache: ${e.message}")
+        }
+    }
 
     override suspend fun addTransaction(transaction: NormalizedTransaction) {
         dbQuery {
@@ -52,7 +74,6 @@ class H2TransactionRepository @Inject constructor(
             } catch(e: Exception) {
                 println("Failed to add transaction ${transaction.id}")
                 println(e.localizedMessage)
-                println(e.stackTrace)
             }
         }
 
@@ -60,18 +81,31 @@ class H2TransactionRepository @Inject constructor(
     }
 
     override suspend fun addTransactions(transactions: List<NormalizedTransaction>) {
-        dbQuery {
+        val addedTransactions = dbQuery {
+            val added = mutableListOf<NormalizedTransaction>()
             transactions.forEach { transaction ->
                 try {
                     addTransactionToTable(transaction)
+                    added.add(transaction)
                 } catch(e: Exception) {
-                    println("Failed to add transaction ${transaction.id}")
-                    println(e.localizedMessage)
-                    println(e.stackTrace)
+                    println("Failed to add transaction ${transaction.id}: ${e.message}")
+                    e.printStackTrace() // ✅ Proper stack trace printing
+                    // Consider whether to rethrow or continue
                 }
             }
+            added
         }
-        transactionCache.update(getAllTransactions())
+
+        // Only update cache if we successfully added transactions
+        if (addedTransactions.isNotEmpty()) {
+            try {
+                val allTransactions = getAllTransactions()
+                transactionCache.update(allTransactions)
+            } catch (e: Exception) {
+                println("Failed to update cache: ${e.message}")
+                e.printStackTrace()
+            }
+        }
     }
 
     fun addTransactionToTable(transaction: NormalizedTransaction) {
@@ -92,8 +126,7 @@ class H2TransactionRepository @Inject constructor(
             it[assetValueFiatValue] = transaction.assetValueFiat.amount
             it[assetValueFiatUnit] = transaction.assetValueFiat.unit
 
-            it[timestamp] =
-                transaction.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+            it[timestamp] = transaction.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
             it[timestampText] = transaction.timestampText
             it[address] = transaction.address
             it[notes] = transaction.notes
@@ -134,9 +167,10 @@ class H2TransactionRepository @Inject constructor(
         sources: List<TransactionSource>?,
         types: List<NormalizedTransactionType>?,
         assets: List<String>?,
-        startDate: Date?,
-        endDate: Date?
+        startDate: Instant?,
+        endDate: Instant?
     ): List<NormalizedTransaction> {
+        println("getFilteredTransactions()")
         return dbQuery {
             TransactionTable.select {
                 val conditions = mutableListOf<Op<Boolean>>()
@@ -146,7 +180,7 @@ class H2TransactionRepository @Inject constructor(
                 }
 
                 types?.takeIf { it.isNotEmpty() }?.let {
-                    conditions. add(TransactionTable.type inList types)
+                    conditions.add(TransactionTable.type inList types)
                 }
 
                 assets?.takeIf { it.isNotEmpty() }?.let {
@@ -154,14 +188,16 @@ class H2TransactionRepository @Inject constructor(
                 }
 
                 if (startDate != null) {
-                    conditions.add(TransactionTable.timestamp greaterEq startDate.toInstant()
-                        .atZone(ZoneId.systemDefault())
+                    println("parsing startDate")
+                    conditions.add(TransactionTable.timestamp greaterEq startDate
+                        .atZone(ZoneOffset.UTC)
                         .toLocalDateTime())
                 }
 
                 if (endDate != null) {
-                    conditions.add(TransactionTable.timestamp lessEq endDate.toInstant()
-                        .atZone(ZoneId.systemDefault())
+                    println("parsing endDate")
+                    conditions.add(TransactionTable.timestamp lessEq endDate
+                        .atZone(ZoneOffset.UTC)
                         .toLocalDateTime())
                 }
 
@@ -188,11 +224,11 @@ class H2TransactionRepository @Inject constructor(
         }
     }
 
-    override suspend fun getTransactionsByDateRange(startDate: Date, endDate: Date): List<NormalizedTransaction> {
+    override suspend fun getTransactionsByDateRange(startDate: Instant, endDate: Instant): List<NormalizedTransaction> {
         return dbQuery {
             TransactionTable.select {
-                (TransactionTable.timestamp greaterEq startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()) and
-                (TransactionTable.timestamp lessEq endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime())
+                (TransactionTable.timestamp greaterEq startDate.atZone(ZoneOffset.UTC).toLocalDateTime()) and
+                        (TransactionTable.timestamp lessEq endDate.atZone(ZoneOffset.UTC).toLocalDateTime())
             }.map { it.toNormalizedTransaction() }
         }
     }
@@ -222,7 +258,7 @@ class H2TransactionRepository @Inject constructor(
                 it[assetValueFiatValue] = transaction.assetValueFiat.amount
                 it[assetValueFiatUnit] = transaction.assetValueFiat.unit
 
-                it[timestamp] = transaction.timestamp.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                it[timestamp] = transaction.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
                 it[timestampText] = transaction.timestampText
                 it[address] = transaction.address
                 it[notes] = transaction.notes
@@ -268,7 +304,7 @@ class H2TransactionRepository @Inject constructor(
                 amount = this[TransactionTable.assetValueFiatValue],
                 unit = this[TransactionTable.assetValueFiatUnit]
             ),
-            timestamp = Date.from(this[TransactionTable.timestamp].atZone(ZoneId.systemDefault()).toInstant()),
+            timestamp = this[TransactionTable.timestamp].atZone(ZoneOffset.UTC).toInstant(),
             timestampText = this[TransactionTable.timestampText],
             address = this[TransactionTable.address],
             notes = this[TransactionTable.notes],

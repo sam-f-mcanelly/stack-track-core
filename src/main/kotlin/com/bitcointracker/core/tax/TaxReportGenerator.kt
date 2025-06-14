@@ -10,7 +10,7 @@ import com.bitcointracker.model.api.tax.TaxableEventResult
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import org.slf4j.LoggerFactory
-import java.util.Date
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -191,7 +191,7 @@ class TaxReportGenerator @Inject constructor(
      * Retrieves available buy transactions that occurred before the given sell date.
      */
     private suspend fun getAvailableBuyTransactionsBeforeSell(
-        sellDate: Date,
+        sellDate: Instant,
         asset: String,
         transactionTracker: TransactionTracker
     ): List<NormalizedTransaction> {
@@ -209,7 +209,7 @@ class TaxReportGenerator @Inject constructor(
      */
     private suspend fun getAvailableBuyTransactionsByIds(
         ids: List<String>,
-        sellDate: Date,
+        sellDate: Instant,
         transactionTracker: TransactionTracker
     ): List<NormalizedTransaction> {
         return ids.mapNotNull { id ->

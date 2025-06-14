@@ -8,14 +8,14 @@ import com.bitcointracker.model.api.transaction.TransactionSource
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.util.Date
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class TransactionMetadataCacheTest {
 
     private lateinit var cache: TransactionMetadataCache
-    private val testDate = Date()
+    private val testDate = Instant.now()
 
     @BeforeEach
     fun setup() {

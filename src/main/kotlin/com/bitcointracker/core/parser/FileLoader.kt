@@ -1,5 +1,13 @@
 package com.bitcointracker.core.parser
 
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+
 /**
  * Interface for loading and parsing files into domain objects.
  *
@@ -31,4 +39,32 @@ interface FileLoader<T> {
      * @return A list of parsed objects from the file.
      */
     fun readCsv(lines: List<String>): List<T>
+
+    /**
+     * Parses a date string into an Instant using the provided formatter.
+     * Assumes the date string represents a date at the start of day in UTC.
+     *
+     * @param dateString The date string to parse
+     * @param formatter The DateTimeFormatter to use
+     * @return Instant representing the parsed date
+     */
+    fun parseDate(dateString: String, formatter: DateTimeFormatter): Instant {
+        return try {
+            // Try to parse as LocalDateTime first (if time is included)
+            LocalDateTime.parse(dateString, formatter)
+                .atZone(ZoneOffset.UTC)
+                .toInstant()
+        } catch (e: DateTimeParseException) {
+            try {
+                // Fall back to LocalDate (date only) and assume start of day UTC
+                LocalDate.parse(dateString, formatter)
+                    .atStartOfDay(ZoneOffset.UTC)
+                    .toInstant()
+            } catch (e2: DateTimeParseException) {
+                // If both fail, try parsing with zone information
+                ZonedDateTime.parse(dateString, formatter)
+                    .toInstant()
+            }
+        }
+    }
 }

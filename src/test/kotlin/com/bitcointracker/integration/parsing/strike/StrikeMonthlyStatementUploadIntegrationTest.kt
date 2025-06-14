@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.call.body
 import io.ktor.client.request.forms.MultiPartFormDataContent
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.text.SimpleDateFormat
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -48,6 +50,8 @@ class StrikeMonthlyStatementUploadIntegrationTest {
         objectMapper = ObjectMapper().apply {
             // Enable pretty printing
             enable(SerializationFeature.INDENT_OUTPUT)
+            registerModule(JavaTimeModule())
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
             // Register Kotlin module with the same configuration as the service
             registerModule(
@@ -128,7 +132,6 @@ class StrikeMonthlyStatementUploadIntegrationTest {
     }
 
     private fun createExpectedTransactions(): List<NormalizedTransaction> {
-        val dateFormat = SimpleDateFormat("MMM dd yyyy HH:mm:ss")
         val transactions = mutableListOf<NormalizedTransaction>()
 
         // Sample of expected transactions based on the provided data
@@ -142,7 +145,7 @@ class StrikeMonthlyStatementUploadIntegrationTest {
                 fee = ExchangeAmount(0.0, "USD"),
                 assetAmount = ExchangeAmount(0.0, "USD"),
                 assetValueFiat = ExchangeAmount(0.0, "USD"),
-                timestamp = dateFormat.parse("Jan 02 2025 01:23:45"),
+                timestamp = Instant.parse("2025-01-02T01:23:45Z"),
                 timestampText = "Jan 02 2025 01:23:45",
                 address = "",
                 notes = ""
@@ -159,7 +162,7 @@ class StrikeMonthlyStatementUploadIntegrationTest {
                 fee = ExchangeAmount(0.0, "USD"),
                 assetAmount = ExchangeAmount(0.00010529, "BTC"),
                 assetValueFiat = ExchangeAmount(9.87, "USD"),
-                timestamp = dateFormat.parse("Jan 02 2025 01:24:12"),
+                timestamp = Instant.parse("2025-01-02T01:24:12Z"),
                 timestampText = "Jan 02 2025 01:24:12",
                 address = "",
                 notes = ""
@@ -176,7 +179,7 @@ class StrikeMonthlyStatementUploadIntegrationTest {
                 fee = ExchangeAmount(0.0, "USD"),
                 assetAmount = ExchangeAmount(0.0, "USD"),
                 assetValueFiat = ExchangeAmount(0.0, "USD"),
-                timestamp = dateFormat.parse("Jan 03 2025 01:22:33"),
+                timestamp = Instant.parse("2025-01-03T01:22:33Z"),
                 timestampText = "Jan 03 2025 01:22:33",
                 address = "",
                 notes = ""
@@ -210,10 +213,9 @@ class StrikeMonthlyStatementUploadIntegrationTest {
                         "Asset currency mismatch for ID ${expected.id}")
                 }
 
-                // Using string comparison for timestamps to avoid time zone issues
                 assertEquals(
-                    SimpleDateFormat("yyyy-MM-dd HH:mm").format(expected.timestamp),
-                    SimpleDateFormat("yyyy-MM-dd HH:mm").format(it.timestamp),
+                    expected.timestamp,
+                    it.timestamp,
                     "Timestamp mismatch for ID ${expected.id}"
                 )
             }

@@ -6,6 +6,7 @@ import com.bitcointracker.model.api.transaction.TransactionSource
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.strike.StrikeV2Transaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeV2TransactionType
+import org.slf4j.LoggerFactory
 import javax.inject.Inject
 import kotlin.math.absoluteValue
 
@@ -15,6 +16,8 @@ import kotlin.math.absoluteValue
 class StrikeV2TransactionNormalizingMapper @Inject constructor() : NormalizingMapper<StrikeV2Transaction> {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(StrikeV2TransactionNormalizingMapper::class.java)
+
         private const val USD_CURRENCY = "USD"
         private const val BTC_CURRENCY = "BTC"
         private const val DEFAULT_VALUE = 0.0
@@ -61,7 +64,9 @@ class StrikeV2TransactionNormalizingMapper @Inject constructor() : NormalizingMa
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
             filedWithIRS = false,
-        )
+        ).also {
+            logger.info("Normalized deposit: $it")
+        }
 
     /**
      * Normalizes a purchase transaction.

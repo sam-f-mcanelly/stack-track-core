@@ -27,6 +27,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.dagger:dagger:2.48")
     implementation("io.ktor:ktor-serialization-jackson:2.3.4")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
     implementation("javax.inject:javax.inject:1")
     implementation("org.slf4j:slf4j-api:2.0.9")

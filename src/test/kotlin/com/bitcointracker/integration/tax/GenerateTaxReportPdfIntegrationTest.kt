@@ -1,5 +1,6 @@
 package com.bitcointracker.integration.tax
 
+import com.bitcointracker.dagger.component.AppComponent
 import com.bitcointracker.dagger.component.DaggerAppComponent
 import com.bitcointracker.model.api.tax.TaxReportResult
 import com.bitcointracker.model.api.tax.TaxType
@@ -15,6 +16,7 @@ import com.bitcointracker.util.jackson.ExchangeAmountSerializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.client.request.post
@@ -26,6 +28,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.testApplication
 import io.ktor.utils.io.jvm.javaio.toInputStream
+import kotlinx.coroutines.runBlocking
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
@@ -33,9 +36,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.text.SimpleDateFormat
+import java.time.Instant
 
 class GenerateTaxReportPdfIntegrationTest {
     private lateinit var objectMapper: ObjectMapper
+
+    private lateinit var appComponent: AppComponent
 
     @BeforeEach
     fun setUp() {
@@ -43,6 +49,8 @@ class GenerateTaxReportPdfIntegrationTest {
         objectMapper = ObjectMapper().apply {
             // Enable pretty printing
             enable(SerializationFeature.INDENT_OUTPUT)
+            registerModule(JavaTimeModule())
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 
             // Register Kotlin module
             registerModule(
@@ -63,12 +71,16 @@ class GenerateTaxReportPdfIntegrationTest {
             }
             registerModule(module)
         }
+
+        appComponent = DaggerAppComponent.create()
+        runBlocking {
+            appComponent.getDatabase().clearDatabase()
+        }
     }
 
     @Test
     fun testTaxReportPdfGeneration() = testApplication {
         // Set up the application with your DI component
-        val appComponent = DaggerAppComponent.create()
         application {
             module(appComponent)
         }
@@ -167,8 +179,6 @@ class GenerateTaxReportPdfIntegrationTest {
     }
 
     private fun createSampleTaxReport(): TaxReportResult {
-        val dateFormat = SimpleDateFormat("MMM dd yyyy HH:mm:ss")
-
         // First transaction - fully covered sale
         val sellTransaction1 = NormalizedTransaction(
             id = "sell-transaction-1",
@@ -178,7 +188,7 @@ class GenerateTaxReportPdfIntegrationTest {
             fee = ExchangeAmount(1.50, "USD"),
             assetAmount = ExchangeAmount(0.01, "BTC"),
             assetValueFiat = ExchangeAmount(500.0, "USD"),
-            timestamp = dateFormat.parse("Oct 15 2024 14:30:00"),
+            timestamp = Instant.parse("2024-10-15T14:30:00Z"),
             timestampText = "Oct 15 2024 14:30:00",
             address = "",
             notes = ""
@@ -192,7 +202,7 @@ class GenerateTaxReportPdfIntegrationTest {
             fee = ExchangeAmount(0.90, "USD"),
             assetAmount = ExchangeAmount(0.01, "BTC"),
             assetValueFiat = ExchangeAmount(300.0, "USD"),
-            timestamp = dateFormat.parse("May 10 2024 09:15:00"),
+            timestamp = Instant.parse("2024-05-10T09:15:00Z"),
             timestampText = "May 10 2024 09:15:00",
             address = "",
             notes = ""
@@ -224,7 +234,7 @@ class GenerateTaxReportPdfIntegrationTest {
             fee = ExchangeAmount(1.25, "USD"),
             assetAmount = ExchangeAmount(0.007, "BTC"),
             assetValueFiat = ExchangeAmount(350.0, "USD"),
-            timestamp = dateFormat.parse("Oct 20 2024 16:45:00"),
+            timestamp = Instant.parse("2024-10-20T16:45:00Z"),
             timestampText = "Oct 20 2024 16:45:00",
             address = "",
             notes = ""
@@ -238,7 +248,7 @@ class GenerateTaxReportPdfIntegrationTest {
             fee = ExchangeAmount(0.75, "USD"),
             assetAmount = ExchangeAmount(0.006, "BTC"),
             assetValueFiat = ExchangeAmount(200.0, "USD"),
-            timestamp = dateFormat.parse("Aug 05 2023 10:20:00"),
+            timestamp = Instant.parse("2023-08-05T10:20:00Z"),
             timestampText = "Aug 05 2023 10:20:00",
             address = "",
             notes = ""

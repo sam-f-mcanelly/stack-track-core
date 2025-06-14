@@ -14,7 +14,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -27,14 +26,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
-import java.util.Date
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @ExtendWith(MockKExtension::class)
-@OptIn(ExperimentalCoroutinesApi::class)
 @Timeout(value = 60, unit = TimeUnit.SECONDS)
 class TaxReportSubmitterTest {
     private val logger = LoggerFactory.getLogger(TaxReportSubmitterTest::class.java)
@@ -275,8 +273,8 @@ class TaxReportSubmitterTest {
         fee = ExchangeAmount(0.0, "USD"),
         assetAmount = ExchangeAmount(1.0, "BTC"),
         assetValueFiat = ExchangeAmount(100000.0, "USD"),
-        timestamp = Date(),
-        timestampText = Date().toString(),
+        timestamp = Instant.now(),
+        timestampText = Instant.now().toString(),
         filedWithIRS = filedWithIRS
     )
 }

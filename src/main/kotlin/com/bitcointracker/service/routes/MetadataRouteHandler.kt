@@ -35,6 +35,24 @@ class MetadataRouteHandler @Inject constructor(
         }
     }
 
+    suspend fun getHistory(call: ApplicationCall) {
+        val assetInput = call.parameters["asset"] ?: return call.respondText(
+            "Missing or malformed asset",
+            status = HttpStatusCode.BadRequest
+        )
+
+        try {
+            val data = metadataManager.getHistory(assetInput)
+
+            call.respond(data)
+        } catch (e: Exception) {
+            println("Failed to compute historical data for $assetInput!")
+            println(e.localizedMessage)
+            println(e.stackTrace)
+            call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
+        }
+    }
+
     /**
      * Retrieves the holdings for a specific cryptocurrency asset.
      * Currently only supports USD as the currency.
@@ -116,6 +134,5 @@ class MetadataRouteHandler @Inject constructor(
             println(ex)
             call.respond(HttpStatusCode.InternalServerError, "Internal Server Error")
         }
-
     }
 }

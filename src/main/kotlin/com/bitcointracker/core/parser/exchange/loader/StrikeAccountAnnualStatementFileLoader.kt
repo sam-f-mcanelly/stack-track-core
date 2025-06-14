@@ -6,14 +6,19 @@ import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionState
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType
-import java.text.SimpleDateFormat
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
 
 class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction> {
+    companion object {
+        private const val DATE_FORMAT = "MMM dd yyyy HH:mm:ss"
+    }
 
     override fun readCsv(lines: List<String>): List<StrikeTransaction> {
-        val dateFormatter = SimpleDateFormat("MMM dd yyyy HH:mm:ss")
+        val dateFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT, Locale.ENGLISH)
+            .withZone(ZoneOffset.UTC)
 
         return filter(
             lines.filter {
@@ -26,7 +31,7 @@ class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<S
             }
             .map { line ->
                 val columns = line.split(",")
-                val date = dateFormatter.parse(columns[1]) // Parsing "Jan 01 2024 13:30:07"
+                val date = parseDate(columns[1], dateFormatter) // Parsing "Jan 01 2024 13:30:07"
 
                 StrikeTransaction(
                     transactionId = columns[0],

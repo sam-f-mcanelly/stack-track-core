@@ -18,9 +18,6 @@
 package com.bitcointracker
 
 import ch.qos.logback.classic.LoggerContext
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder
-import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.core.ConsoleAppender
 import com.bitcointracker.dagger.component.AppComponent
 import com.bitcointracker.dagger.component.DaggerAppComponent
 import com.bitcointracker.util.jackson.ExchangeAmountDeserializer
@@ -28,6 +25,7 @@ import com.bitcointracker.util.jackson.ExchangeAmountSerializer
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.ktor.http.HttpHeaders
@@ -114,6 +112,8 @@ fun Application.module(appComponent: AppComponent) {
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
+            registerModule(JavaTimeModule())
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             registerModule(
                 KotlinModule.Builder()
                     .withReflectionCacheSize(512)
@@ -196,6 +196,9 @@ fun Application.module(appComponent: AppComponent) {
         }
         get("/api/metadata/addresses/{asset}") {
             metadataRouteHandler.getAddresses(call)
+        }
+        get("/api/metadata/history/{asset}") {
+            metadataRouteHandler.getHistory(call)
         }
 
         // Tax routes
