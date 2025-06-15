@@ -17,12 +17,6 @@ jobs:
           echo "Hostname:"
           hostname
           echo ""
-          echo "IP Configuration:"
-          ip addr show
-          echo ""
-          echo "Routing table:"
-          ip route
-          echo ""
           echo "DNS configuration:"
           cat /etc/resolv.conf
           echo ""
