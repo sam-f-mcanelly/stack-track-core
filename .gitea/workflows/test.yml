@@ -11,42 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug Network Information
+      - name: Add gitea hostname mapping
         run: |
-          echo "=== NETWORK DEBUG INFO ==="
-          echo "Hostname:"
-          hostname
-          echo ""
-          echo "DNS configuration:"
-          cat /etc/resolv.conf
-          echo ""
-          echo "Hosts file:"
-          cat /etc/hosts
-          echo ""
-          echo "Network interfaces:"
-          ls /sys/class/net/
-          echo ""
-          echo "Checking if we can reach gitea_server_1:"
-          nslookup gitea_server_1 || echo "DNS lookup failed"
-          echo ""
-          echo "Ping test to gitea_server_1:"
-          ping -c 2 gitea_server_1 || echo "Ping failed"
-          echo ""
-          echo "Trying to reach gitea via IP 10.21.0.26:"
-          ping -c 2 10.21.0.26 || echo "Ping to IP failed"
-          echo ""
-          echo "Testing HTTP connection to gitea:"
-          curl -v http://10.21.0.26:8085/api/v1/version || echo "HTTP connection failed"
-          echo ""
-          echo "Testing HTTP connection to gitea:"
-          curl -v http://gitea_server_1:8085/api/v1/version || echo "HTTP connection failed"
-          echo ""
-          echo "Network namespace info:"
-          ls -la /proc/self/ns/
-          echo ""
-          echo "Docker environment variables:"
-          env | grep -i docker || echo "No docker env vars"
-          echo "=== END NETWORK DEBUG ==="
+          echo "10.21.0.26 gitea_server_1" | sudo tee -a /etc/hosts
+          echo "Added gitea_server_1 to hosts file:"
+          grep gitea_server_1 /etc/hosts
+          echo "Testing connection:"
+          curl -s http://gitea_server_1:8085/api/v1/version
 
       - uses: actions/checkout@v3
 
