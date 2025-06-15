@@ -11,27 +11,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # The artifact uploader uses the ACTIONS_RESULTS_URL environment variable for the upload URL
+      # For some reason this ends up being umbrel.local on an umbrel. This script maps
+      # umbrel.local to the gitea server
+      # https://github.com/actions/toolkit/blob/f31c2921c1228a97be08cdb38b919a83077354d9/packages/artifact/src/internal/shared/config.ts
       - name: Test connection and add host mapping if necessary
         run: |
           echo "Testing initial connection to Gitea..."
           if curl -s --connect-timeout 10 --max-time 30 http://gitea_server_1:8085/api/v1/version; then
-            echo "✅ Connection to gitea_server_1 successful - no host mapping needed"
-          else
-            echo "❌ Connection to gitea_server_1 failed - adding hostname mappings. Pulled from Docker"
-            echo "10.21.0.12 gitea_server_1" | sudo tee -a /etc/hosts
-            echo "10.21.0.12 umbrel.local" | sudo tee -a /etc/hosts
+            echo "✅ Connection to gitea_server_1 successful - no gitea host mapping needed for gitea_server_1"
+            echo "Mapping umbrel.local to gitea_server_1 for actions/upload-artifact@v3..."
+            echo "gitea_server_1 umbrel.local" | sudo tee -a /etc/hosts
             echo "Added hostname mappings:"
-            grep -E "(gitea_server_1|umbrel.local)" /etc/hosts
-
+            grep -E "(umbrel.local)" /etc/hosts
             echo "Testing connection again after adding mappings..."
-            if curl -s --connect-timeout 10 --max-time 30 http://gitea_server_1:8085/api/v1/version; then
-              echo "✅ Connection successful after adding hostname mappings"
+            if curl -s --connect-timeout 10 --max-time 30 http://umbrel.local:8085/api/v1/version; then
+              echo "✅ Connection to umbrel.local successful after adding hostname mappings"
             else
-              echo "❌ Connection still failing after hostname mappings - check network/firewall"
-              echo "Attempting connection to umbrel.local as fallback..."
-              curl -s --connect-timeout 10 --max-time 30 http://umbrel.local:8085/api/v1/version || echo "❌ Fallback connection also failed"
+              echo "❌ Connection to umbrel.local still failing after hostname mappings - check network/firewall"
+              exit 1
             fi
+          else
+            echo "❌ Connection to gitea_server_1 failed - Make sure the gitea runner and child workflow runner are on the same network as gitea"
+            echo "The default network for all apps on umbrel is umbrel_main_network"
+            exit 1
           fi
+
       - name: Debug environment variables
         run: |
           echo "=== All Environment Variables ==="
@@ -59,10 +64,6 @@ jobs:
 
       - name: Upload test results
         if: always()
-        env:
-          # Override this value
-          # https://github.com/actions/toolkit/blob/f31c2921c1228a97be08cdb38b919a83077354d9/packages/artifact/src/internal/shared/config.ts
-          ACTIONS_RESULTS_URL: "http://gitea_server_1:8085"
         uses: actions/upload-artifact@v3
         with:
           name: test-results
