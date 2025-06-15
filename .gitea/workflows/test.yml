@@ -9,6 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # Override this value
+      # https://github.com/actions/toolkit/blob/f31c2921c1228a97be08cdb38b919a83077354d9/packages/artifact/src/internal/shared/config.ts
+      ACTIONS_RESULTS_URL: "http://gitea_server_1:8085"
 
     steps:
       - name: Test connection and add host mapping if necessary
