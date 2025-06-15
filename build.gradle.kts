@@ -3,7 +3,7 @@ plugins {
     application
     id("org.jetbrains.kotlin.kapt") version "2.0.20"
     // kotlin("plugin.serialization") version "1.8.10"
-    id("io.ktor.plugin") version "3.0.3"
+    id("io.ktor.plugin") version "3.1.3"
     jacoco
 }
 
@@ -19,14 +19,14 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation("com.itextpdf:itext7-core:9.1.0")
     implementation("ch.qos.logback:logback-classic:1.5.18")
-    implementation("io.ktor:ktor-server-netty:2.3.1")
-    implementation("io.ktor:ktor-server-core:2.3.1")
-    implementation("io.ktor:ktor-server-content-negotiation:2.3.1")
+    implementation("io.ktor:ktor-server-netty:3.1.3")
+    implementation("io.ktor:ktor-server-core:3.1.3")
+    implementation("io.ktor:ktor-server-content-negotiation:3.1.3")
     implementation("io.ktor:ktor-server-cors")
-    implementation("io.ktor:ktor-server-call-logging:2.3.1")
+    implementation("io.ktor:ktor-server-call-logging:3.1.3")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.dagger:dagger:2.56.2")
-    implementation("io.ktor:ktor-serialization-jackson:2.3.4")
+    implementation("io.ktor:ktor-serialization-jackson:3.1.3")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
     implementation("javax.inject:javax.inject:1")
@@ -49,7 +49,7 @@ dependencies {
     // Testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.13.1")
     testImplementation("org.assertj:assertj-core:3.27.3")
-    testImplementation("io.ktor:ktor-server-test-host:2.3.7")
+    testImplementation("io.ktor:ktor-server-test-host:3.1.3")
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.20")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.slf4j:slf4j-simple:2.0.9")
