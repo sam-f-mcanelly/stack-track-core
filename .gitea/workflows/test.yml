@@ -11,26 +11,69 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-    
-    - name: Run tests
-      run: ./gradlew test
+      - name: Debug Network Information
+        run: |
+          echo "=== NETWORK DEBUG INFO ==="
+          echo "Hostname:"
+          hostname
+          echo ""
+          echo "IP Configuration:"
+          ip addr show
+          echo ""
+          echo "Routing table:"
+          ip route
+          echo ""
+          echo "DNS configuration:"
+          cat /etc/resolv.conf
+          echo ""
+          echo "Hosts file:"
+          cat /etc/hosts
+          echo ""
+          echo "Network interfaces:"
+          ls /sys/class/net/
+          echo ""
+          echo "Checking if we can reach gitea_server_1:"
+          nslookup gitea_server_1 || echo "DNS lookup failed"
+          echo ""
+          echo "Ping test to gitea_server_1:"
+          ping -c 2 gitea_server_1 || echo "Ping failed"
+          echo ""
+          echo "Trying to reach gitea via IP 10.21.0.26:"
+          ping -c 2 10.21.0.26 || echo "Ping to IP failed"
+          echo ""
+          echo "Testing HTTP connection to gitea:"
+          curl -v http://10.21.0.26:8085/api/v1/version || echo "HTTP connection failed"
+          echo ""
+          echo "Testing HTTP connection to gitea:"
+          curl -v http://gitea_server_1:8085/api/v1/version || echo "HTTP connection failed"
+          echo ""
+          echo "Network namespace info:"
+          ls -la /proc/self/ns/
+          echo ""
+          echo "Docker environment variables:"
+          env | grep -i docker || echo "No docker env vars"
+          echo "=== END NETWORK DEBUG ==="
 
-    - name: Run integration tests
-      run: ./gradlew integrationTest
-      
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: build/reports/
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Run tests
+        run: ./gradlew test
+
+      - name: Run integration tests
+        run: ./gradlew integrationTest
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: build/reports/
