@@ -32,6 +32,13 @@ jobs:
               curl -s --connect-timeout 10 --max-time 30 http://umbrel.local:8085/api/v1/version || echo "❌ Fallback connection also failed"
             fi
           fi
+      - name: Debug environment variables
+        run: |
+          echo "=== All Environment Variables ==="
+          env | sort
+          echo ""
+          echo "=== Looking for umbrel/artifact related vars ==="
+          env | grep -i -E "(umbrel|artifact|github|gitea|upload)"
 
       - uses: actions/checkout@v4
 
