@@ -11,15 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Add gitea hostname mapping
+      - name: Test connection and add host mapping if necessary
         run: |
-          echo "10.21.0.26 gitea_server_1" | sudo tee -a /etc/hosts
-          echo "Added gitea_server_1 to hosts file:"
-          echo "10.21.0.26 umbrel.local" | sudo tee -a /etc/hosts
-          echo "Added umbrel.local to hosts file:"
-          grep gitea_server_1 /etc/hosts
-          echo "Testing connection:"
-          curl -s http://gitea_server_1:8085/api/v1/version
+          echo "Testing initial connection to Gitea..."
+          if curl -s --connect-timeout 10 --max-time 30 http://gitea_server_1:8085/api/v1/version; then
+            echo "✅ Connection to gitea_server_1 successful - no host mapping needed"
+          else
+            echo "❌ Connection to gitea_server_1 failed - adding hostname mappings. Pulled from Docker"
+            echo "10.21.0.12 gitea_server_1" | sudo tee -a /etc/hosts
+            echo "10.21.0.12 umbrel.local" | sudo tee -a /etc/hosts
+            echo "Added hostname mappings:"
+            grep -E "(gitea_server_1|umbrel.local)" /etc/hosts
+
+            echo "Testing connection again after adding mappings..."
+            if curl -s --connect-timeout 10 --max-time 30 http://gitea_server_1:8085/api/v1/version; then
+              echo "✅ Connection successful after adding hostname mappings"
+            else
+              echo "❌ Connection still failing after hostname mappings - check network/firewall"
+              echo "Attempting connection to umbrel.local as fallback..."
+              curl -s --connect-timeout 10 --max-time 30 http://umbrel.local:8085/api/v1/version || echo "❌ Fallback connection also failed"
+            fi
+          fi
 
       - uses: actions/checkout@v4
 
