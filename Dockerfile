@@ -28,5 +28,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:90/health || exit 1
 RUN mkdir /app
 # copy the fat jar
-COPY --from=build /home/gradle/src/build/libs/*-all.jar /app/hodl-tax-core-1.0.0.jar
-ENTRYPOINT ["java","-jar","/app/hodl-tax-core-1.0.0.jar"]
+COPY --from=build /home/gradle/src/build/libs/*-all.jar /app/stack-track-core-1.0.0.jar
+ENTRYPOINT ["java","-jar","/app/stack-track-core-1.0.0.jar"]

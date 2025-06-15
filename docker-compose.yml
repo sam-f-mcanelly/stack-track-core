@@ -1,13 +1,13 @@
 version: '3.8'
 
 networks:
-  hodl-tax:
-    name: hodl-tax
+  stack-track:
+    name: stack-track
 
 services:
-  hodl-tax-core:
-    container_name: hodl-tax-core
-    image: localhost:3002/sam/hodl-tax-core:latest
+  stack-track-core:
+    container_name: stack-track-core
+    image: localhost:3002/sam/stack-track-core:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,4 +15,4 @@ services:
       - "90:9090"  # Maps host port 90 to container port 8080
     restart: unless-stopped 
     networks:
-      - hodl-tax
+      - stack-track

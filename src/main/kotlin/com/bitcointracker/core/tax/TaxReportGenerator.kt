@@ -81,8 +81,6 @@ class TaxReportGenerator @Inject constructor(
         event: TaxableEventParameters,
         transactionTracker: TransactionTracker
     ): TaxableEventResult {
-        logger.info("processFIFO($event)")
-
         val sellTransaction = getSellTransaction(event.sellId) ?:
         throw IllegalArgumentException("Sell transaction ${event.sellId} not found")
 

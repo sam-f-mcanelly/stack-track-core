@@ -39,7 +39,7 @@ class TaxCalculator @Inject constructor() {
 
         // Calculate the portion of buy transactions that can be covered
         for (buyTx in buyTransactions) {
-            logger.info("processing buy: ${buyTx}")
+//            logger.info("processing buy: ${buyTx}")
 
             val zeroAmount = ExchangeAmount(0.0, sellTransaction.assetAmount.unit)
             if (remainingSellAmount <= zeroAmount) break
@@ -76,8 +76,8 @@ class TaxCalculator @Inject constructor() {
             totalCostBasis = totalCostBasis + costBasis
             remainingSellAmount = remainingSellAmount - amountToUse
 
-            logger.info("Total cost basis so far: $totalCostBasis")
-            logger.info("Remaining sell: $remainingSellAmount")
+//            logger.info("Total cost basis so far: $totalCostBasis")
+//            logger.info("Remaining sell: $remainingSellAmount")
         }
 
         // Calculate uncovered amount and value

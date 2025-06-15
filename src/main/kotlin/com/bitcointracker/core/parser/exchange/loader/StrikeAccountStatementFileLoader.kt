@@ -60,9 +60,7 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
                     balanceBtc = columns[15].toDoubleOrNull()?.let { ExchangeAmount(it, "BTC") },
                     destination = if (columns.size > 16) columns[17] else null,
                     description = "" // TODO: support this? I've never used it
-                ).also {
-                    logger.info("Strike transaction: $it")
-                }
+                )
             }.toList()
 
         return filter(unfilteredTransactions)
@@ -80,7 +78,7 @@ class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeT
             if (transaction.transactionId in result) {
                 val existingTransaction = result[transaction.transactionId]
                 if (transaction.state == StrikeTransactionState.REVERSED || existingTransaction!!.state == StrikeTransactionState.REVERSED) {
-                    println("Found reversed transaction with id: ${transaction.transactionId}. Ignoring the two transactions")
+                    logger.info("Found reversed transaction with id: ${transaction.transactionId}. Ignoring the two transactions")
                     result.remove(transaction.transactionId)
                 }
             } else {
