@@ -5,9 +5,9 @@ import com.bitcointracker.core.exception.UnsupportedFileTypeException
 import com.bitcointracker.core.parser.exchange.FileContentLoader
 import com.bitcointracker.core.parser.exchange.processor.FileProcessor
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
+import jakarta.inject.Inject
 import org.slf4j.LoggerFactory
 import java.io.File
-import javax.inject.Inject
 
 /**
  * Universal file loader for cryptocurrency transaction files.

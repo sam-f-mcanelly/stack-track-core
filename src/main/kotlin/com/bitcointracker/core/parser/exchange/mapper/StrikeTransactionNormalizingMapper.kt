@@ -8,7 +8,7 @@ import com.bitcointracker.model.internal.transaction.strike.StrikeTransaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionSource
 import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionType
 import org.slf4j.LoggerFactory
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 
 /**

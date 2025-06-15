@@ -1,6 +1,6 @@
 package com.bitcointracker.core.tax
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class TransactionTrackerFactory @Inject constructor() {
     fun create() = TransactionTracker(mutableMapOf())

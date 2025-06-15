@@ -5,7 +5,7 @@ import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseTransactio
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import com.bitcointracker.model.api.transaction.TransactionSource
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 /**
  * A mapper that normalizes Coinbase standard transactions.

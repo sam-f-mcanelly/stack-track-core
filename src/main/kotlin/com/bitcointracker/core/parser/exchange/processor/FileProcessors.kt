@@ -10,7 +10,7 @@ import com.bitcointracker.core.parser.exchange.loader.StrikeAccountStatementFile
 import com.bitcointracker.core.parser.exchange.loader.StrikeV2AccountStatementFileLoader
 import com.bitcointracker.core.parser.exchange.mapper.StrikeV2TransactionNormalizingMapper
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 /**
  * FileProcessor implementation for Strike annual statements.

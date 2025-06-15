@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 /**
  * Client for interacting with the Coinbase API to fetch cryptocurrency prices.

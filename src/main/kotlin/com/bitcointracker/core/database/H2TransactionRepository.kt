@@ -5,6 +5,7 @@ import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import com.bitcointracker.model.api.transaction.TransactionSource
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.Op
@@ -25,9 +26,7 @@ import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.deleteAll
 import java.time.Instant
-import java.time.ZoneId
 import java.time.ZoneOffset
-import javax.inject.Inject
 
 class H2TransactionRepository @Inject constructor(
     private val database: Database,

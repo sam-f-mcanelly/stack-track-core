@@ -3,8 +3,8 @@ package com.bitcointracker.util.local
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 
 /**
  * Default implementation of ResourceProvider for classpath resources

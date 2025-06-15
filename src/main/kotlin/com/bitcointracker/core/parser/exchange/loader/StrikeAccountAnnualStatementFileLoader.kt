@@ -9,7 +9,7 @@ import com.bitcointracker.model.internal.transaction.strike.StrikeTransactionTyp
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class StrikeAccountAnnualStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction> {
     companion object {

@@ -3,10 +3,10 @@ package com.bitcointracker.core.cache
 import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.lang.IllegalArgumentException
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * A singleton cache that maintains the current state of cryptocurrency holdings based on transaction history.

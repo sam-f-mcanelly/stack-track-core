@@ -6,7 +6,7 @@ import com.bitcointracker.core.database.H2TransactionRepository
 import dagger.Module
 import dagger.Provides
 import org.jetbrains.exposed.sql.Database
-import javax.inject.Singleton
+import jakarta.inject.Singleton
 
 @Module
 object DatabaseModule {

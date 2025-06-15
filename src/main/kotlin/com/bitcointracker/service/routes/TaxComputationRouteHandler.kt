@@ -16,7 +16,7 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import org.slf4j.LoggerFactory
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 /**
  * Handles HTTP routes related to tax computation and report submission.

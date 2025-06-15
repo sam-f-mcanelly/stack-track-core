@@ -1,8 +1,8 @@
 package com.bitcointracker.core.chart
 
 import com.bitcointracker.model.internal.historical.BitcoinData
-import javax.inject.Inject
-import javax.inject.Singleton
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.time.ZoneOffset

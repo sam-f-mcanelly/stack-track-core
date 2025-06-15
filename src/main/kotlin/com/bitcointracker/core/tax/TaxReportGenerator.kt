@@ -11,8 +11,8 @@ import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import org.slf4j.LoggerFactory
 import java.time.Instant
-import javax.inject.Inject
-import javax.inject.Singleton
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 
 /**
  * Coordinates tax report generation by delegating to appropriate tax strategies.

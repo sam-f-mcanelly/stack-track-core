@@ -5,7 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 /**
  * Handler for cryptocurrency metadata-related HTTP routes.

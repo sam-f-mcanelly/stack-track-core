@@ -9,7 +9,7 @@ import com.bitcointracker.service.routes.MetadataRouteHandler
 import com.bitcointracker.service.routes.RawDataRouteHandler
 import com.bitcointracker.service.routes.TaxComputationRouteHandler
 import dagger.Component
-import javax.inject.Singleton
+import jakarta.inject.Singleton
 
 @Singleton
 @Component(modules = [

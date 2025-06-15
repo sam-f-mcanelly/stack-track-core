@@ -18,7 +18,7 @@ import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.NavigableMap
 import java.util.TreeMap
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 /**
  * Manages cryptocurrency metadata including price information and portfolio analytics.

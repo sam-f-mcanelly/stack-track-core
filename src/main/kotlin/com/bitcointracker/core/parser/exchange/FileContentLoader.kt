@@ -3,8 +3,8 @@ package com.bitcointracker.core.parser.exchange
 import com.bitcointracker.core.exception.UnsupportedFileTypeException
 import com.bitcointracker.model.internal.file.FileType
 import com.bitcointracker.model.internal.file.NormalizedFile
+import jakarta.inject.Inject
 import org.slf4j.LoggerFactory
-import javax.inject.Inject
 
 /**
  * A mapper class responsible for normalizing different types of cryptocurrency transaction files.

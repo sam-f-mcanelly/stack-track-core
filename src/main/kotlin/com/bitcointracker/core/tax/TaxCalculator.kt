@@ -7,8 +7,8 @@ import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import javax.inject.Inject
-import javax.inject.Singleton
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 
 /**
  * Performs tax calculations for matching buy and sell transactions.

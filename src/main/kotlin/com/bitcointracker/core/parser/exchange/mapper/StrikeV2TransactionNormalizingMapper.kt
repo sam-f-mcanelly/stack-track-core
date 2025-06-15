@@ -7,7 +7,7 @@ import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import com.bitcointracker.model.internal.transaction.strike.StrikeV2Transaction
 import com.bitcointracker.model.internal.transaction.strike.StrikeV2TransactionType
 import org.slf4j.LoggerFactory
-import javax.inject.Inject
+import jakarta.inject.Inject
 import kotlin.math.absoluteValue
 
 /**

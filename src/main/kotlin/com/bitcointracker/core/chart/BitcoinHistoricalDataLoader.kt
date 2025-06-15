@@ -3,8 +3,8 @@ package com.bitcointracker.core.chart
 import com.bitcointracker.core.parser.historical.BitcoinHistoricalDataCsvParser
 import com.bitcointracker.model.internal.historical.BitcoinData
 import com.bitcointracker.util.local.ClasspathResourceProvider
-import javax.inject.Inject
-import javax.inject.Singleton
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 
 @Singleton
 class BitcoinHistoricalDataLoader @Inject constructor(

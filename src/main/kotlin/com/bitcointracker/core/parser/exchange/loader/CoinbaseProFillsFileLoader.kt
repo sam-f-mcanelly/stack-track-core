@@ -7,7 +7,7 @@ import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class CoinbaseProFillsFileLoader @Inject constructor(): FileLoader<CoinbaseFillsTransaction> {
     companion object {

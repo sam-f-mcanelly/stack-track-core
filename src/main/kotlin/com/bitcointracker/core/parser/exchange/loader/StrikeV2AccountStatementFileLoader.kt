@@ -12,7 +12,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 /**
  * FileLoader for Strike V2 monthly statements.

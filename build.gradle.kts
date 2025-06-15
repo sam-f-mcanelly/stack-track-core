@@ -18,23 +18,23 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("com.itextpdf:itext7-core:9.1.0")
-    implementation("ch.qos.logback:logback-classic:1.5.17")
+    implementation("ch.qos.logback:logback-classic:1.5.18")
     implementation("io.ktor:ktor-server-netty:2.3.1")
     implementation("io.ktor:ktor-server-core:2.3.1")
     implementation("io.ktor:ktor-server-content-negotiation:2.3.1")
     implementation("io.ktor:ktor-server-cors")
     implementation("io.ktor:ktor-server-call-logging:2.3.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.google.dagger:dagger:2.48")
+    implementation("com.google.dagger:dagger:2.56.2")
     implementation("io.ktor:ktor-serialization-jackson:2.3.4")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
     implementation("javax.inject:javax.inject:1")
-    implementation("org.slf4j:slf4j-api:2.0.9")
-    implementation("org.apache.pdfbox:pdfbox:3.0.4")
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.apache.pdfbox:pdfbox:3.0.5")
 
     // H2 database
-    implementation("com.h2database:h2:2.2.224")
+    implementation("com.h2database:h2:2.3.232")
 
     // Exposed ORM
     implementation("org.jetbrains.exposed:exposed-dao:0.41.1")
@@ -44,11 +44,10 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.41.1")
 
     // co-routines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
     // Testing dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.13.1")
     testImplementation("org.assertj:assertj-core:3.27.3")
     testImplementation("io.ktor:ktor-server-test-host:2.3.7")
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.0.20")
@@ -60,7 +59,7 @@ dependencies {
     implementation("org.jacoco:org.jacoco.report:0.8.11")
 
     // Annotation processing
-    kapt("com.google.dagger:dagger-compiler:2.48")
+    kapt("com.google.dagger:dagger-compiler:2.56.2")
 }
 
 application {

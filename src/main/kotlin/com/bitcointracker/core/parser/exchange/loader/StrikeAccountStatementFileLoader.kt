@@ -13,7 +13,7 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class StrikeAccountStatementFileLoader @Inject constructor(): FileLoader<StrikeTransaction> {
     companion object {

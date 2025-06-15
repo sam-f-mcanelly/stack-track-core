@@ -26,7 +26,7 @@ import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayInputStream
 import java.time.Instant
 import java.util.UUID
-import javax.inject.Inject
+import jakarta.inject.Inject
 import kotlin.collections.chunked
 
 class RawDataRouteHandler @Inject constructor(

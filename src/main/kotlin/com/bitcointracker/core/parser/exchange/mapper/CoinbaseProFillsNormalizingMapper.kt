@@ -5,7 +5,7 @@ import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseFillsTrans
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import com.bitcointracker.model.api.transaction.TransactionSource
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 /**
  * A mapper class that normalizes Coinbase Pro fill transactions into a standardized format.

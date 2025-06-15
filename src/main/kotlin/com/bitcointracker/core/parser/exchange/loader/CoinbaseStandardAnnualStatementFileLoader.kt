@@ -7,7 +7,7 @@ import com.bitcointracker.model.internal.transaction.normalized.ExchangeAmount
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class CoinbaseStandardAnnualStatementFileLoader @Inject constructor() : FileLoader<CoinbaseStandardTransaction> {
     companion object {

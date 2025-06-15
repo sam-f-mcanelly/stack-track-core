@@ -1,7 +1,6 @@
 package com.bitcointracker.core.parser.exchange.processor
 
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
-import javax.inject.Qualifier
 
 /**
  * Interface for processing specific types of cryptocurrency transaction files.

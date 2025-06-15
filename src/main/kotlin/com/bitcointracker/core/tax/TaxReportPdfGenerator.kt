@@ -17,7 +17,7 @@ import com.itextpdf.layout.element.Text
 import com.itextpdf.layout.properties.TextAlignment
 import com.itextpdf.layout.properties.UnitValue
 import java.io.ByteArrayOutputStream
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 class TaxReportPdfGenerator @Inject constructor() {
 
