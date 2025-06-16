@@ -29,12 +29,17 @@ jobs:
             echo "Added hostname mappings:"
             grep -E "(umbrel.local)" /etc/hosts
             echo "Testing connection again after adding mappings..."
-
+          
             if curl -s --connect-timeout 10 --max-time 30 http://umbrel.local:8085/api/v1/version; then
               echo "✅ Connection to umbrel.local successful after adding hostname mappings"
             else
               echo "❌ Connection to umbrel.local still failing after hostname mappings - check network/firewall"
               exit 1
+            fi
+          else
+            echo "❌ Connection to gitea_server_1 failed - Make sure the gitea runner and child workflow runner are on the same network as gitea"
+            echo "The default network for all apps on umbrel is umbrel_main_network"
+            exit 1
           fi
 
       - name: Debug environment variables
