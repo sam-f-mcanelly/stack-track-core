@@ -262,19 +262,19 @@ class MetadataManagerTest {
 
         // First day (has first transaction)
         assertThat(result[0].date).isEqualTo(bitcoinData1.date)
-        assertThat(result[0].value).isEqualTo(bitcoinData1.close)
+        assertThat(result[0].value).isEqualTo(bitcoinData1.close * transaction1.assetAmount.amount)
         assertThat(result[0].assetAmount.amount).isEqualTo(1.0)
         assertThat(result[0].assetAmount.unit).isEqualTo(asset)
 
         // Middle day
         assertThat(result[1].date).isEqualTo(bitcoinData2.date)
-        assertThat(result[1].value).isEqualTo(bitcoinData2.close)
+        assertThat(result[1].value).isEqualTo(bitcoinData2.close * (transaction1.assetAmount.amount + transaction2.assetAmount.amount))
         assertThat(result[1].assetAmount.amount).isEqualTo(1.5)
         assertThat(result[1].assetAmount.unit).isEqualTo(asset)
 
         // Last day (after both transactions)
         assertThat(result[2].date).isEqualTo(bitcoinData3.date)
-        assertThat(result[2].value).isEqualTo(bitcoinData3.close)
+        assertThat(result[2].value).isEqualTo(bitcoinData3.close * (transaction1.assetAmount.amount + transaction2.assetAmount.amount))
         assertThat(result[2].assetAmount.amount).isEqualTo(1.5)
         assertThat(result[2].assetAmount.unit).isEqualTo(asset)
 

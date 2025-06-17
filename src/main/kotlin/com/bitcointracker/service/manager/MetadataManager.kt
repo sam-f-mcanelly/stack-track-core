@@ -199,7 +199,7 @@ class MetadataManager @Inject constructor(
             // Create DailyData object
             DailyData(
                 date = data.date,
-                value = data.close, // Use closing price as the value
+                value = data.close * assetAmount.amount, // Use closing price as the multiplier
                 assetAmount = assetAmount
             )
         }
