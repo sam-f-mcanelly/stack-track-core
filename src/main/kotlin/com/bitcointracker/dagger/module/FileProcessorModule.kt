@@ -1,11 +1,12 @@
 package com.bitcointracker.dagger.module
 
-import com.bitcointracker.core.parser.exchange.processor.CoinbaseAnnualFileProcessor
-import com.bitcointracker.core.parser.exchange.processor.CoinbaseProFillsFileProcessor
-import com.bitcointracker.core.parser.exchange.processor.FileProcessor
-import com.bitcointracker.core.parser.exchange.processor.StrikeAnnualFileProcessor
-import com.bitcointracker.core.parser.exchange.processor.StrikeMonthlyFileProcessor
-import com.bitcointracker.core.parser.exchange.processor.StrikeV2MonthlyFileProcessor
+import com.bitcointracker.core.parser.processor.CoinbaseAnnualFileProcessor
+import com.bitcointracker.core.parser.processor.CoinbaseProFillsFileProcessor
+import com.bitcointracker.core.parser.processor.FidelityAccountStatementFileProcessor
+import com.bitcointracker.core.parser.processor.FileProcessor
+import com.bitcointracker.core.parser.processor.StrikeAnnualFileProcessor
+import com.bitcointracker.core.parser.processor.StrikeMonthlyFileProcessor
+import com.bitcointracker.core.parser.processor.StrikeV2MonthlyFileProcessor
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -44,4 +45,9 @@ abstract class FileProcessorModule {
     @IntoMap
     @StringKey("COINBASE_ANNUAL")
     abstract fun bindCoinbaseAnnualFileProcessor(processor: CoinbaseAnnualFileProcessor): FileProcessor
+
+    @Binds
+    @IntoMap
+    @StringKey("FIDELITY")
+    abstract fun fidelityAccountStatementFileProcessor(processor: FidelityAccountStatementFileProcessor): FileProcessor
 }

@@ -2,8 +2,7 @@ package com.bitcointracker.core.parser
 
 import com.bitcointracker.core.exception.FileParsingException
 import com.bitcointracker.core.exception.UnsupportedFileTypeException
-import com.bitcointracker.core.parser.exchange.FileContentLoader
-import com.bitcointracker.core.parser.exchange.processor.FileProcessor
+import com.bitcointracker.core.parser.processor.FileProcessor
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 import jakarta.inject.Inject
 import org.slf4j.LoggerFactory

@@ -1,5 +1,6 @@
 package com.bitcointracker.core.parser.exchange.mapper
 
+import com.bitcointracker.core.parser.NormalizingMapper
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseStandardTransaction
 import com.bitcointracker.model.internal.transaction.coinbase.CoinbaseTransactionType
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
@@ -17,7 +18,8 @@ import jakarta.inject.Inject
  * @constructor Creates an instance of [CoinbaseStandardTransactionNormalizingMapper].
  * @inject This class is intended to be used with dependency injection.
  */
-class CoinbaseStandardTransactionNormalizingMapper @Inject constructor() : NormalizingMapper<CoinbaseStandardTransaction> {
+class CoinbaseStandardTransactionNormalizingMapper @Inject constructor() :
+    NormalizingMapper<CoinbaseStandardTransaction> {
 
     /**
      * Normalizes a given [CoinbaseStandardTransaction] to a [NormalizedTransaction].

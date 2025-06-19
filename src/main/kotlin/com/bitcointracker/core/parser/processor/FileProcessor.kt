@@ -1,4 +1,4 @@
-package com.bitcointracker.core.parser.exchange.processor
+package com.bitcointracker.core.parser.processor
 
 import com.bitcointracker.model.api.transaction.NormalizedTransaction
 

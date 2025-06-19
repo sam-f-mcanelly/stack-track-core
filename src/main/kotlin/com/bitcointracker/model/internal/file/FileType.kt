@@ -8,6 +8,9 @@ enum class FileType {
     COINBASE_PRO_FILLS,
     COINBASE_ANNUAL,
 
+    // Brokerage
+    FIDELITY,
+
     // Data
     BTC_HISTORICAL_DATA,
 }

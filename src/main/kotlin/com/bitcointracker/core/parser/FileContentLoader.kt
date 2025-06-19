@@ -1,4 +1,4 @@
-package com.bitcointracker.core.parser.exchange
+package com.bitcointracker.core.parser
 
 import com.bitcointracker.core.exception.UnsupportedFileTypeException
 import com.bitcointracker.model.internal.file.FileType
@@ -26,6 +26,8 @@ class FileContentLoader @Inject constructor() {
          * These constants represent the expected header formats for various transaction file types
          * from different platforms.
          */
+
+        // Exchanges
         private const val STRIKE_ANNUAL_TRANSACTIONS_HEADER = "Transaction ID,Initiated Time (UTC),Completed Time (UTC),Transaction Type,State,Amount 1,Currency 1,Amount 2,Currency 2,BTC Price,Balance 1,Currency 1,Balance - BTC,Destination,Description"
         private const val STRIKE_MONTHLY_TRANSACTIONS_COLUMNS = "Transaction ID,Initiated Date (UTC),Initiated Time (UTC),Completed Time (UTC),Completed Time (UTC),Transaction Type,State,Amount 1,Currency 1,Fee 1,Amount 2,Currency 2,Fee 2,BTC Price,Balance 1,Currency 1,Balance - BTC,Destination,Description"
         private const val STRIKE_MONTHLY_TRANSACTIONS_COLUMNS_V2 = "Transaction ID,Initiated Date (UTC),Initiated Time (UTC),Completed Date (UTC),Completed Time (UTC),Transaction Type,State,Amount 1,Currency 1,Fee 1,Amount 2,Currency 2,Fee 2,BTC Price,Balance 1,Currency 1,Balance - BTC,Destination,Description"
@@ -33,6 +35,9 @@ class FileContentLoader @Inject constructor() {
         private const val STRIKE_MONTHLY_V2_TRANSACTIONS_HEADER = "Reference,Date & Time (UTC),Transaction Type,Amount USD,Fee USD,Amount BTC,Fee BTC,BTC Price,Cost Basis (USD),Destination,Description,Note"
         private const val COINBASE_FILLS_TRANSACTIONS_COLUMNS = "portfolio,trade id,product,side,created at,size,size unit,price,fee,total,price/fee/total unit"
         private const val COINBASE_ANNUAL_TRANSACTIONS_COLUMNS = "ID,Timestamp,Transaction Type,Asset,Quantity Transacted,Price Currency,Price at Transaction,Subtotal,Total (inclusive of fees and/or spread),Fees and/or Spread,Notes"
+
+        // Brokerages
+        private const val FIDELITY_ACCOUNT_STATEMENT_COLUMNS = "Run Date,Account,Account Number,Action,Symbol,Description,Type,Quantity,Price (\$),Commission (\$),Fees (\$),Accrued Interest (\$),Amount (\$),Settlement Date"
     }
 
 
@@ -81,6 +86,7 @@ class FileContentLoader @Inject constructor() {
             STRIKE_MONTHLY_V2_TRANSACTIONS_HEADER -> FileType.STRIKE_MONTHLY_V2
             COINBASE_FILLS_TRANSACTIONS_COLUMNS -> FileType.COINBASE_PRO_FILLS
             COINBASE_ANNUAL_TRANSACTIONS_COLUMNS -> FileType.COINBASE_ANNUAL
+            FIDELITY_ACCOUNT_STATEMENT_COLUMNS -> FileType.FIDELITY
             else -> null
         }
 }

@@ -29,7 +29,6 @@ dependencies {
     implementation("io.ktor:ktor-serialization-jackson:3.1.3")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
-    implementation("javax.inject:javax.inject:1")
     implementation("org.slf4j:slf4j-api:2.0.17")
     implementation("org.apache.pdfbox:pdfbox:3.0.5")
 

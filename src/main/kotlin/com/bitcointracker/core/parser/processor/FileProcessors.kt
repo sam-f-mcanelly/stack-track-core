@@ -1,5 +1,7 @@
-package com.bitcointracker.core.parser.exchange.processor
+package com.bitcointracker.core.parser.processor
 
+import com.bitcointracker.core.parser.brokerage.loader.FidelityAccountStatementFileLoader
+import com.bitcointracker.core.parser.brokerage.mapper.FidelityTransactionNormalizingMapper
 import com.bitcointracker.core.parser.exchange.mapper.CoinbaseProFillsNormalizingMapper
 import com.bitcointracker.core.parser.exchange.mapper.CoinbaseStandardTransactionNormalizingMapper
 import com.bitcointracker.core.parser.exchange.mapper.StrikeTransactionNormalizingMapper
@@ -63,6 +65,17 @@ class CoinbaseProFillsFileProcessor @Inject constructor(
 class CoinbaseAnnualFileProcessor @Inject constructor(
     private val fileLoader: CoinbaseStandardAnnualStatementFileLoader,
     private val normalizer: CoinbaseStandardTransactionNormalizingMapper
+) : FileProcessor {
+    override fun processFile(fileLines: List<String>): List<NormalizedTransaction> =
+        normalizer.normalizeTransactions(fileLoader.readCsv(fileLines))
+}
+
+/**
+ * FileProcessor implementation for Fidelity account statements.
+ */
+class FidelityAccountStatementFileProcessor @Inject constructor(
+    private val fileLoader: FidelityAccountStatementFileLoader,
+    private val normalizer: FidelityTransactionNormalizingMapper
 ) : FileProcessor {
     override fun processFile(fileLines: List<String>): List<NormalizedTransaction> =
         normalizer.normalizeTransactions(fileLoader.readCsv(fileLines))
