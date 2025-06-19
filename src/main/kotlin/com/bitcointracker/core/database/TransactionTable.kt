@@ -2,8 +2,8 @@ package com.bitcointracker.core.database
 
 import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import com.bitcointracker.model.api.transaction.TransactionSource
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.datetime.timestamp
 
 object TransactionTable : Table("normalized_transactions") {
     val id = varchar("id", 255).uniqueIndex()
@@ -26,7 +26,7 @@ object TransactionTable : Table("normalized_transactions") {
     val assetValueFiatValue = double("asset_value_fiat_value")
     val assetValueFiatUnit = varchar("asset_value_fiat_unit", 50)
 
-    val timestamp = datetime("timestamp")
+    val timestamp = timestamp("timestamp")
     val timestampText = varchar("timestamp_text", 255)
     val address = varchar("address", 255).default("")
     val notes = text("notes").default("")

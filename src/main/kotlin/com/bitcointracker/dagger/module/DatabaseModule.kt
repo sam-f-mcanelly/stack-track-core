@@ -5,8 +5,8 @@ import com.bitcointracker.core.cache.TransactionMetadataCache
 import com.bitcointracker.core.database.H2TransactionRepository
 import dagger.Module
 import dagger.Provides
-import org.jetbrains.exposed.sql.Database
 import jakarta.inject.Singleton
+import org.jetbrains.exposed.v1.jdbc.Database
 
 @Module
 object DatabaseModule {

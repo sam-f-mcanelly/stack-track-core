@@ -7,24 +7,28 @@ import com.bitcointracker.model.api.transaction.NormalizedTransactionType
 import com.bitcointracker.model.api.transaction.TransactionSource
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.Function
-import org.jetbrains.exposed.sql.ExpressionWithColumnType
-import org.jetbrains.exposed.sql.IntegerColumnType
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.deleteAll
+import kotlinx.datetime.toJavaInstant
+import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
+import org.jetbrains.exposed.v1.core.IntegerColumnType
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.CustomFunction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
 import java.time.ZoneOffset
 
@@ -35,7 +39,7 @@ class H2TransactionRepository @Inject constructor(
 
     init {
         // Initialize tables in a regular transaction
-        org.jetbrains.exposed.sql.transactions.transaction(database) {
+        transaction(database) {
             SchemaUtils.create(TransactionTable)
         }
     }
@@ -51,6 +55,7 @@ class H2TransactionRepository @Inject constructor(
             throw e // Re-throw to let caller handle
         }
     }
+
     /**
      * Clears all data from the database tables.
      * This should only be used in test environments.
@@ -88,8 +93,7 @@ class H2TransactionRepository @Inject constructor(
                     added.add(transaction)
                 } catch(e: Exception) {
                     println("Failed to add transaction ${transaction.id}: ${e.message}")
-                    e.printStackTrace() // ✅ Proper stack trace printing
-                    // Consider whether to rethrow or continue
+                    e.printStackTrace()
                 }
             }
             added
@@ -125,7 +129,7 @@ class H2TransactionRepository @Inject constructor(
             it[assetValueFiatValue] = transaction.assetValueFiat.amount
             it[assetValueFiatUnit] = transaction.assetValueFiat.unit
 
-            it[timestamp] = transaction.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
+            it[timestamp] = kotlinx.datetime.Instant.fromEpochMilliseconds(transaction.timestamp.toEpochMilli())
             it[timestampText] = transaction.timestampText
             it[address] = transaction.address
             it[notes] = transaction.notes
@@ -135,7 +139,8 @@ class H2TransactionRepository @Inject constructor(
 
     override suspend fun getTransactionById(id: String): NormalizedTransaction? {
         return dbQuery {
-            TransactionTable.select { TransactionTable.id eq id }
+            TransactionTable.selectAll()
+                .where { TransactionTable.id eq id }
                 .map { it.toNormalizedTransaction() }
                 .singleOrNull()
         }
@@ -150,8 +155,8 @@ class H2TransactionRepository @Inject constructor(
 
     override suspend fun getSellTransactionsByYear(year: Int): List<NormalizedTransaction> {
         return dbQuery {
-            TransactionTable
-                .select {
+            TransactionTable.selectAll()
+                .where {
                     // Filter for SELL transactions
                     (TransactionTable.type eq NormalizedTransactionType.SELL) and
                             // Filter for the specified year
@@ -170,68 +175,72 @@ class H2TransactionRepository @Inject constructor(
         endDate: Instant?
     ): List<NormalizedTransaction> {
         return dbQuery {
-            TransactionTable.select {
-                val conditions = mutableListOf<Op<Boolean>>()
+            val conditions = mutableListOf<Op<Boolean>>()
 
-                sources?.takeIf { it.isNotEmpty() }?.let {
-                    conditions.add(TransactionTable.transactionSource inList sources)
-                }
+            sources?.takeIf { it.isNotEmpty() }?.let {
+                conditions.add(TransactionTable.transactionSource inList sources)
+            }
 
-                types?.takeIf { it.isNotEmpty() }?.let {
-                    conditions.add(TransactionTable.type inList types)
-                }
+            types?.takeIf { it.isNotEmpty() }?.let {
+                conditions.add(TransactionTable.type inList types)
+            }
 
-                assets?.takeIf { it.isNotEmpty() }?.let {
-                    conditions.add(TransactionTable.assetAmountUnit inList assets)
-                }
+            assets?.takeIf { it.isNotEmpty() }?.let {
+                conditions.add(TransactionTable.assetAmountUnit inList assets)
+            }
 
-                if (startDate != null) {
-                    conditions.add(TransactionTable.timestamp greaterEq startDate
-                        .atZone(ZoneOffset.UTC)
-                        .toLocalDateTime())
-                }
+            if (startDate != null) {
+                conditions.add(TransactionTable.timestamp greaterEq
+                        kotlinx.datetime.Instant.fromEpochMilliseconds(startDate.toEpochMilli()))
+            }
 
-                if (endDate != null) {
-                    conditions.add(TransactionTable.timestamp lessEq endDate
-                        .atZone(ZoneOffset.UTC)
-                        .toLocalDateTime())
-                }
+            if (endDate != null) {
+                conditions.add(TransactionTable.timestamp lessEq
+                        kotlinx.datetime.Instant.fromEpochMilliseconds(endDate.toEpochMilli()))
+            }
 
-                when {
-                    conditions.isEmpty() -> Op.TRUE
-                    else -> conditions.reduce { acc, op -> acc and op }
-                }
+            val whereCondition = when {
+                conditions.isEmpty() -> Op.TRUE
+                else -> conditions.reduce { acc, op -> acc and op }
+            }
 
-            }.map { it.toNormalizedTransaction() }
+            TransactionTable.selectAll()
+                .where { whereCondition }
+                .map { it.toNormalizedTransaction() }
         }
     }
 
     override suspend fun getTransactionsBySource(vararg source: TransactionSource): List<NormalizedTransaction> {
         return dbQuery {
-            TransactionTable.select { TransactionTable.transactionSource inList source.toList() }
+            TransactionTable.selectAll()
+                .where { TransactionTable.transactionSource inList source.toList() }
                 .map { it.toNormalizedTransaction() }
         }
     }
 
     override suspend fun getTransactionsByType(vararg type: NormalizedTransactionType): List<NormalizedTransaction> {
         return dbQuery {
-            TransactionTable.select { TransactionTable.type inList type.toList() }
+            TransactionTable.selectAll()
+                .where { TransactionTable.type inList type.toList() }
                 .map { it.toNormalizedTransaction() }
         }
     }
 
     override suspend fun getTransactionsByDateRange(startDate: Instant, endDate: Instant): List<NormalizedTransaction> {
         return dbQuery {
-            TransactionTable.select {
-                (TransactionTable.timestamp greaterEq startDate.atZone(ZoneOffset.UTC).toLocalDateTime()) and
-                        (TransactionTable.timestamp lessEq endDate.atZone(ZoneOffset.UTC).toLocalDateTime())
-            }.map { it.toNormalizedTransaction() }
+            TransactionTable.selectAll()
+                .where {
+                    (TransactionTable.timestamp greaterEq kotlinx.datetime.Instant.fromEpochMilliseconds(startDate.toEpochMilli())) and
+                            (TransactionTable.timestamp lessEq kotlinx.datetime.Instant.fromEpochMilliseconds(endDate.toEpochMilli()))
+                }
+                .map { it.toNormalizedTransaction() }
         }
     }
 
     override suspend fun getTransactionsByAsset(vararg asset: String): List<NormalizedTransaction> {
         return dbQuery {
-            TransactionTable.select { TransactionTable.assetAmountUnit inList asset.toList() }
+            TransactionTable.selectAll()
+                .where { TransactionTable.assetAmountUnit inList asset.toList() }
                 .map { it.toNormalizedTransaction() }
         }
     }
@@ -254,7 +263,7 @@ class H2TransactionRepository @Inject constructor(
                 it[assetValueFiatValue] = transaction.assetValueFiat.amount
                 it[assetValueFiatUnit] = transaction.assetValueFiat.unit
 
-                it[timestamp] = transaction.timestamp.atZone(ZoneOffset.UTC).toLocalDateTime()
+                it[timestamp] = kotlinx.datetime.Instant.fromEpochMilliseconds(transaction.timestamp.toEpochMilli())
                 it[timestampText] = transaction.timestampText
                 it[address] = transaction.address
                 it[notes] = transaction.notes
@@ -270,10 +279,12 @@ class H2TransactionRepository @Inject constructor(
         transactionCache.update(getAllTransactions())
     }
 
-    internal class ExtractYear(val expr: ExpressionWithColumnType<java.time.LocalDateTime>) : Function<Int>(IntegerColumnType()) {
+    internal class ExtractYear(val expression: ExpressionWithColumnType<kotlinx.datetime.Instant>) :
+        CustomFunction<Int>("EXTRACT", IntegerColumnType()) {
+
         override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder {
             append("EXTRACT(YEAR FROM ")
-            append(expr)
+            append(expression)
             append(")")
         }
     }
@@ -300,7 +311,7 @@ class H2TransactionRepository @Inject constructor(
                 amount = this[TransactionTable.assetValueFiatValue],
                 unit = this[TransactionTable.assetValueFiatUnit]
             ),
-            timestamp = this[TransactionTable.timestamp].atZone(ZoneOffset.UTC).toInstant(),
+            timestamp = this[TransactionTable.timestamp].toJavaInstant(),
             timestampText = this[TransactionTable.timestampText],
             address = this[TransactionTable.address],
             notes = this[TransactionTable.notes],
