@@ -43,6 +43,7 @@ class FidelityTransactionNormalizingMapper @Inject constructor() : NormalizingMa
      */
     override fun normalizeTransactions(transactions: List<FidelityTransaction>): List<NormalizedTransaction> =
         transactions.map { normalizeTransaction(it) }
+            .filter { it.assetAmount.unit == "BTC" }
 
     /**
      * Converts a Fidelity transaction into a normalized format.
