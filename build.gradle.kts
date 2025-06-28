@@ -7,6 +7,16 @@ plugins {
     jacoco
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
+kotlin {
+    jvmToolchain(22)
+}
+
 group = "com.bitcointracker"
 version = "1.0.0"
 
