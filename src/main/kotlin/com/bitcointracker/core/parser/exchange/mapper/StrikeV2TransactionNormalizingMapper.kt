@@ -109,6 +109,7 @@ class StrikeV2TransactionNormalizingMapper @Inject constructor() : NormalizingMa
             assetValueFiat = ExchangeAmount(USD_TO_USD_RATE, USD_CURRENCY),
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
+            address = transaction.destination ?: "",
             filedWithIRS = false,
         )
 
@@ -128,6 +129,7 @@ class StrikeV2TransactionNormalizingMapper @Inject constructor() : NormalizingMa
             assetValueFiat = ExchangeAmount(-1.0, USD_CURRENCY),
             timestamp = transaction.date,
             timestampText = transaction.date.toString(),
+            address = transaction.destination ?: "",
             filedWithIRS = false,
         )
 
